@@ -108,6 +108,35 @@ void makeMatrix(const int dim1,const int dim2, double* const matrix){
 void forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, const int N, const int K, const int T){
 
 
+	/* OPTIMIZATION AND SIMD
+		SIMPLE APPROACH		
+		precompute a matrix for  b[s*K + y[t]] => B_expl
+		1. loop: 
+			can use _mm256_mul_pd
+		2. loop: 
+			changing the order of the outer loops should be beneficial,
+			because then alpha is accessed in row major order (except in inner most loop)
+			for SIMD we can increase the stepsize of loop iterator t to 4
+			replace alpha[s*T+t]=0 with __m256d a = _mms256_setzero_pd()
+			inner most loop:
+				perfect FMA
+				a = _mm256_fma_pd(alpha_col,a_col)
+				Here the access pattern is a problem because both arguments
+				in the fma are accessed column wise order.
+			replace alpha[s*T + t] *= b[s*K + y[t]]; with a = _mm256_mul_pd(a,b)
+			where _m256d b = _mm256_load_pd(B_expl + s*K + t)
+
+		IMPROVED APPROACH
+		Currently I'm not sure if this is safe but I think we can
+		change the loop order to j,s,t => check with Jan similar function
+		Then in the current inner most loop:
+			matrix a would be accesed in row wise order instead of colum wise order
+			both alphas would be accessed in row wise order
+		At no point in the loop hierarchy we would access in column wise order
+		The SIMD instructions remain as before.
+	
+	*/
+
 	for(int s = 0; s < N; s++){
 		//printf("%lf %lf %lf \n", alpha[s*N], p[s], b[s*K]);
 		alpha[s*T] = p[s] * b[s*K + y[0]];
