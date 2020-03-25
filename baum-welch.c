@@ -4,6 +4,9 @@
 #include <math.h>
 #include "tsc_x86.h"
 
+#define EPSILON 0.001
+#define DELTA 0.001
+
 //printing the data of an double array
 //R is number of rows
 //C is number of columns
@@ -173,15 +176,31 @@ void update(const double* const a, const double* const e, const double* const al
 }
 
 //Jan
-int finished(){
-	return 1;
+int finished(const double* const alpha, double* const likelihood,const int N,const int T){
+	double old_likelihood=*likelihood;
+	double new_likelihood;
+	for(int i=0;i<N;i++){
+		//alpha_i(T)
+		new_likelihood+=alpha[T*i+T-1];
+	}
+	*likelihood=new_likelihood;
+	return (new_likelihood-old_likelihood)<EPSILON;
 }
 
 
 
 //Jan
-int similar(const double * const a, const double * const b ){
-	return 1;
+int similar(const double * const a, const double * const b , const int N, const int M){
+	//using Frobenius norm
+	double sum=0.0;
+	double abs=0.0;
+	for(int i=0;i<N;i++){
+		for(int j=0;j<M;j++){
+			abs=a[i*M+j]-b[i*M+j];
+			sum+=abs*abs;
+		}
+	}
+	return sqrt(sum)<DELTA; 
 }
 
 
@@ -227,6 +246,7 @@ void wikipedia_example(){
 
 	piMatrix[0] = 0.2;
 	piMatrix[1] = 0.8;
+	
 	
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
@@ -294,6 +314,8 @@ int main(int argc, char *argv[]){
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double));
+	
+	double* likelihood=0.0;
 
 	for (int run=0; run<maxRuns; run++){
 
@@ -332,12 +354,12 @@ int main(int argc, char *argv[]){
 			backward(transitionMatrix, emissionMatrix, beta, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//???
 
-		}while (!finished());//Jan
+		}while (!finished(alpha, likelihood, hiddenStates, T));//Jan
 
 		cycles = stop_tsc(start);
 
 		//Jan
-		if (similar(groundTransitionMatrix,transitionMatrix) && similar(groundObservationMatrix,emissionMatrix)){
+		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundObservationMatrix,emissionMatrix,differentObservables,hiddenStates)){
 			printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{
 			free(groundTransitionMatrix);
