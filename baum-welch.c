@@ -315,7 +315,8 @@ int main(int argc, char *argv[]){
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double));
 	
-	double* likelihood=0.0;
+	double* likelihood;
+	*likelihood=0.0;
 
 	for (int run=0; run<maxRuns; run++){
 
