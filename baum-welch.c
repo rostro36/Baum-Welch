@@ -168,6 +168,18 @@ void forward(const double* const a, const double* const p, const double* const b
 
 //Ang
 void backward(const double* const a, const double* const e, double* const beta, const int N, const int K, const int T ){
+  for(int s = 1; s < N+1; s++){
+     beta[s*T-1] = 1.;
+   }
+
+   for(int t = T-1; t > 0; t--){
+     for(int s = 0; s < N; s++){
+       beta[s*T + t-1] = 0.;
+       for(int j = 0; j < N; j++){
+         beta[s*T + t-1] += beta[s*T + t] * a[s*N + j] * b[j*K + y[t]]; // XXX
+       }
+     }
+   }
 	return;
 }
 
