@@ -5,14 +5,18 @@
 #include "tsc_x86.h"
 
 #include "io.h"
-#include <cstdio>
-#include <list>
-using namespace std;
 
 #define EPSILON 0.001
 #define DELTA 0.001
 
 
+int compare_doubles (const void *a, const void *b) //for sorting at the end
+{
+  const double *da = (const double *) a;
+  const double *db = (const double *) b;
+
+  return (*da > *db) - (*da < *db);
+}
 //generate a random number [0,1] and return the index...
 //where the sum of the probabilities up to this index of the vector...
 //is bigger than the random number
@@ -279,7 +283,7 @@ int main(int argc, char *argv[]){
 
 	myInt64 cycles;
     myInt64 start;
-	list< double > perfList; //for medianTime
+	double runs[maxRuns]; //for medianTime
 	//set random according to seed
 	srand(seed);
 
@@ -356,7 +360,7 @@ int main(int argc, char *argv[]){
 
 		//Jan
 		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundObservationMatrix,emissionMatrix,differentObservables,hiddenStates)){
-			perfList.push_back((double)cycles);
+			runs[run]=cycles;
 			printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{
 			free(groundTransitionMatrix);
@@ -375,8 +379,8 @@ int main(int argc, char *argv[]){
 
 
 	}
-	perfList.sort();
-  	double medianTime = perfList.front();
+	qsort (runs, maxRuns, sizeof (double), compare_doubles);
+  	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %llu cycles \n", medianTime); 
 
 	free(groundTransitionMatrix);
