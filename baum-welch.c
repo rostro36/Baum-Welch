@@ -4,43 +4,16 @@
 #include <math.h>
 #include "tsc_x86.h"
 
+#include "io.h"
+
 #define EPSILON 0.001
 #define DELTA 0.001
 
-//printing the data of an double array
-//R is number of rows
-//C is number of columns
-void print_matrix(const double * const  a, const int R, const int C){
-	for(int i =0; i < R; i++){
-		for(int j = 0; j < C-1; j++){
-			printf("%lf, ",a[i*C + j]);
-		}
-		printf("%lf \n", a[i*C + C-1]);
-	}
-	printf("\n");
-}
 
-//printing the data of a double vector
-//L is lenght of vector
-void print_vector(const double * const a, const int L){
-	print_matrix(a,L,1);
-}
-
-//printing the data of a integer vector
-//L is lenght of vector
-void print_vector_int(const int * const a, const int L){
-	for(int j = 0; j < L-1; j++){
-		printf("%i, ",a[j]);
-	}
-	printf("%i \n", a[L-1]);
-	
-	printf("\n");
-}
-
-//generate a random number and return the index...
+//generate a random number [0,1] and return the index...
 //where the sum of the probabilities up to this index of the vector...
 //is bigger than the random number
-//choices is the lenght of the vector
+//argument choices is the lenght of the vector
 int chooseOf(const int choices, const double* const probArray){
 	//decide at which proba to stop
 	double decider= (double)rand()/(double)RAND_MAX;
@@ -167,7 +140,7 @@ void forward(const double* const a, const double* const p, const double* const b
 }
 
 //Ang
-void backward(const double* const a, const double* const e, double* const beta, const int N, const int K, const int T ){
+void backward(const double* const a, const double* const b, double* const beta, const int * const y, const int N, const int K, const int T ){
   for(int s = 1; s < N+1; s++){
      beta[s*T-1] = 1.;
    }
@@ -218,6 +191,7 @@ int similar(const double * const a, const double * const b , const int N, const 
 
 void wikipedia_example(){
 
+
 	int hiddenStates = 2;
 	int differentObservables = 2;
 	int T = 10;
@@ -230,43 +204,34 @@ void wikipedia_example(){
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
-
-
-	transitionMatrix[0] = 0.5;
-	transitionMatrix[1] = 0.5;
-	transitionMatrix[2] = 0.3;
-	transitionMatrix[3] = 0.7;
-
-	emissionMatrix[0] = 0.3;
-	emissionMatrix[1] = 0.7;
-	emissionMatrix[2] = 0.8;
-	emissionMatrix[3] = 0.2;
-
-	observations[0] = 0;
-	observations[1] = 0;
-	observations[2] = 0;
-	observations[3] = 0;
-	observations[4] = 0;
-	observations[5] = 1;
-	observations[6] = 1;
-	observations[7] = 0;
-	observations[8] = 0;
-	observations[9] = 0;
-
-	//init state distribution
 	double* piMatrix  = (double*) malloc(hiddenStates * sizeof(double));
 
-	piMatrix[0] = 0.2;
-	piMatrix[1] = 0.8;
-	
-	
+	char tname[100]="wikipedia_matrices/transitionMatrix.csv";
+	read_matrix_file(transitionMatrix,2,2,tname);	
+
+	char ename[100]="wikipedia_matrices/emissionMatrix.csv";
+	read_matrix_file(emissionMatrix,2,2,ename);	
+
+	char oname[100]="wikipedia_matrices/observations.csv";
+	read_vector_file_int(observations,T,oname);	
+
+	char pname[100]="wikipedia_matrices/piMatrix.csv";
+	read_vector_file(piMatrix,2,pname);	
+
+	/*
+	print_matrix(transitionMatrix,2,2);
+	print_matrix(emissionMatrix,2,2);
+	print_vector_int(observations,T);
+	print_vector(piMatrix,2);
+	*/
+
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
 
 	forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	
-	backward(transitionMatrix, emissionMatrix, beta, hiddenStates, differentObservables, T);	//Ang
+	backward(transitionMatrix, emissionMatrix, beta, observations, hiddenStates, differentObservables, T);	//Ang
 	update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//???
 	
 	/*
@@ -278,7 +243,7 @@ void wikipedia_example(){
 
 int main(int argc, char *argv[]){
 
-	//wikipedia_example();
+	wikipedia_example();
 
 	if(argc != 5){
 		printf("USAGE: ./run <seed> <hiddenStates> <observables> <T> \n");
@@ -358,16 +323,13 @@ int main(int argc, char *argv[]){
 		printf("observations \n");
 		print_vector_int(observations,T);
 		*/
-	
-
-		// CHANGE TO WHILE LOOP. do while only for testing
-		do{
+		while (!finished(alpha, likelihood, hiddenStates, T)){
 			//observations=forward(observations, transitionMatrix, observationMatrix); //Luca
 			forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
-			backward(transitionMatrix, emissionMatrix, beta, hiddenStates, differentObservables, T);	//Ang
+			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//???
 
-		}while (!finished(alpha, likelihood, hiddenStates, T));//Jan
+		}
 
 		cycles = stop_tsc(start);
 
