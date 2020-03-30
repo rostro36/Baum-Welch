@@ -41,13 +41,13 @@ int chooseOf(const int choices, const double* const probArray){
 }
 
 //Generate random observations 
-void makeObservations(const int hiddenStates, const int differentObservables, const int groundInitialState, const double* const groundTransitionMatrix, const double* const groundObservationMatrix, const int T, int* const observations){
+void makeObservations(const int hiddenStates, const int differentObservables, const int groundInitialState, const double* const groundTransitionMatrix, const double* const groundEmissionMatrix, const int T, int* const observations){
 
 	int currentState=groundInitialState;
 	for(int i=0; i<T;i++){
 		//this ordering of observations and current state, because first state is not necessarily affected by transitionMatrix
 		//write down observation, based on occurenceMatrix of currentState
-		observations[i]=chooseOf(differentObservables,groundObservationMatrix+currentState*differentObservables);
+		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
 		//choose next State, given transitionMatrix of currentState
 	currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
 
@@ -170,7 +170,7 @@ void update(const double* const a, const double* const e, const double* const al
 //Jan
 int finished(const double* const alpha, double* const likelihood,const int N,const int T){
 	double old_likelihood=*likelihood;
-	double new_likelihood;
+	double new_likelihood= 0.0;
 	for(int i=0;i<N;i++){
 		//alpha_i(T)
 		new_likelihood+=alpha[T*i+T-1]; //??? Das macht für mich keinen Sinn. Sollte es nicht eher auch similar(old_alpha,new_alpha)&&similar(old_beta,new_beta) sein?
@@ -282,29 +282,30 @@ int main(int argc, char *argv[]){
 	printf("\n");
 
 	myInt64 cycles;
-    myInt64 start;
+   	myInt64 start;
 	double runs[maxRuns]; //for medianTime
 	//set random according to seed
 	srand(seed);
 
 	//the ground TRUTH we want to approximate:
 	double* groundTransitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
-	double* groundObservationMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
+	double* groundEmissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 
 	//set ground truth to some random values
 	makeMatrix(hiddenStates, hiddenStates, groundTransitionMatrix);
-	makeMatrix(hiddenStates, differentObservables, groundObservationMatrix);
+	makeMatrix(hiddenStates, differentObservables, groundEmissionMatrix);
 	int groundInitialState = rand()%hiddenStates;
 	
 	//the observations we made
 	int* observations = (int*) malloc ( T * sizeof(int));
-	makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundObservationMatrix,T, observations);//??? added
+	makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations);//??? added
+	
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 
 	//init state distribution
-	double* piVector  = (double*) malloc(hiddenStates * sizeof(double));
+	double* stateProb  = (double*) malloc(hiddenStates * sizeof(double));
 
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
@@ -316,8 +317,8 @@ int main(int argc, char *argv[]){
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
-	makeProbabilities(piVector,hiddenStates);
-	heatup(transitionMatrix,piVector,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	makeProbabilities(stateProb,hiddenStates);
+	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
 	for (int run=0; run<maxRuns; run++){
 
@@ -326,30 +327,33 @@ int main(int argc, char *argv[]){
 		//init transition Matrix, emission Matrix and initial state distribution random
 		makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 		makeMatrix(hiddenStates, differentObservables, emissionMatrix);	
-		makeProbabilities(piVector,hiddenStates);
+		makeProbabilities(stateProb,hiddenStates);
 		
-		/* for debugging
-		printf("transition Matrix \n");
-		print_matrix(transitionMatrix, hiddenStates, hiddenStates);
 
-		printf("emission Matrix \n");
-		print_matrix(emissionMatrix, hiddenStates, differentObservables);
-		
-		printf("PI Matrix \n");
-		print_vector(piVector, hiddenStates);
+		//can be use for debugging and for testing with other libraries
+		//write all matrices to csv files
+		/*write_all(groundTransitionMatrix,
+			groundEmissionMatrix,
+			transitionMatrix,
+			emissionMatrix,
+			observations,
+			stateProb,
+			alpha,
+			beta,
+			gamma,
+			xi,
+			hiddenStates,
+			differentObservables,
+			T);		
 		*/
 
 		//make some random observations
 		int groundInitialState = rand()%hiddenStates;
-		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundObservationMatrix,T, observations); //??? ground___ zu ___ wechseln?
+		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln?
 		
-		/*for debugging
-		printf("observations \n");
-		print_vector_int(observations,T);
-		*/
+	
 		while (!finished(alpha, &likelihood, hiddenStates, T)){
-			//observations=forward(observations, transitionMatrix, observationMatrix); //Luca
-			forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
+			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//???
 
@@ -358,16 +362,16 @@ int main(int argc, char *argv[]){
 		cycles = stop_tsc(start);
 
 		//Jan
-		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundObservationMatrix,emissionMatrix,differentObservables,hiddenStates)){
+		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundEmissionMatrix,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
 			printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{
 			free(groundTransitionMatrix);
-			free(groundObservationMatrix);
+			free(groundEmissionMatrix);
 			free(observations);
 			free(transitionMatrix);
 			free(emissionMatrix);
-			free(piVector);
+			free(stateProb);
 			free(alpha);
 			free(beta);
 			free(gamma);
@@ -383,11 +387,11 @@ int main(int argc, char *argv[]){
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
 	free(groundTransitionMatrix);
-	free(groundObservationMatrix);
+	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
 	free(emissionMatrix);
-	free(piVector);
+	free(stateProb);
 	free(alpha);
 	free(beta);
 	free(gamma);

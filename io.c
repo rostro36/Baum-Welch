@@ -112,3 +112,52 @@ void print_vector_int(const int * const a, const int L){
 	printf("\n");
 }
 
+
+void write_all(const double * const groundTransitionMatrix,
+		const double * const groundEmissionMatrix,
+		const double * const transitionMatrix,
+		const double * const emissionMatrix,
+		const int * const observations,
+		const double * const stateProb,
+		const double * const alpha,
+		const double * const beta,
+		const double * const gamma,
+		const double * const xi,
+		const int hiddenStates,
+		const int differentObservables,
+		const int T){
+
+
+	char gtname[100]="test_matrices/groundTransitionMatrix.csv";
+	write_matrix_file(groundTransitionMatrix,hiddenStates,hiddenStates,gtname);	
+
+	char gename[100]="test_matrices/groundEmissionMatrix.csv";
+	write_matrix_file(groundEmissionMatrix,hiddenStates,differentObservables,gename);	
+
+	char tname[100]="test_matrices/transitionMatrix.csv";
+	write_matrix_file(transitionMatrix,hiddenStates,hiddenStates,tname);	
+
+	char ename[100]="test_matrices/emissionMatrix.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,differentObservables,ename);	
+
+	char oname[100]="test_matrices/observations.csv";
+	write_vector_file_int(observations,T,oname);	
+
+	char pname[100]="test_matrices/stateProb.csv";
+	write_vector_file(stateProb,hiddenStates,pname);	
+
+	char aname[100]="test_matrices/alpha.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,T,aname);	
+
+	char bname[100]="test_matrices/beta.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,T,bname);	
+
+	char gname[100]="test_matrices/gamma.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,T,gname);	
+
+	char xname[100]="test_matrices/xi.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,hiddenStates*(T-1),xname);	
+
+}
+
+
