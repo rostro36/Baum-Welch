@@ -5,6 +5,9 @@
 #include "tsc_x86.h"
 
 #include "io.h"
+#include <cstdio>
+#include <list>
+using namespace std;
 
 #define EPSILON 0.001
 #define DELTA 0.001
@@ -121,11 +124,11 @@ void forward(const double* const a, const double* const p, const double* const b
 	//print_matrix(alpha,N,T);
 
 	for(int t = 1; t < T; t++){
-		for(int s = 0; s<N; s++){
+		for(int s = 0; s<N; s++){// s=new_state
 			alpha[s*T + t] = 0;
-			for(int j = 0; j < N; j++){
+			for(int j = 0; j < N; j++){//j=old_states
 
-				alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s]; 
+				alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
 				//printf("%lf %lf %lf %lf \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t]]);
 			}
 
@@ -146,9 +149,9 @@ void backward(const double* const a, const double* const b, double* const beta, 
    }
 
    for(int t = T-1; t > 0; t--){
-     for(int s = 0; s < N; s++){
+     for(int s = 0; s < N; s++){//s=older state
        beta[s*T + t-1] = 0.;
-       for(int j = 0; j < N; j++){
+       for(int j = 0; j < N; j++){//j=newer state
          beta[s*T + t-1] += beta[s*T + t] * a[s*N + j] * b[j*K + y[t]]; // XXX
        }
      }
@@ -166,7 +169,7 @@ int finished(const double* const alpha, double* const likelihood,const int N,con
 	double new_likelihood;
 	for(int i=0;i<N;i++){
 		//alpha_i(T)
-		new_likelihood+=alpha[T*i+T-1];
+		new_likelihood+=alpha[T*i+T-1]; //??? Das macht für mich keinen Sinn. Sollte es nicht eher auch similar(old_alpha,new_alpha)&&similar(old_beta,new_beta) sein?
 	}
 	*likelihood=new_likelihood;
 	return (new_likelihood-old_likelihood)<EPSILON;
@@ -188,7 +191,18 @@ int similar(const double * const a, const double * const b , const int N, const 
 	return sqrt(sum)<DELTA; 
 }
 
-
+void heatup(const double* transitionMatrix,const double* piVector,const double* emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
+	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
+	for(int j=0;j<10;j++){
+		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	
+		backward(transitionMatrix, emissionMatrix, beta, observations, hiddenStates, differentObservables, T);	//Ang
+		update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//??
+	};	
+	
+}
 void wikipedia_example(){
 
 
@@ -264,8 +278,8 @@ int main(int argc, char *argv[]){
 	printf("\n");
 
 	myInt64 cycles;
-    	myInt64 start;
-
+    myInt64 start;
+	list< double > perfList; //for medianTime
 	//set random according to seed
 	srand(seed);
 
@@ -276,10 +290,11 @@ int main(int argc, char *argv[]){
 	//set ground truth to some random values
 	makeMatrix(hiddenStates, hiddenStates, groundTransitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, groundObservationMatrix);
+	int groundInitialState = rand()%hiddenStates;
 	
 	//the observations we made
 	int* observations = (int*) malloc ( T * sizeof(int));
-
+	makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundObservationMatrix,T, observations);//??? added
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
@@ -290,11 +305,17 @@ int main(int argc, char *argv[]){
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double));
+	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); //??? Wieso T-1 ?
 	
 	double* likelihood;
 	*likelihood=0.0;
 
+	//heatup needs some data.
+	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
+	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
+	makeProbabilities(piVector,hiddenStates);
+	heatup(transitionMatrix,piVector,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	
 	for (int run=0; run<maxRuns; run++){
 
 		start = start_tsc();
@@ -317,7 +338,7 @@ int main(int argc, char *argv[]){
 
 		//make some random observations
 		int groundInitialState = rand()%hiddenStates;
-		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundObservationMatrix,T, observations);
+		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundObservationMatrix,T, observations); //??? ground___ zu ___ wechseln?
 		
 		/*for debugging
 		printf("observations \n");
@@ -335,6 +356,7 @@ int main(int argc, char *argv[]){
 
 		//Jan
 		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundObservationMatrix,emissionMatrix,differentObservables,hiddenStates)){
+			perfList.push_back((double)cycles);
 			printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{
 			free(groundTransitionMatrix);
@@ -353,6 +375,9 @@ int main(int argc, char *argv[]){
 
 
 	}
+	perfList.sort();
+  	double medianTime = perfList.front();
+	printf("Median Time: \t %llu cycles \n", medianTime); 
 
 	free(groundTransitionMatrix);
 	free(groundObservationMatrix);
