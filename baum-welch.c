@@ -41,7 +41,7 @@ int chooseOf(const int choices, const double* const probArray){
 }
 
 //Generate random observations 
-void makeObservations(const int hiddenStates, const int differentObservables, const int groundInitialState, const double* const groundTransitionMatrix, const double* const groundObservationMatrix, const  const int T, int* const observations){
+void makeObservations(const int hiddenStates, const int differentObservables, const int groundInitialState, const double* const groundTransitionMatrix, const double* const groundObservationMatrix, const int T, int* const observations){
 
 	int currentState=groundInitialState;
 	for(int i=0; i<T;i++){
@@ -311,8 +311,7 @@ int main(int argc, char *argv[]){
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); //??? Wieso T-1 ?
 	
-	double* likelihood;
-	*likelihood=0.0;
+	double likelihood=0.0;
 
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -348,7 +347,7 @@ int main(int argc, char *argv[]){
 		printf("observations \n");
 		print_vector_int(observations,T);
 		*/
-		while (!finished(alpha, likelihood, hiddenStates, T)){
+		while (!finished(alpha, &likelihood, hiddenStates, T)){
 			//observations=forward(observations, transitionMatrix, observationMatrix); //Luca
 			forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
@@ -381,7 +380,7 @@ int main(int argc, char *argv[]){
 	}
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
-	printf("Median Time: \t %llu cycles \n", medianTime); 
+	printf("Median Time: \t %lf cycles \n", medianTime); 
 
 	free(groundTransitionMatrix);
 	free(groundObservationMatrix);
