@@ -156,14 +156,58 @@ void backward(const double* const a, const double* const b, double* const beta, 
      for(int s = 0; s < N; s++){//s=older state
        beta[s*T + t-1] = 0.;
        for(int j = 0; j < N; j++){//j=newer state
-         beta[s*T + t-1] += beta[s*T + t] * a[s*N + j] * b[j*K + y[t]]; // XXX
+         beta[s*T + t-1] += beta[s*T + t] * a[s*N + j] * b[j*K + y[t]];
        }
      }
    }
 	return;
 }
 
-void update(const double* const a, const double* const e, const double* const alpha, const double * const beta, double * const xi, const int N, const int K, const int T){
+void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const int N, const int K, const int T){
+  double evidence, xi_sum, gamma_sum_numerator, gamma_sum_denominator;
+  for(int t = 1; t < T; t++){
+    evidence = 0.; // P(Y|theta)
+    // denominator at time t
+    for(int s = 0; s < N; s++){
+      evidence += alpha[s*T + t-1] * beta[s*T + t-1];
+    }
+
+    for(int s = 0; s < N; s++){ // s old state
+      gamma[s*T + t-1] = (alpha[s*T + t-1] * beta[s*T + t-1]) / evidence;
+      for(int j = 0; j < N; j++){ // j new state
+        xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence;
+      }
+    }
+  }
+
+  for(int s = 0; s < N; s++){
+    // new pi
+    p[s] = gamma[s*T];
+    
+    for(int j = 0; j < N; j++){
+      xi_sum = 0.;
+      gamma_sum_denominator = 0.;
+      for(int t = 1; t < T; t++){
+        xi_sum += xi[((t-1) * N + s) * N + j];
+        gamma_sum_denominator += gamma[s*T + t-1];
+      }
+      // new transition matrix
+      a[s*N + j] = xi_sum / gamma_sum_denominator;
+    }
+
+    gamma_sum_denominator += gamma[s*T + T-1];
+    for(int v = 0; v < K; v++){
+      gamma_sum_numerator = 0.;
+      for(int t = 1; t <= T; t++){
+        if(y[t] == v){// XXX rather AllPossibleValues[v] ???
+        gamma_sum_numerator += gamma[s*T + t-1];
+        }
+      }
+      // new emmision matrix
+      b[s*K + v] = gamma_sum_numerator / gamma_sum_denominator;
+    }
+  }
+
 	return;
 }
 
@@ -203,7 +247,7 @@ void heatup(const double* transitionMatrix,const double* piVector,const double* 
 	for(int j=0;j<10;j++){
 		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	
 		backward(transitionMatrix, emissionMatrix, beta, observations, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//??
+		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);//Ang
 	};	
 	
 }
@@ -250,7 +294,7 @@ void wikipedia_example(){
 
 	forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	
 	backward(transitionMatrix, emissionMatrix, beta, observations, hiddenStates, differentObservables, T);	//Ang
-	update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//???
+	update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);//Ang
 	
 	/*
 	printf("new transition matrix from wikipedia example: \n \n");
@@ -355,7 +399,7 @@ int main(int argc, char *argv[]){
 		while (!finished(alpha, &likelihood, hiddenStates, T)){
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
-			update(transitionMatrix, emissionMatrix, alpha,beta, xi, hiddenStates, differentObservables, T);//???
+			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);  //Ang
 
 		}
 
