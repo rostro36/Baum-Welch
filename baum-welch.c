@@ -212,22 +212,24 @@ void update(double* const a, double* const p, double* const b, const double* con
 }
 
 //Jan
-int finished(const double* const alpha, double* const likelihood,const int N,const int T){
-	double old_likelihood=*likelihood;
-	double new_likelihood= 0.0;
-	for(int i=0;i<N;i++){
-		//alpha_i(T)
-		new_likelihood+=alpha[T*i+T-1]; //??? Das macht für mich keinen Sinn. Sollte es nicht eher auch similar(old_alpha,new_alpha)&&similar(old_beta,new_beta) sein?
+int finished(const double* const alpha, double* const logLikelihood,const int N,const int T){
+	double oldLogLikelihood=*logLikelihood;
+	double newLogLikelihood= 0.0;
+	for(int t = 1; t < T; t++){
+        for(int i = 0; i < N; i++){
+            newLogLikelihood += alpha[i*T + t-1] * beta[i*T + t-1];
+        }
 	}
-	*likelihood=new_likelihood;
-	return (new_likelihood-old_likelihood)<EPSILON;
+	newLogLieklihood=log(newLogLikelihood);
+	*logLikelihood=newLogLikelihood;
+	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
 }
 
 
 
 //Jan
 int similar(const double * const a, const double * const b , const int N, const int M){
-	//using Frobenius norm
+	//Frobenius norm
 	double sum=0.0;
 	double abs=0.0;
 	for(int i=0;i<N;i++){
@@ -356,7 +358,7 @@ int main(int argc, char *argv[]){
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); //??? Wieso T-1 ?
 	
-	double likelihood=0.0;
+	double logLikelihood=0.0;
 
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -396,7 +398,7 @@ int main(int argc, char *argv[]){
 		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln?
 		
 	
-		while (!finished(alpha, &likelihood, hiddenStates, T)){
+		while (!finished(alpha, &logLikelihood, hiddenStates, T)){
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);  //Ang
