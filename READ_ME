@@ -1,0 +1,4 @@
+gcc -o run baum-welch.c io.c -lm
+
+// -lm is used for the sqrt function
+

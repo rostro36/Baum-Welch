@@ -212,7 +212,7 @@ void update(double* const a, double* const p, double* const b, const double* con
 }
 
 //Jan
-int finished(const double* const alpha, double* const logLikelihood,const int N,const int T){
+int finished(const double* const alpha,const double* const beta, double* const logLikelihood,const int N,const int T){
 	double oldLogLikelihood=*logLikelihood;
 	double newLogLikelihood= 0.0;
 	for(int t = 1; t < T; t++){
@@ -220,7 +220,7 @@ int finished(const double* const alpha, double* const logLikelihood,const int N,
             newLogLikelihood += alpha[i*T + t-1] * beta[i*T + t-1];
         }
 	}
-	newLogLieklihood=log(newLogLikelihood);
+	newLogLikelihood=log(newLogLikelihood);
 	*logLikelihood=newLogLikelihood;
 	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
 }
@@ -253,6 +253,7 @@ void heatup(const double* transitionMatrix,const double* piVector,const double* 
 	};	
 	
 }
+
 void wikipedia_example(){
 
 
@@ -398,7 +399,7 @@ int main(int argc, char *argv[]){
 		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln?
 		
 	
-		while (!finished(alpha, &logLikelihood, hiddenStates, T)){
+		while (!finished(alpha, beta, &logLikelihood, hiddenStates, T)){
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);  //Ang
