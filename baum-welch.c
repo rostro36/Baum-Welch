@@ -401,6 +401,7 @@ int main(int argc, char *argv[]){
 		
 			//can be use for debugging and for testing with other libraries
 		//write all matrices to csv files
+		/*		
 		write_all(groundTransitionMatrix,
 			groundEmissionMatrix,
 			transitionMatrix,
@@ -414,13 +415,13 @@ int main(int argc, char *argv[]){
 			hiddenStates,
 			differentObservables,
 			T);		
-		
-		//while (!finished(alpha, beta, &logLikelihood, hiddenStates, T)){
+		*/
+		while (!finished(alpha, beta, &logLikelihood, hiddenStates, T)){
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);  //Ang
 
-		//}
+		}
 
 		//print_matrix(alpha,hiddenStates,T);
 
@@ -430,7 +431,22 @@ int main(int argc, char *argv[]){
 		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundEmissionMatrix,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
 			printf("run %i: \t %llu cycles \n",run, cycles);
-		}else{
+		}else{	
+		
+			write_all(groundTransitionMatrix,
+				groundEmissionMatrix,
+				transitionMatrix,
+				emissionMatrix,
+				observations,
+				stateProb,
+				alpha,
+				beta,
+				gamma,
+				xi,
+				hiddenStates,
+				differentObservables,
+				T);		
+		
 			free(groundTransitionMatrix);
 			free(groundEmissionMatrix);
 			free(observations);
@@ -450,6 +466,22 @@ int main(int argc, char *argv[]){
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
+
+
+	write_all(groundTransitionMatrix,
+		groundEmissionMatrix,
+		transitionMatrix,
+		emissionMatrix,
+		observations,
+		stateProb,
+		alpha,
+		beta,
+		gamma,
+		xi,
+		hiddenStates,
+		differentObservables,
+		T);		
+		
 
 	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);

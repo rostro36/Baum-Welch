@@ -22,5 +22,5 @@ hmm = initHMM(seq(1,length(stateProb), by=1),seq(1,dim(emissionMatrix)[2], by=1)
 
 print(hmm)
 # Baum-Welch
-bw = baumWelch(hmm,observations,maxIterations = 200)
+bw = baumWelch(hmm,observations,maxIterations = 500)
 print(bw$hmm)

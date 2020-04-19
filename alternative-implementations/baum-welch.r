@@ -64,6 +64,7 @@ BaumWelch = function(v, a, b, initial_distribution, n.iter = 100){
 }
  
 data = read.csv("../test_matrices/observations.csv",header = FALSE)+1
+data = as.matrix(unname(data))
 
 emissionMatrix<- read.csv(file = '../test_matrices/emissionMatrix.csv',header=FALSE)
 emissionMatrix<-as.matrix(unname(emissionMatrix))
@@ -87,7 +88,7 @@ initial_distribution = stateProb
 
 b = B
 a = A
-v = data$X0
+v = data
 
 
 (myout = BaumWelch(stateProb, A, B, initial_distribution, n.iter = 1))
