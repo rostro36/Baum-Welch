@@ -1,18 +1,8 @@
-COMPILE baum-welch.c
-
-gcc -o run baum-welch.c io.c -lm
-
-// -lm is used for the sqrt function
-
-
-
-
-
-USAGE baum-welch.r
+USAGE of baum-welch.r
 
 - open with RStudio
 - Go the session -> Set Working Directory -> to source file location
-- load package 'HMM' 
 
+Make sure you have a folder 'alternative-implemenations' which contains baum-welch.r
 Make sure you have a folder 'test_matrices' which contains a observations.csv file
 
