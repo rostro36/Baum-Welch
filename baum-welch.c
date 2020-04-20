@@ -178,14 +178,17 @@ void update(double* const a, double* const p, double* const b, const double* con
 	for(int t = 1; t < T; t++){
 		evidence = 0.; // P(Y|theta)
 		// denominator at time t
+		//evidenceXi=0;
 		for(int s = 0; s < N; s++){
 			evidence += alpha[s*T + t-1] * beta[s*T + t-1];
+			//for nextState=0;nextState<N;nextState++){
+			//evidenceXI+=alpha[s*T+t-1]*a[s*T+newState]*beta[newState*T+t]*b[newState*K+y[t]];}
 		}
 
 		for(int s = 0; s < N; s++){ // s old state
 			gamma[s*T + t-1] = (alpha[s*T + t-1] * beta[s*T + t-1]) / evidence;
 			for(int j = 0; j < N; j++){ // j new state
-				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence;
+				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence; //Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
 			}
 		}
 	}
@@ -208,9 +211,9 @@ void update(double* const a, double* const p, double* const b, const double* con
 		gamma_sum_denominator += gamma[s*T + T-1];
 		for(int v = 0; v < K; v++){
 			gamma_sum_numerator = 0.;
-			for(int t = 1; t <= T; t++){
+			for(int t = 1; t <= T; t++){//why 1 indented
 				if(y[t] == v){// XXX rather AllPossibleValues[v] ???
-					gamma_sum_numerator += gamma[s*T + t-1];
+					gamma_sum_numerator += gamma[s*T + t-1];//why different t here than in y[t]
 				}
 			}
 			// new emmision matrix
@@ -228,10 +231,14 @@ int finished(const double* const alpha,const double* const beta, double* const l
 	for(int t = 1; t < T; t++){
         	for(int i = 0; i < N; i++){
             		newLogLikelihood += alpha[i*T + t-1] * beta[i*T + t-1];
+            		
         	}
 	}
-
-	newLogLikelihood=log(newLogLikelihood);
+    //propose:
+    //for(int state=0;t<HiddenStates;state++){ //N==HiddenStates?
+    //newLogLikelihood+=alpha[T-1+state*T];} //Can be written with less adds.
+    newLogLikelihood += alpha[i*T+]
+	newLogLikelihood=log(newLogLikelihood);//not needed, EPSILON needs to be adjusted accordingly tho.
 	*logLikelihood=newLogLikelihood;
 	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
 }
