@@ -221,6 +221,42 @@ void update(double* const a, double* const p, double* const b, const double* con
 	return;
 }
 
+void evidence_testing(const double* const alpha, const double* const beta, const int N, const int T){
+	
+	double evidence = 0;
+	//evidence with alpha only:
+	for(int state = 1; state < N+1; state++){
+		evidence += alpha[state*T -1]; 
+	}	
+
+	printf("evidence with sum over alpha(T) : %.10lf \n", evidence);
+
+	evidence = 0;
+	
+	//evidence with beta only: XXX DOES NOT WORK! alpha(0) is also needed
+	for(int state = 0; state < N; state++){
+		evidence += beta[state*T]; 
+	}
+
+	printf("evidence with sum over beta(1) : %.10lf \n", evidence);
+	
+
+	
+	//evidence with alpha * beta for every time t:
+	for(int time = 0 ; time < T; time++){
+		evidence = 0;
+		for(int state = 0; state < N; state++){
+			evidence += alpha[state*T + time]*beta[state*T + time]; 
+		}
+
+		printf("evidence at time %i with sum over alpha(t)*beta(t) : %.10lf \n",time, evidence);
+	}
+
+	//CONCLUSION
+	//Evidence P(Y|M) = sum alpha(T) = sum alpha(t)*beta(t)	(summing over all states N)
+
+}
+
 //Jan
 int finished(const double* const alpha,const double* const beta, double* const logLikelihood,const int N,const int T){
 	double oldLogLikelihood=*logLikelihood;
@@ -372,12 +408,13 @@ int main(int argc, char *argv[]){
 	
 	double logLikelihood=0.0;
 
+
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
 	makeProbabilities(stateProb,hiddenStates);
 	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
-	
+	/*
 	for (int run=0; run<maxRuns; run++){
 
 		//XXX start after makeMatrix
@@ -399,23 +436,8 @@ int main(int argc, char *argv[]){
 		int groundInitialState = rand()%hiddenStates;
 		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln?
 		
-			//can be use for debugging and for testing with other libraries
-		//write all matrices to csv files
-		/*		
-		write_all(groundTransitionMatrix,
-			groundEmissionMatrix,
-			transitionMatrix,
-			emissionMatrix,
-			observations,
-			stateProb,
-			alpha,
-			beta,
-			gamma,
-			xi,
-			hiddenStates,
-			differentObservables,
-			T);		
-		*/
+
+
 		while (!finished(alpha, beta, &logLikelihood, hiddenStates, T)){
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
@@ -481,7 +503,7 @@ int main(int argc, char *argv[]){
 		hiddenStates,
 		differentObservables,
 		T);		
-		
+	*/	
 
 	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
