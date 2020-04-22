@@ -60,6 +60,7 @@ BaumWelch = function(v, a, b, initial_distribution, n.iter = 100){
     }
     b = b/rowSums(b)
     
+    #ADDED AFTERWARDS. NOT ORIGINAL IMPLEMENTATION
     initial_distribution=gamma[,1]
       
   }
