@@ -33,6 +33,7 @@ backward = function(v, a, b){
 BaumWelch = function(v, a, b, initial_distribution, n.iter = 100){
  
   for(i in 1:n.iter){
+    print(i)
     T = length(v)
     M = nrow(a)
     K=ncol(b)
@@ -59,6 +60,8 @@ BaumWelch = function(v, a, b, initial_distribution, n.iter = 100){
     }
     b = b/rowSums(b)
     
+    initial_distribution=gamma[,1]
+      
   }
   return(list(a = a, b = b, initial_distribution = initial_distribution))
 }
@@ -91,4 +94,4 @@ a = A
 v = data
 
 
-(myout = BaumWelch(stateProb, A, B, initial_distribution, n.iter = 1))
+(myout = BaumWelch(data, A, B, initial_distribution, n.iter = 100))
