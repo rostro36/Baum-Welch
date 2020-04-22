@@ -174,7 +174,11 @@ void backward(const double* const a, const double* const b, double* const beta, 
 }
 
 void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const int N, const int K, const int T){
+
+
 	double evidence, xi_sum, gamma_sum_numerator, gamma_sum_denominator;
+
+	//XXX Compute evidence only once
 	for(int t = 1; t < T; t++){
 		evidence = 0.; // P(Y|theta)
 		// denominator at time t
@@ -186,6 +190,7 @@ void update(double* const a, double* const p, double* const b, const double* con
 		}
 
 		for(int s = 0; s < N; s++){ // s old state
+			//XXX Replace division with a scalar 1/evidence because evidence is always the same
 			gamma[s*T + t-1] = (alpha[s*T + t-1] * beta[s*T + t-1]) / evidence;
 			for(int j = 0; j < N; j++){ // j new state
 				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence; //Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
@@ -411,7 +416,11 @@ int main(int argc, char *argv[]){
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); //??? Wieso T-1 ?
+	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); 
+	//XXX??? Wieso T-1 ?
+	//because xi is the probability of being in state i and j at times t and  t+1 respectively 
+	//given the observed sequence Y and parameters θ
+ 	//Therefore there are T-1 pairs of t and t+1 values
 	
 	double logLikelihood=0.0;
 
