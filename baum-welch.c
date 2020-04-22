@@ -7,8 +7,7 @@
 #include "io.h"
 
 #define EPSILON 1e-8
-#define DELTA 0.001
-
+#define DELTA 2.0
 
 void set_zero(double* const a, const int rows, const int cols){
 	for(int row = 0 ; row < rows; row++){
@@ -189,10 +188,18 @@ void update(double* const a, double* const p, double* const b, const double* con
 			//evidenceXI+=alpha[s*T+t-1]*a[s*T+newState]*beta[newState*T+t]*b[newState*K+y[t]];}
 			//Discussion from 22.4.20 should make this computation redundant
 		}
+	}
 
+	//gamma needs t = 0 ... T and not like xi from 0...T-1
+	for(int t = 0; t < T; t++){
 		for(int s = 0; s < N; s++){ // s old state
 			//XXX Replace division with a scalar 1/evidence because evidence is always the same
-			gamma[s*T + t-1] = (alpha[s*T + t-1] * beta[s*T + t-1]) / evidence;
+			gamma[s*T + t] = (alpha[s*T + t] * beta[s*T + t]) / evidence;
+		}
+	}
+
+	for(int t = 1; t < T; t++){
+		for(int s = 0; s < N; s++){
 			for(int j = 0; j < N; j++){ // j new state
 				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence; 
 				//Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
@@ -217,6 +224,7 @@ void update(double* const a, double* const p, double* const b, const double* con
 		}
 
 		gamma_sum_denominator += gamma[s*T + T-1];
+
 		for(int v = 0; v < K; v++){
 			gamma_sum_numerator = 0.;
 			for(int t = 0; t < T; t++){//why 1 indented => better?
@@ -263,8 +271,6 @@ void evidence_testing(const double* const alpha, const double* const beta,const 
 
 	//evidence for xi
 
-
-
 	for(int t = 1; t < T; t++){
 		evidence=0;	
 		for(int s = 0; s < N; s++){
@@ -276,10 +282,8 @@ void evidence_testing(const double* const alpha, const double* const beta,const 
 		printf("evidence for XI at time %i: %.10lf \n", t,evidence);
 	}
 		
-
 	//CONCLUSION
 	//Evidence P(Y|M) = sum alpha(T) = sum alpha(t)*beta(t)	= sum sum alpha(t) * a_kw * beta(t+1)b_w(y[t+1])
-				
 
 }
 
@@ -301,7 +305,6 @@ int finished(const double* const alpha,const double* const beta, double* const l
 }
 
 
-
 //Jan
 int similar(const double * const a, const double * const b , const int N, const int M){
 	//Frobenius norm
@@ -313,25 +316,26 @@ int similar(const double * const a, const double * const b , const int N, const 
 			sum+=abs*abs;
 		}
 	}
-	printf("sum = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
+	printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
 	return sqrt(sum)<DELTA; 
 }
 
 void heatup(const double* transitionMatrix,const double* piVector,const double* emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
+
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
+	
 	for(int j=0;j<10;j++){
 		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	
 		backward(transitionMatrix, emissionMatrix, beta, observations, hiddenStates, differentObservables, T);	//Ang
 		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);//Ang
-	};	
+	}	
 	
 }
 
 void wikipedia_example(){
-
 
 	int hiddenStates = 2;
 	int differentObservables = 2;
@@ -441,18 +445,13 @@ int main(int argc, char *argv[]){
 	
 	double likelihood=-1.0;
 
-
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
 	makeProbabilities(stateProb,hiddenStates);
-	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
-
 	for (int run=0; run<maxRuns; run++){
-
-		//XXX start after makeMatrix
-		start = start_tsc();
 
 		//init transition Matrix, emission Matrix and initial state distribution random
 		makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -465,24 +464,21 @@ int main(int argc, char *argv[]){
 		set_zero(xi,hiddenStates*hiddenStates,T-1);
 
 
-
 		//make some random observations
 		int groundInitialState = rand()%hiddenStates;
-		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln?
-		
+		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln? => Verstehe deine Frage nicht...
 
+		//XXX start after makeMatrix
+		start = start_tsc();
 
 		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
-	
-			//evidence_testing(alpha,beta,transitionMatrix,emissionMatrix, observations,hiddenStates,T,differentObservables);
-	
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);  //Ang
+
 
 		}while (!finished(alpha, beta, &likelihood, hiddenStates, T));
 
-		//print_matrix(alpha,hiddenStates,T);
 
 		cycles = stop_tsc(start);
 
@@ -526,7 +522,6 @@ int main(int argc, char *argv[]){
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
-
 	write_all(groundTransitionMatrix,
 		groundEmissionMatrix,
 		transitionMatrix,
@@ -540,7 +535,6 @@ int main(int argc, char *argv[]){
 		hiddenStates,
 		differentObservables,
 		T);		
-		
 
 	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
