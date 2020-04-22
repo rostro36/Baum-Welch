@@ -421,7 +421,8 @@ int main(int argc, char *argv[]){
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
 	makeProbabilities(stateProb,hiddenStates);
 	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
-	/*
+	
+
 	for (int run=0; run<maxRuns; run++){
 
 		//XXX start after makeMatrix
@@ -510,7 +511,7 @@ int main(int argc, char *argv[]){
 		hiddenStates,
 		differentObservables,
 		T);		
-	*/	
+		
 
 	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
