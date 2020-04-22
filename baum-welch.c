@@ -6,7 +6,7 @@
 
 #include "io.h"
 
-#define EPSILON 0.001
+#define EPSILON 1e-8
 #define DELTA 0.001
 
 
@@ -187,13 +187,16 @@ void update(double* const a, double* const p, double* const b, const double* con
 			evidence += alpha[s*T + t-1] * beta[s*T + t-1];
 			//for nextState=0;nextState<N;nextState++){
 			//evidenceXI+=alpha[s*T+t-1]*a[s*T+newState]*beta[newState*T+t]*b[newState*K+y[t]];}
+			//Discussion from 22.4.20 should make this computation redundant
 		}
 
 		for(int s = 0; s < N; s++){ // s old state
 			//XXX Replace division with a scalar 1/evidence because evidence is always the same
 			gamma[s*T + t-1] = (alpha[s*T + t-1] * beta[s*T + t-1]) / evidence;
 			for(int j = 0; j < N; j++){ // j new state
-				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence; //Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
+				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence; 
+				//Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
+				//Discussion from 22.4.20 showed that this should be the same. Notation on wikipedia is consistent.
 			}
 		}
 	}
@@ -216,9 +219,9 @@ void update(double* const a, double* const p, double* const b, const double* con
 		gamma_sum_denominator += gamma[s*T + T-1];
 		for(int v = 0; v < K; v++){
 			gamma_sum_numerator = 0.;
-			for(int t = 1; t <= T; t++){//why 1 indented
-				if(y[t] == v){// XXX rather AllPossibleValues[v] ???
-					gamma_sum_numerator += gamma[s*T + t-1];//why different t here than in y[t]
+			for(int t = 0; t < T; t++){//why 1 indented => better?
+				if(y[t] == v){// XXX rather AllPossibleValues[v] ??? => don't understand the question. What is AllPossibleValues[v]?
+					gamma_sum_numerator += gamma[s*T + t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
 				}
 			}
 			// new emmision matrix
@@ -229,7 +232,7 @@ void update(double* const a, double* const p, double* const b, const double* con
 	return;
 }
 
-void evidence_testing(const double* const alpha, const double* const beta, const int N, const int T){
+void evidence_testing(const double* const alpha, const double* const beta,const double* const a,const double* const b,const int* const y, const int N, const int T,int K){
 	
 	double evidence = 0;
 	//evidence with alpha only:
@@ -247,9 +250,7 @@ void evidence_testing(const double* const alpha, const double* const beta, const
 	}
 
 	printf("evidence with sum over beta(1) : %.10lf \n", evidence);
-	
-
-	
+		
 	//evidence with alpha * beta for every time t:
 	for(int time = 0 ; time < T; time++){
 		evidence = 0;
@@ -260,28 +261,43 @@ void evidence_testing(const double* const alpha, const double* const beta, const
 		printf("evidence at time %i with sum over alpha(t)*beta(t) : %.10lf \n",time, evidence);
 	}
 
+	//evidence for xi
+
+
+
+	for(int t = 1; t < T; t++){
+		evidence=0;	
+		for(int s = 0; s < N; s++){
+			for (int nextState=0; nextState < N; nextState++){
+				evidence+=alpha[s*T+t-1]*a[s*N+nextState]*beta[nextState*T+t]*b[nextState*K+y[t]];
+			}
+		}
+
+		printf("evidence for XI at time %i: %.10lf \n", t,evidence);
+	}
+		
+
 	//CONCLUSION
-	//Evidence P(Y|M) = sum alpha(T) = sum alpha(t)*beta(t)	(summing over all states N)
+	//Evidence P(Y|M) = sum alpha(T) = sum alpha(t)*beta(t)	= sum sum alpha(t) * a_kw * beta(t+1)b_w(y[t+1])
+				
 
 }
 
 //Jan
-int finished(const double* const alpha,const double* const beta, double* const logLikelihood,const int N,const int T){
-	double oldLogLikelihood=*logLikelihood;
-	double newLogLikelihood= 0.0;
-	for(int t = 1; t < T; t++){
-        	for(int i = 0; i < N; i++){
-            		newLogLikelihood += alpha[i*T + t-1] * beta[i*T + t-1];
-            		
-        	}
+int finished(const double* const alpha,const double* const beta, double* const likelihood,const int N,const int T){
+
+	double oldLikelihood=*likelihood;
+
+	double newLikelihood = 0.0;
+	//evidence with alpha only:
+	for(int state = 1; state < N+1; state++){
+		newLikelihood += alpha[state*T -1]; 
 	}
-    //propose:
-    //for(int state=0;t<HiddenStates;state++){ //N==HiddenStates?
-    //newLogLikelihood+=alpha[T-1+state*T];} //Can be written with less adds.
-    newLogLikelihood += alpha[i*T+]
-	newLogLikelihood=log(newLogLikelihood);//not needed, EPSILON needs to be adjusted accordingly tho.
-	*logLikelihood=newLogLikelihood;
-	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
+
+	*likelihood=newLikelihood;
+
+	//printf("evidence %.100lf , Epsilon %.10lf result %.100lf \n", newLikelihood, EPSILON,newLikelihood-oldLikelihood);
+	return (newLikelihood-oldLikelihood)<EPSILON;
 }
 
 
@@ -297,6 +313,7 @@ int similar(const double * const a, const double * const b , const int N, const 
 			sum+=abs*abs;
 		}
 	}
+	printf("sum = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
 	return sqrt(sum)<DELTA; 
 }
 
@@ -422,7 +439,7 @@ int main(int argc, char *argv[]){
 	//given the observed sequence Y and parameters θ
  	//Therefore there are T-1 pairs of t and t+1 values
 	
-	double logLikelihood=0.0;
+	double likelihood=-1.0;
 
 
 	//heatup needs some data.
@@ -455,12 +472,15 @@ int main(int argc, char *argv[]){
 		
 
 
-		while (!finished(alpha, beta, &logLikelihood, hiddenStates, T)){
+		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, hiddenStates, differentObservables, T);	//Ang
+	
+			//evidence_testing(alpha,beta,transitionMatrix,emissionMatrix, observations,hiddenStates,T,differentObservables);
+	
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, hiddenStates, differentObservables, T);  //Ang
 
-		}
+		}while (!finished(alpha, beta, &likelihood, hiddenStates, T));
 
 		//print_matrix(alpha,hiddenStates,T);
 
