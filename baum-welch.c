@@ -208,6 +208,21 @@ void update(double* const a, double* const p, double* const b, const double* con
 		}
 	}
 
+	/*Only here to show that the evidence is the same for other computations
+	//evidence for xi
+
+	for(int t = 1; t < T; t++){
+		evidence=0;	
+		for(int s = 0; s < N; s++){
+			for (int nextState=0; nextState < N; nextState++){
+				evidence+=alpha[s*T+t-1]*a[s*N+nextState]*beta[nextState*T+t]*b[nextState*K+y[t]];
+			}
+		}
+
+		printf("evidence for XI at time %i: %.10lf \n", t,evidence);
+	}
+	*/
+
 	for(int s = 0; s < N; s++){
 		// new pi
     		p[s] = gamma[s*T];
@@ -269,19 +284,7 @@ void evidence_testing(const double* const alpha, const double* const beta,const 
 		printf("evidence at time %i with sum over alpha(t)*beta(t) : %.10lf \n",time, evidence);
 	}
 
-	//evidence for xi
-
-	for(int t = 1; t < T; t++){
-		evidence=0;	
-		for(int s = 0; s < N; s++){
-			for (int nextState=0; nextState < N; nextState++){
-				evidence+=alpha[s*T+t-1]*a[s*N+nextState]*beta[nextState*T+t]*b[nextState*K+y[t]];
-			}
-		}
-
-		printf("evidence for XI at time %i: %.10lf \n", t,evidence);
-	}
-		
+	
 	//CONCLUSION
 	//Evidence P(Y|M) = sum alpha(T) = sum alpha(t)*beta(t)	= sum sum alpha(t) * a_kw * beta(t+1)b_w(y[t+1])
 
