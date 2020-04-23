@@ -2,11 +2,12 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <math.h>
+#include <float.h> //for DOUBL_MAX
 #include "tsc_x86.h"
 
 #include "io.h"
 
-#define EPSILON 1e-8
+#define EPSILON 1e-12
 #define DELTA 2.0
 
 void set_zero(double* const a, const int rows, const int cols){
@@ -126,17 +127,26 @@ void forward(const double* const a, const double* const p, const double* const b
 		The SIMD instructions remain as before.
 	
 	*/
-	
+	ct[0]=0.0;
+	//compute alpha(0) and scaling factor for t = 0
 	for(int s = 0; s < N; s++){
 		alpha[s*T] = p[s] * b[s*K + y[0]];
 		ct[0] += alpha[s*T];
 		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
 	}
+	
+	//scaling factor for t = 0
 	ct[0] = 1.0 / ct[0];
 
+	//scale alpha(0)
+	for(int s = 0; s < N; s++){
+		alpha[s*T] *= ct[0];
+		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
+	}
 	//print_matrix(alpha,N,T);
 
 	for(int t = 1; t < T; t++){
+		ct[t]=0.0;
 		for(int s = 0; s<N; s++){// s=new_state
 			alpha[s*T + t] = 0;
 			for(int j = 0; j < N; j++){//j=old_states
@@ -149,7 +159,14 @@ void forward(const double* const a, const double* const p, const double* const b
 			//print_matrix(alpha,N,T);
 			ct[t] += alpha[s*T + t];
 		}
+		//scaling factor for t 
 		ct[t] = 1.0 / ct[t];
+		
+		//scale alpha(t)
+		for(int s = 0; s<N; s++){// s=new_state
+			alpha[s*T + t] *= ct[t];
+		}
+		
 	}
 
 	//print_matrix(alpha,N,T);
@@ -160,7 +177,7 @@ void forward(const double* const a, const double* const p, const double* const b
 //Ang
 void backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
 	for(int s = 1; s < N+1; s++){
-		beta[s*T-1] = 1.;
+		beta[s*T-1] = /* 1* */ct[T-1];
 	}
 
 	for(int t = T-1; t > 0; t--){
@@ -170,6 +187,7 @@ void backward(const double* const a, const double* const b, double* const beta, 
 				beta[s*T + t-1] += beta[j*T + t ] * a[s*N + j] * b[j*K + y[t]];
 				//printf("%lf %lf %lf %lf %i \n", beta[s*T + t-1], beta[j*T+t], a[s*N+j], b[j*K+y[t]],y[t]);
 			}
+			beta[s*T + t-1] *= ct[t-1];
 		}
 	}
 	//print_matrix(beta,N,T);
@@ -179,61 +197,72 @@ void backward(const double* const a, const double* const b, double* const beta, 
 void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const int N, const int K, const int T){
 
 
-	double evidence, xi_sum, gamma_sum_numerator, gamma_sum_denominator;
-
-	//XXX Compute evidence only once
-	for(int t = 1; t < T; t++){
-		evidence = 0.; // P(Y|theta)
-		// denominator at time t
-		//evidenceXi=0;
-		for(int s = 0; s < N; s++){
-			evidence += alpha[s*T + t-1] * beta[s*T + t-1];
-			//for nextState=0;nextState<N;nextState++){
-			//evidenceXI+=alpha[s*T+t-1]*a[s*T+newState]*beta[newState*T+t]*b[newState*K+y[t]];}
-			//Discussion from 22.4.20 should make this computation redundant
-		}
-	}
+	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
 
 	//gamma needs t = 0 ... T and not like xi from 0...T-1
 	for(int t = 0; t < T; t++){
 		for(int s = 0; s < N; s++){ // s old state
 			//XXX Replace division with a scalar 1/evidence because evidence is always the same
-			gamma[s*T + t] = (alpha[s*T + t] * beta[s*T + t]) / evidence;
+			gamma[s*T + t] = alpha[s*T + t] * beta[s*T + t];
 		}
 	}
 
 	for(int t = 1; t < T; t++){
 		for(int s = 0; s < N; s++){
 			for(int j = 0; j < N; j++){ // j new state
-				xi[((t-1) * N + s) * N + j] = (alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]) / evidence; 
+				xi[((t-1) * N + s) * N + j] = alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]; 
 				//Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
 				//Discussion from 22.4.20 showed that this should be the same. Notation on wikipedia is consistent.
 			}
 		}
 	}
 
+
+	/*
+	//Only here to show that the evidence is the same as the result of alternative computations
+	//evidence for xi
+	double cT = 1.0;
+	for(int time = 0; time < T; time++){
+		cT *=ct[time];
+	}
+
+	for(int t = 1; t < T; t++){
+		double evidence=0;	
+
+		for(int s = 0; s < N; s++){
+			for (int nextState=0; nextState < N; nextState++){
+				evidence+=alpha[s*T+t-1]*a[s*N+nextState]*beta[nextState*T+t]*b[nextState*K+y[t]];
+			}
+		}
+
+		printf("evidence for XI at time %i: %.10lf \n", t,evidence/cT);
+	}
+		
+	*/
+
+
 	for(int s = 0; s < N; s++){
 		// new pi
-    		p[s] = gamma[s*T];
+    		p[s] = gamma[s*T]/ct[0];
     
 		for(int j = 0; j < N; j++){
 			xi_sum = 0.;
 			gamma_sum_denominator = 0.;
 			for(int t = 1; t < T; t++){
 				xi_sum += xi[((t-1) * N + s) * N + j];
-				gamma_sum_denominator += gamma[s*T + t-1];
+				gamma_sum_denominator += gamma[s*T + t-1]/ct[t-1];
 			}
 			// new transition matrix
 			a[s*N + j] = xi_sum / gamma_sum_denominator;
 		}
 
-		gamma_sum_denominator += gamma[s*T + T-1];
+		gamma_sum_denominator += gamma[s*T + T-1]/ct[T-1];
 
 		for(int v = 0; v < K; v++){
 			gamma_sum_numerator = 0.;
 			for(int t = 0; t < T; t++){//why 1 indented => better?
 				if(y[t] == v){// XXX rather AllPossibleValues[v] ??? => don't understand the question. What is AllPossibleValues[v]?
-					gamma_sum_numerator += gamma[s*T + t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
+					gamma_sum_numerator += gamma[s*T + t]/ct[t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
 				}
 			}
 			// new emmision matrix
@@ -244,68 +273,79 @@ void update(double* const a, double* const p, double* const b, const double* con
 	return;
 }
 
-void evidence_testing(const double* const alpha, const double* const beta,const double* const a,const double* const b,const int* const y, const int N, const int T,int K){
+
+
+void evidence_testing(const double* const alpha, const double* const beta,const double* const a,const double* const b,const int* const y, const double* const ct, const int N, const int T,int K){
 	
 	double evidence = 0;
 	//evidence with alpha only:
+
+	double cT = 1.0;
+	for(int time = 0; time < T; time++){
+		cT *=ct[time];
+	}
+
 	for(int state = 1; state < N+1; state++){
 		evidence += alpha[state*T -1]; 
 	}	
+	evidence/=cT;
 
 	printf("evidence with sum over alpha(T) : %.10lf \n", evidence);
 
-	evidence = 0;
-	
-	//evidence with beta only: XXX DOES NOT WORK! alpha(0) is also needed
-	for(int state = 0; state < N; state++){
-		evidence += beta[state*T]; 
-	}
-
-	printf("evidence with sum over beta(1) : %.10lf \n", evidence);
-		
 	//evidence with alpha * beta for every time t:
 	for(int time = 0 ; time < T; time++){
 		evidence = 0;
 		for(int state = 0; state < N; state++){
 			evidence += alpha[state*T + time]*beta[state*T + time]; 
 		}
-
+		evidence/=cT*ct[time];
 		printf("evidence at time %i with sum over alpha(t)*beta(t) : %.10lf \n",time, evidence);
 	}
 
-	//evidence for xi
-
-	for(int t = 1; t < T; t++){
-		evidence=0;	
-		for(int s = 0; s < N; s++){
-			for (int nextState=0; nextState < N; nextState++){
-				evidence+=alpha[s*T+t-1]*a[s*N+nextState]*beta[nextState*T+t]*b[nextState*K+y[t]];
-			}
-		}
-
-		printf("evidence for XI at time %i: %.10lf \n", t,evidence);
-	}
-		
 	//CONCLUSION
 	//Evidence P(Y|M) = sum alpha(T) = sum alpha(t)*beta(t)	= sum sum alpha(t) * a_kw * beta(t+1)b_w(y[t+1])
 
 }
 
 //Jan
-int finished(const double* const alpha,const double* const beta, double* const likelihood,const int N,const int T){
+int finished(const double* const alpha,const double* const beta, const double* const ct, double* const l,const int N,const int T){
 
-	double oldLikelihood=*likelihood;
+	/* true evidence
+	double oldLikelihood=*l;
 
 	double newLikelihood = 0.0;
 	//evidence with alpha only:
-	for(int state = 1; state < N+1; state++){
-		newLikelihood += alpha[state*T -1]; 
+
+	double cT = 1.0;
+	for(int time = 0; time < T; time++){
+		cT *=ct[time];
 	}
 
-	*likelihood=newLikelihood;
+	for(int state = 1; state < N+1; state++){
+		newLikelihood += alpha[state*T -1]; 
+	}	
+	newLikelihood/=cT;
+	
+	*l=newLikelihood;
 
-	//printf("evidence %.100lf , Epsilon %.10lf result %.100lf \n", newLikelihood, EPSILON,newLikelihood-oldLikelihood);
+	printf("evidence %.100lf , Epsilon %.10lf result %.100lf \n", newLikelihood, EPSILON,newLikelihood-oldLikelihood);
 	return (newLikelihood-oldLikelihood)<EPSILON;
+	*/
+	
+	//log likelihood
+	double oldLogLikelihood=*l;
+
+	double newLogLikelihood = 0.0;
+	//evidence with alpha only:
+
+	for(int time = 0; time < T; time++){
+		newLogLikelihood -= log10(ct[time]);
+	}
+	
+	*l=newLogLikelihood;
+
+	//printf("log likelihood %.10lf , Epsilon %.10lf result %.10lf \n", newLogLikelihood, EPSILON,newLogLikelihood-oldLogLikelihood);
+	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
 }
 
 
@@ -346,10 +386,8 @@ void wikipedia_example(){
 	int differentObservables = 2;
 	int T = 10;
 
-
 	//the observations we made
 	int* observations = (int*) malloc ( T * sizeof(int));
-	
 
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
@@ -381,15 +419,16 @@ void wikipedia_example(){
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
 	double* ct = (double*) malloc(T * sizeof(double));
 
-	forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-	backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-	update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct,  hiddenStates, differentObservables, T);//Ang
-	
-	/*
+	for(int t = 0; t < 1000; t++){
+		forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
+		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
+		update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct,  hiddenStates, differentObservables, T);//Ang
+	}
+
 	printf("new transition matrix from wikipedia example: \n \n");
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
-	*/
-
+	print_matrix(emissionMatrix, hiddenStates,differentObservables);
+	print_vector(piMatrix,2);
 }
 
 int main(int argc, char *argv[]){
@@ -401,7 +440,7 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	const int maxRuns=1;
+	const int maxRuns=10;
 	const int seed = atoi(argv[1]);  
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
@@ -452,7 +491,7 @@ int main(int argc, char *argv[]){
 
 	double* ct = (double*) malloc(T*sizeof(double));
 	
-	double likelihood=-1.0;
+	double logLikelihood=-DBL_MAX;
 
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -477,22 +516,17 @@ int main(int argc, char *argv[]){
 		int groundInitialState = rand()%hiddenStates;
 		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln? => Verstehe deine Frage nicht...
 
+
 		//XXX start after makeMatrix
 		start = start_tsc();
 
-		//do{
+		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
 
+		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T));
 
-		//}while (!finished(alpha, beta, &likelihood, hiddenStates, T));
-
-		print_matrix(alpha, hiddenStates,T);
-		print_matrix(beta, hiddenStates,T);
-		print_matrix(gamma, hiddenStates,T);
-		print_matrix(xi, hiddenStates*hiddenStates,T);
-		print_matrix(ct, 1,T);
 
 
 		cycles = stop_tsc(start);
@@ -503,6 +537,7 @@ int main(int argc, char *argv[]){
 			printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{	
 		
+			/*
 			write_all(groundTransitionMatrix,
 				groundEmissionMatrix,
 				transitionMatrix,
@@ -517,6 +552,8 @@ int main(int argc, char *argv[]){
 				differentObservables,
 				T);		
 		
+			*/
+
 			free(groundTransitionMatrix);
 			free(groundEmissionMatrix);
 			free(observations);
@@ -533,10 +570,12 @@ int main(int argc, char *argv[]){
 
 
 	}
+
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
+	/*
 	write_all(groundTransitionMatrix,
 		groundEmissionMatrix,
 		transitionMatrix,
@@ -550,6 +589,7 @@ int main(int argc, char *argv[]){
 		hiddenStates,
 		differentObservables,
 		T);		
+	*/
 
 	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
