@@ -79,6 +79,20 @@ transitionMatrix<-as.matrix(unname(transitionMatrix))
 stateProb<- read.csv(file = '../test_matrices/stateProb.csv',header=FALSE)
 stateProb <-as.vector(t(unname(stateProb)))
 
+
+
+#data = read.csv("../wikipedia_matrices/observations.csv",header = FALSE)+1
+#data = as.matrix(unname(data))
+
+#emissionMatrix<- read.csv(file = '../wikipedia_matrices/emissionMatrix.csv',header=FALSE)
+#emissionMatrix<-as.matrix(unname(emissionMatrix))
+
+#transitionMatrix<- read.csv(file = '../wikipedia_matrices/transitionMatrix.csv',header=FALSE)
+#transitionMatrix<-as.matrix(unname(transitionMatrix))
+
+#stateProb<- read.csv(file = '../wikipedia_matrices/piMatrix.csv',header=FALSE)
+#stateProb <-as.vector(t(unname(stateProb)))
+
 #data = read.csv("data_r.csv")
 
 M=2
@@ -95,4 +109,4 @@ a = A
 v = data
 
 
-(myout = BaumWelch(data, A, B, initial_distribution, n.iter = 100))
+(myout = BaumWelch(data, A, B, initial_distribution, n.iter = 1))
