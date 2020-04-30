@@ -6,9 +6,11 @@
 #include "tsc_x86.h"
 
 #include "io.h"
+#include "tested.h"
 
 #define EPSILON 1e-12
 #define DELTA 2.0
+#define maxSteps 100
 
 void set_zero(double* const a, const int rows, const int cols){
 	for(int row = 0 ; row < rows; row++){
@@ -360,7 +362,8 @@ int similar(const double * const a, const double * const b , const int N, const 
 			sum+=abs*abs;
 		}
 	}
-	printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
+    //DEBUG off
+	//printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
 	return sqrt(sum)<DELTA; 
 }
 
@@ -445,14 +448,14 @@ int main(int argc, char *argv[]){
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
 	const int T = atoi(argv[4]); 
-
+    /*
 	printf("Parameters: \n");
 	printf("seed = %i \n", seed);
 	printf("hidden States = %i \n", hiddenStates);
 	printf("different Observables = %i \n", differentObservables);
 	printf("number of observations= %i \n", T);
 	printf("\n");
-
+    */
 	myInt64 cycles;
    	myInt64 start;
 	double runs[maxRuns]; //for medianTime
@@ -474,25 +477,22 @@ int main(int argc, char *argv[]){
 	
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
+	double* transitionMatrixSafe = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
+	double* emissionMatrixSafe = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 
 	//init state distribution
 	double* stateProb  = (double*) malloc(hiddenStates * sizeof(double));
+	double* stateProbSafe  = (double*) malloc(hiddenStates * sizeof(double));
 
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); 
-	//XXX??? Wieso T-1 ?
-	//because xi is the probability of being in state i and j at times t and  t+1 respectively 
-	//given the observed sequence Y and parameters θ
- 	//Therefore there are T-1 pairs of t and t+1 values
 
 
 	double* ct = (double*) malloc(T*sizeof(double));
 	
-	double logLikelihood=-DBL_MAX;
-
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
@@ -503,14 +503,19 @@ int main(int argc, char *argv[]){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
 		makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
-		makeMatrix(hiddenStates, differentObservables, emissionMatrix);	
+        memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
+		makeMatrix(hiddenStates, differentObservables, emissionMatrix);
+	    memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
 		makeProbabilities(stateProb,hiddenStates);
-		
+        memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
+
 		set_zero(alpha,hiddenStates,T);
 		set_zero(beta,hiddenStates,T);
 		set_zero(gamma,hiddenStates,T);
 		set_zero(xi,hiddenStates*hiddenStates,T-1);
 		set_zero(ct,1,T);
+        
+        double logLikelihood=-DBL_MAX; //Took down here.
 
 		//make some random observations
 		int groundInitialState = rand()%hiddenStates;
@@ -518,41 +523,40 @@ int main(int argc, char *argv[]){
 
 
 		//XXX start after makeMatrix
+        int steps=0;
 		start = start_tsc();
-
+        
 		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
-
-		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T));
-
-
+            steps+=1;
+		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 
 		cycles = stop_tsc(start);
-
+        cycles = cycles/steps;
 		//Jan
-		if (similar(groundTransitionMatrix,transitionMatrix,hiddenStates,hiddenStates) && similar(groundEmissionMatrix,emissionMatrix,differentObservables,hiddenStates)){
+
+        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
+		if (similar(transitionMatrixSafe,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixSafe,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
-			printf("run %i: \t %llu cycles \n",run, cycles);
+            //DEBUG OFF
+			//printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{	
 		
-			/*
-			write_all(groundTransitionMatrix,
-				groundEmissionMatrix,
+			write_all(transitionMatrixSafe,
+				emissionMatrixSafe,
 				transitionMatrix,
 				emissionMatrix,
 				observations,
 				stateProb,
-				alpha,
+				stateProbSafe,
 				beta,
 				gamma,
 				xi,
 				hiddenStates,
 				differentObservables,
-				T);		
-		
-			*/
+				T);	
 
 			free(groundTransitionMatrix);
 			free(groundEmissionMatrix);
