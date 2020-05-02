@@ -1,10 +1,14 @@
 COMPILE baum-welch.c
-
-gcc -o run baum-welch.c io.c -lm
-
+gcc $flag -o run baum-welch-stable.c io.c bw-tested.c tested.h -lm
 // -lm is used for the sqrt function
 
+./run $seed $hiddenState $differentObservable $T
 
+or run the bash function with many different parameters (you can change them easily): 
+bash suite.sh
+
+pipe the output into "output.txt"
+bash suite.sh > output.txt
 
 
 
