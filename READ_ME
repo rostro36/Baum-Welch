@@ -7,9 +7,12 @@ gcc $flag -o run baum-welch-stable.c io.c bw-tested.c tested.h -lm
 or run the bash function with many different parameters (you can change them easily): 
 bash suite.sh
 
-pipe the output into "output.txt"
-bash suite.sh > output.txt
+pipe the output into "model_output.txt"
+bash suite.sh > model_output.txt
 
+to create plot run:
+python3 plotting.py
+it stores a plot with the current time as name in the same directory.
 
 
 USAGE baum-welch.r
