@@ -23,3 +23,12 @@ USAGE baum-welch.r
 
 Make sure you have a folder 'test_matrices' which contains a observations.csv file
 
+
+ADDITIONAL DOCUMENTS
+
+Overleaf collection of files: https://www.overleaf.com/2741931356ngjpcjmswxff
+
+	main.tex		overview of baum-welch algorithm and possible optimizations
+	slides.tex		slides for meeting with supervisors
+	flops.tex		cost analysis of stable and default baum-welch algorithm
+	memory_accesses.tex	mememory access analysis for stable baum-welch algorithm
