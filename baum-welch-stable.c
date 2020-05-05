@@ -367,7 +367,7 @@ int similar(const double * const a, const double * const b , const int N, const 
 	return sqrt(sum)<DELTA; 
 }
 
-void heatup(double* const transitionMatrix, double* const piVector, double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
+void heatup(double* const transitionMatrix,double* const piVector,double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
 
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
@@ -499,6 +499,7 @@ int main(int argc, char *argv[]){
 	makeProbabilities(stateProb,hiddenStates);
 	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
+        int steps=0;
 	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
@@ -517,10 +518,14 @@ int main(int argc, char *argv[]){
 		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln? => Verstehe deine Frage nicht...
 		//XXX Ist es notwendig nach jedem run neue observations zu machen?
 
-		//XXX start after makeMatrix
-        	int steps=0;
-		start = start_tsc();
+		//only needed for testing
+		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
         
+		//XXX start after makeMatrix
+        	steps=0;
+		start = start_tsc();
+
+	
 		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
@@ -532,6 +537,11 @@ int main(int argc, char *argv[]){
         	cycles = cycles/steps;
 		//Jan
 
+
+		//print_matrix(transitionMatrix,hiddenStates,hiddenStates);
+		//print_matrix(emissionMatrix, hiddenStates,differentObservables);
+
+
         	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
 		if (similar(transitionMatrixSafe,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixSafe,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
@@ -539,20 +549,6 @@ int main(int argc, char *argv[]){
 			//printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{	
 		
-			write_all(transitionMatrixSafe,
-				emissionMatrixSafe,
-				transitionMatrix,
-				emissionMatrix,
-				observations,
-				stateProb,
-				stateProbSafe,
-				beta,
-				gamma,
-				xi,
-				hiddenStates,
-				differentObservables,
-				T);	
-
 			free(groundTransitionMatrix);
 			free(groundEmissionMatrix);
 			free(observations);
@@ -574,22 +570,8 @@ int main(int argc, char *argv[]){
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
-	/*
-	write_all(groundTransitionMatrix,
-		groundEmissionMatrix,
-		transitionMatrix,
-		emissionMatrix,
-		observations,
-		stateProb,
-		alpha,
-		beta,
-		gamma,
-		xi,
-		hiddenStates,
-		differentObservables,
-		T);		
-	*/
-
+	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
+        
 	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
