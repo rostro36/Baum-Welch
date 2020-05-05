@@ -22,7 +22,7 @@ USAGE baum-welch.r
 - load package 'HMM' 
 - comment out PI update in baum-welch-stable.c to get same result
 
-Make sure you have a folder 'test_matrices' which contains a observations.csv file
+Make sure you have a folder 'init' and 'result' which contains a observations.csv file
 
 
 ADDITIONAL DOCUMENTS
