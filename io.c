@@ -161,3 +161,54 @@ void write_all(const double * const groundTransitionMatrix,
 }
 
 
+void write_init(const double * const transitionMatrix,
+		const double * const emissionMatrix,
+		const int * const observations,
+		const double * const stateProb,
+		const int hiddenStates,
+		const int differentObservables,
+		const int T){
+
+
+	char tname[100]="init/transitionMatrix.csv";
+	write_matrix_file(transitionMatrix,hiddenStates,hiddenStates,tname);	
+
+	char ename[100]="init/emissionMatrix.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,differentObservables,ename);	
+
+	char oname[100]="init/observations.csv";
+	write_vector_file_int(observations,T,oname);	
+
+	char pname[100]="init/stateProb.csv";
+	write_vector_file(stateProb,hiddenStates,pname);	
+
+}
+
+void write_result(const double * const transitionMatrix,
+		const double * const emissionMatrix,
+		const int * const observations,
+		const double * const stateProb,
+		const int const steps,
+		const int hiddenStates,
+		const int differentObservables,
+		const int T){
+
+
+	char tname[100]="result/transitionMatrix.csv";
+	write_matrix_file(transitionMatrix,hiddenStates,hiddenStates,tname);	
+
+	char ename[100]="result/emissionMatrix.csv";
+	write_matrix_file(emissionMatrix,hiddenStates,differentObservables,ename);	
+
+	char oname[100]="result/observations.csv";
+	write_vector_file_int(observations,T,oname);	
+
+	char pname[100]="result/stateProb.csv";
+	write_vector_file(stateProb,hiddenStates,pname);
+
+	char sname[100]="result/steps.csv";
+	write_vector_file_int(&steps,1,sname);	
+
+}
+
+
