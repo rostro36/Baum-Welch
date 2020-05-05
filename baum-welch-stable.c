@@ -367,7 +367,7 @@ int similar(const double * const a, const double * const b , const int N, const 
 	return sqrt(sum)<DELTA; 
 }
 
-void heatup(const double* transitionMatrix,const double* piVector,const double* emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
+void heatup(double* const transitionMatrix, double* const piVector, double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
 
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
