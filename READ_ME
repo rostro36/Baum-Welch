@@ -20,9 +20,11 @@ USAGE baum-welch.r
 - open with RStudio
 - Go the session -> Set Working Directory -> to source file location
 - load package 'HMM' 
-- comment out PI update in baum-welch-stable.c to get same result
+- comment out PI update in baum-welch-stable.c to get same result 
+- also comment out PI update in bw-tested.c to make sure we don't get an error
+- make sure you write initial matrices to init folder (use write_init(...))
+- make sure you write result matrices to result folder (use write_result(...))
 
-Make sure you have a folder 'init' and 'result' which contains a observations.csv file
 
 
 ADDITIONAL DOCUMENTS
