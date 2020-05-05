@@ -26,5 +26,19 @@ void write_all(const double * const groundTransitionMatrix,
 		const int hiddenStates,
 		const int differentObservables,
 		const int T);	
-
+void write_init(const double * const transitionMatrix,
+		const double * const emissionMatrix,
+		const int * const observations,
+		const double * const stateProb,
+		const int hiddenStates,
+		const int differentObservables,
+		const int T);
+void write_result(const double * const transitionMatrix,
+		const double * const emissionMatrix,
+		const int * const observations,
+		const double * const stateProb,
+		const int const steps,
+		const int hiddenStates,
+		const int differentObservables,
+		const int T);
 #endif
