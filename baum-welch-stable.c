@@ -27,6 +27,7 @@ int compare_doubles (const void *a, const void *b) //for sorting at the end
 
   return (*da > *db) - (*da < *db);
 }
+
 //generate a random number [0,1] and return the index...
 //where the sum of the probabilities up to this index of the vector...
 //is bigger than the random number
@@ -201,10 +202,8 @@ void update(double* const a, double* const p, double* const b, const double* con
 
 	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
 
-	//gamma needs t = 0 ... T and not like xi from 0...T-1
 	for(int t = 0; t < T; t++){
 		for(int s = 0; s < N; s++){ // s old state
-			//XXX Replace division with a scalar 1/evidence because evidence is always the same
 			gamma[s*T + t] = alpha[s*T + t] * beta[s*T + t];
 		}
 	}
@@ -245,6 +244,7 @@ void update(double* const a, double* const p, double* const b, const double* con
 
 	for(int s = 0; s < N; s++){
 		// new pi
+		//XXX the next line is not in the r library hmm.
     		p[s] = gamma[s*T]/ct[0];
     
 		for(int j = 0; j < N; j++){
@@ -503,41 +503,36 @@ int main(int argc, char *argv[]){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
 		makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
-        memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
+       		memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
 		makeMatrix(hiddenStates, differentObservables, emissionMatrix);
-	    memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
+	   	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
 		makeProbabilities(stateProb,hiddenStates);
-        memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
+        	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
+		//XXX brauchen wir nach jedem run neue transitionMatrix, emissionMatrix und stateProb?
 
-		set_zero(alpha,hiddenStates,T);
-		set_zero(beta,hiddenStates,T);
-		set_zero(gamma,hiddenStates,T);
-		set_zero(xi,hiddenStates*hiddenStates,T-1);
-		set_zero(ct,1,T);
-        
-        double logLikelihood=-DBL_MAX; //Took down here.
+        	double logLikelihood=-DBL_MAX; //Took down here.
 
 		//make some random observations
 		int groundInitialState = rand()%hiddenStates;
 		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln? => Verstehe deine Frage nicht...
-
+		//XXX Ist es notwendig nach jedem run neue observations zu machen?
 
 		//XXX start after makeMatrix
-        int steps=0;
+        	int steps=0;
 		start = start_tsc();
         
 		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
 			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
-            steps+=1;
+            		steps+=1;
 		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 
 		cycles = stop_tsc(start);
-        cycles = cycles/steps;
+        	cycles = cycles/steps;
 		//Jan
 
-        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
+        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
 		if (similar(transitionMatrixSafe,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixSafe,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
             //DEBUG OFF
