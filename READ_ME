@@ -20,6 +20,7 @@ USAGE baum-welch.r
 - open with RStudio
 - Go the session -> Set Working Directory -> to source file location
 - load package 'HMM' 
+- comment out PI update in baum-welch-stable.c to get same result
 
 Make sure you have a folder 'test_matrices' which contains a observations.csv file
 
