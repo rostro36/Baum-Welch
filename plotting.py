@@ -36,13 +36,14 @@ def to_order(array, index):
 
 def base_work(params):
     (flag,hiddenstate,differentObservables,T)=params
-    #logarithms count as one flop
-    return (4*hiddenstate+7*T*hiddenstate*hiddenstate+4*T*hiddenstate+3*(T-1)*hiddenstate*hiddenstate+3*T+2+3*T*hiddenstate*differentObservables+(T-1)*hiddenstate+hiddenstate*hiddenstate+hiddenstate*differentObservables)
+    #4∗N+ 7∗T∗N∗N+ 4∗T∗N+ 3∗(T−1)∗N∗N+ 3∗T+ 3+3∗T∗K∗N+ (T−1)∗N+N∗N+N∗K [Latex]
+    return (4*hiddenstate+7*T*hiddenstate*hiddenstate+4*T*hiddenstate+3*(T-1)*hiddenstate*hiddenstate+3*T+3+3*T*hiddenstate*differentObservables+(T-1)*hiddenstate+hiddenstate*hiddenstate+hiddenstate*differentObservables)
 work_functions=[base_work]
 
 def base_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
-    return (12*hiddenstate+3+4*T+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+3*hiddenstate*(T-1)+9*hiddenstate*hiddenstate*(T-1)+hiddenstate*hiddenstate+hiddenstate*differentObservables+2*T*hiddenstate*differentObservables)
+    #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1) + 2∗T∗K∗N+N∗N+N∗K [Latex]
+    return (12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables)
 memory_functions=[base_memory]
 
 
