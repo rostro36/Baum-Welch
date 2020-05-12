@@ -36,12 +36,13 @@ def to_order(array, index):
 
 def base_work(params):
     (flag,hiddenstate,differentObservables,T)=params
-    return T #placeholder
+    #logarithms count as one flop
+    return (4*hiddenstate+7*T*hiddenstate*hiddenstate+4*T*hiddenstate+3*(T-1)*hiddenstate*hiddenstate+3*T+2+3*T*hiddenstate*differentObservables+(T-1)*hiddenstate+hiddenstate*hiddenstate+hiddenstate*differentObservables)
 work_functions=[base_work]
 
 def base_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
-    return T #placeholder
+    return (12*hiddenstate+3+4*T+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+3*hiddenstate*(T-1)+9*hiddenstate*hiddenstate*(T-1)+hiddenstate*hiddenstate+hiddenstate*differentObservables+2*T*hiddenstate*differentObservables)
 memory_functions=[base_memory]
 
 
