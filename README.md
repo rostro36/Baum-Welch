@@ -1,8 +1,6 @@
 # Baum-Welch
 
 ## Compile + run
-
-COMPILE baum-welch.c
 - gcc $flag -o run baum-welch-stable.c io.c bw-tested.c tested.h -lm
 - ./run $seed $hiddenState $differentObservable $T
 
@@ -24,11 +22,14 @@ It stores a plot with the current time as name in the same directory.
 and for the normal plots also the roofline plot.
 
 ## Valgrind
-- sudo apt-get install valgrind, kcachegrind
+- sudo apt-get install [valgrind](https://valgrind.org/docs/manual/manual.html), [kcachegrind](https://kcachegrind.github.io/html/Home.html)
 - gcc $flags -g -o run $file io.c bw-tested.c tested.h -lm
-- valgrind ./run $params -> checks for memory leaks
-- valgrind --tool=cachegrind --cachegrind-out-file=cachegrindfile --branch-sim=yes  ./run $params -> statistics
-- kcachegrind cachegrindfile -> opens statistics for cache misses/branch predictions etc.
+- valgrind ./run $params -
+    - checks for memory leaks
+- valgrind --tool=cachegrind --cachegrind-out-file=cachegrindfile --branch-sim=yes  ./run $params 
+    - generate statistics
+- kcachegrind cachegrindfile
+    - read-out statistics for cache misses/branch predictions etc.
 
 
 ## Usage baum-welch.r
@@ -44,9 +45,9 @@ and for the normal plots also the roofline plot.
 
 ## Additional Documents
 
-Overleaf collection of files: https://www.overleaf.com/2741931356ngjpcjmswxff
+[Overleaf](https://www.overleaf.com/2741931356ngjpcjmswxff): 
 
-	main.tex		overview of baum-welch algorithm and possible optimizations
-	slides.tex		slides for meeting with supervisors
-	flops.tex		cost analysis of stable and default baum-welch algorithm
-	memory_accesses.tex	mememory access analysis for stable baum-welch algorithm
+- main.tex		overview of baum-welch algorithm and possible optimizations
+- slides.tex		slides for meeting with supervisors
+- flops.tex		cost analysis of stable and default baum-welch algorithm
+- memory_accesses.tex	mememory access analysis for stable baum-welch algorithm
