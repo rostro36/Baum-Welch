@@ -24,12 +24,12 @@ void transpose(double* a, const int rows, const int cols){
 	free(transpose);
 }
 
-int compare_doubles (const void *a, const void *b) //for sorting at the end
-{
-  const double *da = (const double *) a;
-  const double *db = (const double *) b;
+//for sorting at the end
+int compare_doubles (const void *a, const void *b){
+	const double *da = (const double *) a;
+	const double *db = (const double *) b;
 
-  return (*da > *db) - (*da < *db);
+	return (*da > *db) - (*da < *db);
 }
 
 //generate a random number [0,1] and return the index...
@@ -216,14 +216,33 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	for(int t = T-1; t > 0; t--){
 		for(int i = 0; i < N ; i++){
 			p[i] = 0.0;
+			beta_new[i]=0.0;
 			for(int j = 0; j < N; j++){
-				double xi_ijt = alpha[(t-1)*N + i] * a[i*N +j] * beta[j] * b[y[t]*N + j];
+				double temp = a[i*N +j] * beta[j] * b[y[t]*N + j];
+				
+				double xi_ijt = alpha[(t-1)*N + i] * temp;
 				a_new[i*N+j] +=xi_ijt;
+				//XXX NEW COMPUTATION OF BETA DOES NOT NEED THIS
 				//to get real gamma you have to scale with ct[t-1] 
-				p[i] += xi_ijt /* *ct[t-1]*/ ;
+				//p[i] += xi_ijt /* *ct[t-1]*/ ;
 				//printf("%lf %lf %lf %lf %lf , ", xi_ijt,alpha[(t-1)*N + i] , a[i*N + j] , beta[ j] , b[j*K + y[t]]);
+
+				//XXX NEW COMPUTATION OF BETA DOES NEED THIS
+				//Cost equal as computing p[i]
+				//printf("%lf , ", beta[ j] );
+				beta_new[i] += temp;
 				
 			}
+			//XXX NEW COMPUTATION OF BETA DOES NEED THIS
+			//Cost better as beta = gamma / alpha because we replace division by multiplication
+			//to get real gamma you have to scale with ct[t-1] 
+			p[i] = alpha[(t-1)*N+i]*beta_new[i]/* *ct[t-1]*/;
+			beta_new[i] *= ct[t-1];
+
+			//XXX NEW COMPUTATION OF BETA DOES NOT NEED THIS
+			//printf("\n\n");
+			//beta_new[i] = p[i] * ct[t-1] / alpha[(t-1)*N+i];
+
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[i]+= p[i] /* /ct[t-1] */ ;
 
@@ -235,9 +254,9 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 				//printf(" %i %lf \n ", indicator,p[i]);
 			}
 			
-			beta_new[i] = p[i] * ct[t-1] / alpha[(t-1)*N+i];
+			//printf(" %lf %lf %lf \n", p[i],  ct[t-1],alpha[(t-1)*N+i]);
 		}
-			//printf("\n");
+		//printf("T = %li\n",t);
 		
 		double * temp = beta_new;
 		beta_new = beta;
@@ -402,12 +421,15 @@ int main(int argc, char *argv[]){
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* transitionMatrixSafe = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
+	double* transitionMatrixTesting=(double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 	double* emissionMatrixSafe = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
+	double* emissionMatrixTesting=(double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 
 	//init state distribution
 	double* stateProb  = (double*) malloc(hiddenStates * sizeof(double));
 	double* stateProbSafe  = (double*) malloc(hiddenStates * sizeof(double));
+	double* stateProbTesting  = (double*) malloc(hiddenStates * sizeof(double));
 
 	double* gamma_T = (double*) malloc( hiddenStates * sizeof(double));
 	double* gamma_sum = (double*) malloc( hiddenStates * sizeof(double));
@@ -428,18 +450,28 @@ int main(int argc, char *argv[]){
 	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
 	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
-      	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
+      	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
+
+
+	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
+	memcpy(transitionMatrixTesting, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
+   	memcpy(emissionMatrixTesting, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
+      	memcpy(stateProbTesting, stateProb, hiddenStates * sizeof(double));
 
 	//heat up cache
-	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
         int steps=0;
-	for (int run=0; run<1; run++){
+	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
 		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
    		memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
       		memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));
+		
+		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+      		memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
 
         	double logLikelihood=-DBL_MAX; //Took down here.
 
@@ -449,7 +481,7 @@ int main(int argc, char *argv[]){
         	steps=0;
 		start = start_tsc();
 
-		//for(int i = 0; i < 10; i++){
+		//for(int i = 0; i < 83; i++){
 		do{
 
 			baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,ct, hiddenStates, differentObservables, T);
@@ -460,25 +492,23 @@ int main(int argc, char *argv[]){
         	cycles = cycles/steps;
 		//Jan
 				
-
 		transpose(emissionMatrix,differentObservables,hiddenStates);
 
+		/*
+		//SHOW RESULTS
 		printf("a \n");
 		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 		printf("b \n");
-		print_matrix(emissionMatrix,hiddenStates,differentObservables);
+		print_matrix(emissionMatrix,differentObservables,hiddenStates);
 		printf("state \n");
-		print_matrix(stateProb,1,hiddenStates);
-		
-		//print_matrix(xi,T,hiddenStates*hiddenStates);
-		//print_matrix(emissionMatrix, hiddenStates,differentObservables);
-
+		print_matrix(stateProb,1,hiddenStates);		
+		*/
+	
 		//emissionMatrix is not in state major order
-		transpose(emissionMatrixSafe, differentObservables,hiddenStates);
-        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
+		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
+        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 
-
-		if (similar(transitionMatrixSafe,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixSafe,emissionMatrix,differentObservables,hiddenStates)){
+		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
             //DEBUG OFF
 			//printf("run %i: \t %llu cycles \n",run, cycles);
