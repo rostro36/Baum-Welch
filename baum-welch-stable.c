@@ -550,15 +550,19 @@ int main(int argc, char *argv[]){
 		}else{	
 		
 			free(groundTransitionMatrix);
-			free(groundEmissionMatrix);
-			free(observations);
-			free(transitionMatrix);
-			free(emissionMatrix);
-			free(stateProb);
-			free(alpha);
-			free(beta);
-			free(gamma);
-			free(xi);
+        	free(groundEmissionMatrix);
+        	free(observations);
+        	free(transitionMatrix);
+        	free(emissionMatrix);
+        	free(stateProb);
+        	free(alpha);
+        	free(beta);
+        	free(gamma);
+        	free(xi);
+            free(ct);
+            free(transitionMatrixSafe);
+        	free(emissionMatrixSafe);
+            free(stateProbSafe);
 			printf("Something went wrong! \n");
 			return -1;//error Jan
 		}
@@ -572,7 +576,7 @@ int main(int argc, char *argv[]){
 
 	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
-	free(groundTransitionMatrix);
+    free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -582,6 +586,10 @@ int main(int argc, char *argv[]){
 	free(beta);
 	free(gamma);
 	free(xi);
+    free(ct);
+    free(transitionMatrixSafe);
+	free(emissionMatrixSafe);
+    free(stateProbSafe);
 
 	return 0; 
 } 
