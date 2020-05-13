@@ -210,7 +210,7 @@ void backward(const double* const a, const double* const b, double* const beta, 
 	return;
 }
 
-void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const int N, const int K, const int T){
+void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const double* const inv_ct,const int N, const int K, const int T){
 
 
 	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
@@ -256,8 +256,7 @@ void update(double* const a, double* const p, double* const b, const double* con
 	}
 		
 	*/
-	//to save T divisions (in if y[t] == v block)
-	double* inv_ct = (double*) malloc(T * sizeof(double));
+
 
 	const double ct0div = 1/ct[0];
 	inv_ct[0] = ct0div;
@@ -404,7 +403,7 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	for(int j=0;j<10;j++){
 		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
 		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);//Ang
+		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);//Ang
 	}	
 	
 }
@@ -447,11 +446,13 @@ void wikipedia_example(){
 	double* gamma = (double*) malloc(T * hiddenStates  * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
 	double* ct = (double*) malloc(T * sizeof(double));
+		//to save T divisions (in if y[t] == v block)
+	double* inv_ct = (double*) malloc(T * sizeof(double));
 
 	for(int t = 0; t < 1000; t++){
 		forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
 		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct,  hiddenStates, differentObservables, T);//Ang
+		update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct,  hiddenStates, differentObservables, T);//Ang
 	}
 
 	printf("new transition matrix from wikipedia example: \n \n");
@@ -518,6 +519,8 @@ int main(int argc, char *argv[]){
 
 
 	double* ct = (double*) malloc(T*sizeof(double));
+		//to save T divisions (in if y[t] == v block)
+	double* inv_ct = (double*) malloc(T * sizeof(double));
 	
 	//heatup needs some data.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -555,7 +558,7 @@ int main(int argc, char *argv[]){
 		do{
 			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
 			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
-			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
+			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);  //Ang
             		steps+=1;
 		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 
@@ -575,16 +578,21 @@ int main(int argc, char *argv[]){
 			//printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{	
 		
-			free(groundTransitionMatrix);
-			free(groundEmissionMatrix);
-			free(observations);
-			free(transitionMatrix);
-			free(emissionMatrix);
-			free(stateProb);
-			free(alpha);
-			free(beta);
-			free(gamma);
-			free(xi);
+				free(groundTransitionMatrix);
+            	free(groundEmissionMatrix);
+            	free(observations);
+            	free(transitionMatrix);
+            	free(emissionMatrix);
+            	free(stateProb);
+            	free(alpha);
+            	free(beta);
+            	free(gamma);
+            	free(xi);
+                free(ct);
+                free(inv_ct);
+                free(transitionMatrixSafe);
+            	free(emissionMatrixSafe);
+                free(stateProbSafe);
 			printf("Something went wrong! \n");
 			return -1;//error Jan
 		}
@@ -608,6 +616,11 @@ int main(int argc, char *argv[]){
 	free(beta);
 	free(gamma);
 	free(xi);
+    free(ct);
+    free(inv_ct);
+    free(transitionMatrixSafe);
+	free(emissionMatrixSafe);
+    free(stateProbSafe);
 
 	return 0; 
 } 
