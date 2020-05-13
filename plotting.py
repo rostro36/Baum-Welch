@@ -31,7 +31,7 @@ def to_back(arrays, index):
 def to_order(array, index):
     value=array[-1]
     del array[-1]
-    array.insert(value,index)
+    array.insert(index,value)
     return array
 
 def base_work(params):
@@ -42,7 +42,7 @@ work_functions=[base_work]
 
 def base_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
-    #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1)+ 2∗T∗K∗N+ N∗N+ N∗K [Latex]*8(because we want it in bytes, not operations)
+    #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1)+ 2∗T∗K∗N+ N∗N+ N∗K [Latex]
     return 8*((12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables))
 memory_functions=[base_memory]
 
@@ -87,7 +87,8 @@ while(re.search('FLAG', text)):
 #     print(hiddenstate)
 #     print(dO)
 #     print(T)
-#     print(cycles)
+#    print(cycles)
+
 
 plt.xlabel(order_names[-1])
 plt.ylabel('cycles/iteration')
@@ -119,9 +120,6 @@ plt.clf()
 plt.xlabel('flops/byte')
 plt.ylabel('flops/cycle')
 plt.title('Roofline impact of '+order_names[-1])
-plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
-
-
 
 marker=0
 color=0
@@ -146,16 +144,23 @@ for flag in flags.keys():
     marker+=1
     
 xstart, xend = plt.xlim()
-#Memory bound
-x=[xstart,vector_pi/mem_beta]
-y=[xstart*mem_beta, vector_pi]
-plt.fill_between(x, y, 0, alpha=0.2, color='r')
+
 #Vector line
-x=[xstart,xend]
+#Probably have to change in the future
+end=min(xend,vector_pi/mem_beta)
+x=[xstart,end]
 plt.fill_between(x, vector_pi, 0, alpha=0.2, color='y')
 #Scalar line
-plt.fill_between(x, scalar_pi, 0, alpha=0.2, color='b')
-
+plt.fill_between(x, scalar_pi, 0, alpha=0.2, color='g')
+#Memory bound
+print(vector_pi/mem_beta)
+x=[xstart,end]
+#x=[xstart, xend]
+y=[xstart*mem_beta, vector_pi]
+y=[xstart*mem_beta, end*mem_beta]
+plt.fill_between(x, y, 0, alpha=0.2, color='b')
+plt.yscale('log')
+plt.xscale('log')
 
 
 plt.legend()
