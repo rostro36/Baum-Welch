@@ -13,17 +13,15 @@
 #define maxSteps 100
 
 void transpose(double* a, const int rows, const int cols){
-
 	double* transpose = (double*)calloc(cols*rows, sizeof(double));
 	memcpy(transpose, a, rows*cols*sizeof(double));
 	for(int row = 0 ; row < rows; row++){
 		for(int col =0; col < cols; col++){
 			a[col * rows + row]  = transpose[row * cols + col];
 			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
-
 		}
 	}
-
+	free(transpose);
 }
 
 int compare_doubles (const void *a, const void *b) //for sorting at the end
@@ -117,7 +115,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	//compute alpha(0) and scaling factor for t = 0
 	int y0 = y[0];
 	for(int s = 0; s < N; s++){
-		//double alphas = p[s] * b[s*K + y0];
 		double alphas = p[s] * b[y0*N + s];
 		ct0 += alphas;
 		alpha[s] = alphas;
@@ -137,18 +134,13 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	for(int t = 1; t < T-1; t++){
 		double ctt = 0.0;	
 		const int yt = y[t];	
-		//ct[t]=0.0;
 		for(int s = 0; s<N; s++){// s=new_state
 			double alphatNs = 0;
 			//alpha[s*T + t] = 0;
 			for(int j = 0; j < N; j++){//j=old_states
-				//alphatNs += alpha[j*T + t-1] * a[j*N + s];
 				alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
-				//alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
 				//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
 			}
-
-			//alphatNs *= b[s*K + yt];
 			alphatNs *= b[yt*N + s];
 			//print_matrix(alpha,N,T);
 			ctt += alphatNs;
@@ -167,18 +159,14 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	
 	double ctt = 0.0;	
 	const int yt = y[T-1];	
-	//ct[t]=0.0;
 	for(int s = 0; s<N; s++){// s=new_state
 		double alphatNs = 0;
 		//alpha[s*T + t] = 0;
 		for(int j = 0; j < N; j++){//j=old_states
-			//alphatNs += alpha[j*T + t-1] * a[j*N + s];
 			alphatNs += alpha[(T-2)*N + j] * a[j*N + s];
-			//alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
 			//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
 		}
 
-		//alphatNs *= b[s*K + yt];
 		alphatNs *= b[yt*N + s];	
 		//print_matrix(alpha,N,T);
 		ctt += alphatNs;
@@ -196,6 +184,8 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	ct[T-1] = ctt;
 	//print_matrix(alpha,T,N);
 	//print_matrix(ct,1,T);
+
+
 
 
 	//FUSED BACKWARD and UPDATE STEP
@@ -222,15 +212,11 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	//print_matrix(beta,1,N);
 	//print_matrix(gamma_T,1,N);
 
-
 	//compute sum of xi and gamma from t= 0...T-2
 	for(int t = T-1; t > 0; t--){
-		
 		for(int i = 0; i < N ; i++){
 			p[i] = 0.0;
 			for(int j = 0; j < N; j++){
-
-				//double xi_ijt = alpha[(t-1)*N + i] * a[i*N +j] * beta[j] * b[j*K + y[t]];
 				double xi_ijt = alpha[(t-1)*N + i] * a[i*N +j] * beta[j] * b[y[t]*N + j];
 				a_new[i*N+j] +=xi_ijt;
 				//to get real gamma you have to scale with ct[t-1] 
@@ -244,7 +230,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 			for(int v = 0; v < K; v++){
 				int indicator = (int)(y[t-1] == v);
 				//if you use real gamma you have to divide by ct[t-1]
-				//b_new[i*K + v] += (double)(indicator)*p[i] /* /ct[t-1]*/;
 				b_new[v*N + i] += (double)(indicator)*p[i] /* /ct[t-1]*/;
 				
 				//printf(" %i %lf \n ", indicator,p[i]);
@@ -265,8 +250,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		}
 		*/	
 
-			
-		
 		//printf("beta \n");
 		//print_matrix(beta,1,N);
 		//printf("gamma \n");
@@ -300,25 +283,26 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		for(int v = 0; v < K; v++){
 			int indicator = (int)(y[T-1] == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			//b_new[i*K + v] += indicator*gamma_T[i] /* /ct[T-1] */ ;
 			b_new[v*N + i] += indicator*gamma_T[i] /* /ct[T-1] */ ;
 			
 		}
 	}
 
 	//compute new emission matrix
-	for(int i = 0; i < N; i++){
-		for(int v = 0; v < K; v++){
-			//b[i*K + v] = b_new[i*K + v] / gamma_sum[i];
+	for(int v = 0; v < K; v++){
+		for(int i = 0; i < N; i++){
 			b[v*N + i] = b_new[v*N + i] / gamma_sum[i];
 			//printf(" %lf %lf %lf \n", b[i*K + v], b_new[i*K + v] , gamma_sum[i]);
 		}
 	}
 	//print_matrix(b,N,K);
 
+	free(beta);
+	free(beta_new);
+	free(a_new);
+	free(b_new);
 	
 	return;
-
 }
 
 
@@ -367,7 +351,11 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	
 	for(int j=0;j<10;j++){	
 		baum_welch(transitionMatrix, emissionMatrix, piVector, observations, gamma_sum, gamma_T,ct, hiddenStates, differentObservables, T);
-	}	
+	}
+
+	free(ct);
+	free(gamma_T);
+	free(gamma_sum);	
 	
 }
 
@@ -442,9 +430,8 @@ int main(int argc, char *argv[]){
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
       	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
 
-
 	//heat up cache
-	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
         int steps=0;
 	for (int run=0; run<1; run++){
@@ -503,12 +490,12 @@ int main(int argc, char *argv[]){
 			free(transitionMatrix);
 			free(emissionMatrix);
 			free(stateProb);
-			//free(alpha);
-			//free(beta);
-			//free(gamma);
-			//free(xi);
+			free(transitionMatrixSafe);
+			free(emissionMatrixSafe);
+			free(stateProbSafe);
 			free(gamma_T);
 			free(gamma_sum);
+			free(ct);
 			
 			printf("Something went wrong! \n");
 			return -1;//error Jan
@@ -529,12 +516,12 @@ int main(int argc, char *argv[]){
 	free(transitionMatrix);
 	free(emissionMatrix);
 	free(stateProb);
-	//free(alpha);
-	//free(beta);
-	//free(gamma);
-	//free(xi);
+	free(transitionMatrixSafe);
+	free(emissionMatrixSafe);
+	free(stateProbSafe);
 	free(gamma_T);
 	free(gamma_sum);
+	free(ct);
 
 	return 0; 
 } 
