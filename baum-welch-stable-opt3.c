@@ -9,9 +9,22 @@
 #include "tested.h"
 
 #define EPSILON 1e-12
-#define DELTA 0.2
+#define DELTA 1e-2
 #define maxSteps 100
 
+void transpose(double* a, const int rows, const int cols){
+
+	double* transpose = (double*)calloc(cols*rows, sizeof(double));
+	memcpy(transpose, a, rows*cols*sizeof(double));
+	for(int row = 0 ; row < rows; row++){
+		for(int col =0; col < cols; col++){
+			a[col * rows + row]  = transpose[row * cols + col];
+			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
+
+		}
+	}
+
+}
 
 int compare_doubles (const void *a, const void *b) //for sorting at the end
 {
@@ -53,7 +66,7 @@ void makeObservations(const int hiddenStates, const int differentObservables, co
 		//write down observation, based on occurenceMatrix of currentState
 		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
 		//choose next State, given transitionMatrix of currentState
-		currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
+	currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
 
 	}
 }
@@ -91,133 +104,227 @@ void makeMatrix(const int dim1,const int dim2, double* const matrix){
 }
 
 
-//Luca
-void forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
 
-	ct[0]=0.0;
+void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T, double* const ct, const int N, const int K, const int T){
+
+
+	//FORWARD
+
+	double* alpha = (double*) malloc(N * T * sizeof(double));
+
+	double ct0 = 0.0;
+	//ct[0]=0.0;
 	//compute alpha(0) and scaling factor for t = 0
+	int y0 = y[0];
 	for(int s = 0; s < N; s++){
-		alpha[s*T] = p[s] * b[s*K + y[0]];
-		ct[0] += alpha[s*T];
-		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
+		//double alphas = p[s] * b[s*K + y0];
+		double alphas = p[s] * b[y0*N + s];
+		ct0 += alphas;
+		alpha[s] = alphas;
+		//printf("%lf %lf %lf \n", alpha[s], p[s], b[s*K+y[0]]);
 	}
 	
-	//scaling factor for t = 0
-	ct[0] = 1.0 / ct[0];
+	ct0 = 1.0 / ct0;
 
 	//scale alpha(0)
 	for(int s = 0; s < N; s++){
-		alpha[s*T] *= ct[0];
+		alpha[s] *= ct0;
 		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
 	}
 	//print_matrix(alpha,N,T);
+	ct[0] = ct0;
 
-	for(int t = 1; t < T; t++){
-		ct[t]=0.0;
+	for(int t = 1; t < T-1; t++){
+		double ctt = 0.0;	
+		const int yt = y[t];	
+		//ct[t]=0.0;
 		for(int s = 0; s<N; s++){// s=new_state
-			alpha[s*T + t] = 0;
+			double alphatNs = 0;
+			//alpha[s*T + t] = 0;
 			for(int j = 0; j < N; j++){//j=old_states
-
-				alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
+				//alphatNs += alpha[j*T + t-1] * a[j*N + s];
+				alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
+				//alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
 				//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
 			}
 
-			alpha[s*T + t] *= b[s*K + y[t]];
+			//alphatNs *= b[s*K + yt];
+			alphatNs *= b[yt*N + s];
 			//print_matrix(alpha,N,T);
-			ct[t] += alpha[s*T + t];
+			ctt += alphatNs;
+			alpha[t*N + s] = alphatNs;
 		}
 		//scaling factor for t 
-		ct[t] = 1.0 / ct[t];
+		ctt = 1.0 / ctt;
 		
 		//scale alpha(t)
 		for(int s = 0; s<N; s++){// s=new_state
-			alpha[s*T + t] *= ct[t];
+			alpha[t*N+s] *= ctt;
 		}
+		ct[t] = ctt;
 	}
-
-	//print_matrix(alpha,N,T);
-	return;
-}
-
-//Ang
-void backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
-	for(int s = 1; s < N+1; s++){
-		beta[s*T-1] = /* 1* */ct[T-1];
-	}
-
-	for(int t = T-1; t > 0; t--){
-		for(int s = 0; s < N; s++){//s=older state
-       			beta[s*T + t-1] = 0.;
-			for(int j = 0; j < N; j++){//j=newer state
-				beta[s*T + t-1] += beta[j*T + t ] * a[s*N + j] * b[j*K + y[t]];
-				//printf("%lf %lf %lf %lf %i \n", beta[s*T + t-1], beta[j*T+t], a[s*N+j], b[j*K+y[t]],y[t]);
-			}
-			beta[s*T + t-1] *= ct[t-1];
+		
+	
+	double ctt = 0.0;	
+	const int yt = y[T-1];	
+	//ct[t]=0.0;
+	for(int s = 0; s<N; s++){// s=new_state
+		double alphatNs = 0;
+		//alpha[s*T + t] = 0;
+		for(int j = 0; j < N; j++){//j=old_states
+			//alphatNs += alpha[j*T + t-1] * a[j*N + s];
+			alphatNs += alpha[(T-2)*N + j] * a[j*N + s];
+			//alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
+			//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
 		}
+
+		//alphatNs *= b[s*K + yt];
+		alphatNs *= b[yt*N + s];	
+		//print_matrix(alpha,N,T);
+		ctt += alphatNs;
+		alpha[(T-1)*N + s] = alphatNs;
 	}
-	//print_matrix(beta,N,T);
-	return;
-}
-
-void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const int N, const int K, const int T){
-
-
-	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
-
-	for(int t = 0; t < T; t++){
-		for(int s = 0; s < N; s++){ // s old state
-			gamma[s*T + t] = alpha[s*T + t] * beta[s*T + t];
-		}
+	//scaling factor for T-1
+	ctt = 1.0 / ctt;
+		
+	//scale alpha(t)
+	for(int s = 0; s<N; s++){// s=new_state
+		alpha[(T-1)*N+s] *= ctt;
+		//XXX Last iteration explicit because of this line
+		gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
 	}
+	ct[T-1] = ctt;
+	//print_matrix(alpha,T,N);
+	//print_matrix(ct,1,T);
 
-	for(int t = 1; t < T; t++){
-		for(int s = 0; s < N; s++){
-			for(int j = 0; j < N; j++){ // j new state
-				xi[((t-1) * N + s) * N + j] = alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]; 
-				//Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
-				//Discussion from 22.4.20 showed that this should be the same. Notation on wikipedia is consistent.
-			}
-		}
-	}
+
+	//FUSED BACKWARD and UPDATE STEP
+
+	double* beta = (double*) malloc(N * sizeof(double));
+	double* beta_new = (double*) malloc(N * sizeof(double));
+	
+	double* a_new = (double*) calloc(N * N , sizeof(double));
+
+	double* b_new = (double*) calloc(K*N, sizeof(double));
+
 
 	for(int s = 0; s < N; s++){
-		// new pi
-		//XXX the next line is not in the r library hmm.
-    		p[s] = gamma[s*T]/ct[0];
-    
-		for(int j = 0; j < N; j++){
-			xi_sum = 0.;
-			gamma_sum_denominator = 0.;
-			for(int t = 1; t < T; t++){
-				xi_sum += xi[((t-1) * N + s) * N + j];
-				gamma_sum_denominator += gamma[s*T + t-1]/ct[t-1];
+		beta[s] = /* 1* */ct[T-1];
+		//if you use real gamma you have to divide by ct[t-1]
+		//the scaling is not necessary
+		//without this scaling we have:
+		//(T-1)*N mults
+		//instead of:
+		//(N + (T-1)*N*N )*mult + ((T-1)*N + (T-1)*N*K + N + N*K)*div
+		//gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
+		gamma_sum[s] = 0.0;
+	}
+	//print_matrix(beta,1,N);
+	//print_matrix(gamma_T,1,N);
+
+
+	//compute sum of xi and gamma from t= 0...T-2
+	for(int t = T-1; t > 0; t--){
+		
+		for(int i = 0; i < N ; i++){
+			p[i] = 0.0;
+			for(int j = 0; j < N; j++){
+
+				//double xi_ijt = alpha[(t-1)*N + i] * a[i*N +j] * beta[j] * b[j*K + y[t]];
+				double xi_ijt = alpha[(t-1)*N + i] * a[i*N +j] * beta[j] * b[y[t]*N + j];
+				a_new[i*N+j] +=xi_ijt;
+				//to get real gamma you have to scale with ct[t-1] 
+				p[i] += xi_ijt /* *ct[t-1]*/ ;
+				//printf("%lf %lf %lf %lf %lf , ", xi_ijt,alpha[(t-1)*N + i] , a[i*N + j] , beta[ j] , b[j*K + y[t]]);
+				
 			}
-			// new transition matrix
-			a[s*N + j] = xi_sum / gamma_sum_denominator;
+			//if you use real gamma you have to divide with ct[t-1]
+			gamma_sum[i]+= p[i] /* /ct[t-1] */ ;
+
+			for(int v = 0; v < K; v++){
+				int indicator = (int)(y[t-1] == v);
+				//if you use real gamma you have to divide by ct[t-1]
+				//b_new[i*K + v] += (double)(indicator)*p[i] /* /ct[t-1]*/;
+				b_new[v*N + i] += (double)(indicator)*p[i] /* /ct[t-1]*/;
+				
+				//printf(" %i %lf \n ", indicator,p[i]);
+			}
+			
+			beta_new[i] = p[i] * ct[t-1] / alpha[(t-1)*N+i];
 		}
+			//printf("\n");
+		
+		double * temp = beta_new;
+		beta_new = beta;
+		beta = temp;
+		/*
+		//This needs additional accesses to p[i] and alpha[(t-1)*N +i]
+		for(int i = 0; i < N; i++){
+			//if you use real gamma you do not have to scale with ct[t-1]
+			beta[i] =p[i] *ct[t-1] / alpha[(t-1)*N + i] ;
+		}
+		*/	
 
-		gamma_sum_denominator += gamma[s*T + T-1]/ct[T-1];
+			
+		
+		//printf("beta \n");
+		//print_matrix(beta,1,N);
+		//printf("gamma \n");
+		//print_matrix(gamma_t,1,N);
+		//printf("gamma sum \n");		
+		//print_matrix(gamma_sum,1,N);
 
+		
+	}
+
+	//XXX The original idea was to scale a and b in the forward step
+	//This is not beneficial because we would need copy a_new to a and
+	//b_new to b. This would mean a loop over N*N elements of a and a_new
+	//and a loop over N*K elements of b and b_new
+	//Therefore we can directly use this loop to do useful work
+
+	//compute new transition matrix
+	for(int i = 0; i < N; i++){
+		for(int j = 0; j < N; j++){
+			a[i*N+j] = a_new[i*N+j]/gamma_sum[i];
+			//printf(" %lf %lf %lf \n", a[i*N + j],  a_new[i*N+j],gamma_sum[i]);
+		}
+	}
+	//print_matrix(a,N,N);
+
+	//add remaining parts of the sum of gamma 
+	for(int i = 0; i < N; i++){
+
+		//if you use real gamma you have to divide by ct[t-1]
+		gamma_sum[i] += gamma_T[i] /* /ct[T-1] */;
 		for(int v = 0; v < K; v++){
-			gamma_sum_numerator = 0.;
-			for(int t = 0; t < T; t++){//why 1 indented => better?
-				if(y[t] == v){// XXX rather AllPossibleValues[v] ??? => don't understand the question. What is AllPossibleValues[v]?
-					gamma_sum_numerator += gamma[s*T + t]/ct[t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
-				}
-			}
-			// new emmision matrix
-			b[s*K + v] = gamma_sum_numerator / gamma_sum_denominator;
+			int indicator = (int)(y[T-1] == v);
+			//if you use real gamma you have to divide by ct[t-1]
+			//b_new[i*K + v] += indicator*gamma_T[i] /* /ct[T-1] */ ;
+			b_new[v*N + i] += indicator*gamma_T[i] /* /ct[T-1] */ ;
+			
 		}
 	}
 
-	return;
-}
+	//compute new emission matrix
+	for(int i = 0; i < N; i++){
+		for(int v = 0; v < K; v++){
+			//b[i*K + v] = b_new[i*K + v] / gamma_sum[i];
+			b[v*N + i] = b_new[v*N + i] / gamma_sum[i];
+			//printf(" %lf %lf %lf \n", b[i*K + v], b_new[i*K + v] , gamma_sum[i]);
+		}
+	}
+	//print_matrix(b,N,K);
 
+	
+	return;
+
+}
 
 
 //Jan
-int finished( const double* const ct, double* const l,const int N,const int T){
-	
+int finished(const double* const ct, double* const l,const int N,const int T){
+
 	//log likelihood
 	double oldLogLikelihood=*l;
 
@@ -232,6 +339,7 @@ int finished( const double* const ct, double* const l,const int N,const int T){
 
 	//printf("log likelihood %.10lf , Epsilon %.10lf result %.10lf \n", newLogLikelihood, EPSILON,newLogLikelihood-oldLogLikelihood);
 	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
+	
 }
 
 
@@ -246,138 +354,25 @@ int similar(const double * const a, const double * const b , const int N, const 
 			sum+=abs*abs;
 		}
 	}
-    //DEBUG off
+    	//DEBUG off
 	//printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
 	return sqrt(sum)<DELTA; 
 }
 
 void heatup(double* const transitionMatrix,double* const piVector,double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
 
-	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
-	double* ct = (double*) malloc(T * sizeof(double));
+	double* ct = (double*) malloc( T * sizeof(double));
+	double* gamma_T = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* gamma_sum = (double*) malloc(hiddenStates * T * sizeof(double));
 	
-	for(int j=0;j<10;j++){
-		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);//Ang
+	for(int j=0;j<10;j++){	
+		baum_welch(transitionMatrix, emissionMatrix, piVector, observations, gamma_sum, gamma_T,ct, hiddenStates, differentObservables, T);
 	}	
 	
-}
-	
-
-void baum_welch(const double* const a, const double* const b, const double* const p, const int* const y, double * const gamma_total, double* const gamma_T, double* const ct, const int N, const int K, const int T){
-
-
-	//FORWARD
-
-	double* alpha = (double*) malloc(N * T * sizeof(double));
-
-	ct[0]=0.0;
-	//compute alpha(0) and scaling factor for t = 0
-	for(int s = 0; s < N; s++){
-		alpha[s*T] = p[s] * b[s*K + y[0]];
-		ct[0] += alpha[s*T];
-		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
-	}
-	
-	//scaling factor for t = 0
-	ct[0] = 1.0 / ct[0];
-
-	//scale alpha(0)
-	for(int s = 0; s < N; s++){
-		alpha[s*T] *= ct[0];
-		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
-	}
-	//print_matrix(alpha,N,T);
-
-	for(int t = 1; t < T; t++){
-		ct[t]=0.0;
-		for(int s = 0; s<N; s++){// s=new_state
-			alpha[s*T + t] = 0;
-			for(int j = 0; j < N; j++){//j=old_states
-
-				alpha[s*T + t] += alpha[j*T + t-1] * a[j*N + s];
-				//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
-			}
-
-			alpha[s*T + t] *= b[s*K + y[t]];
-			//print_matrix(alpha,N,T);
-			ct[t] += alpha[s*T + t];
-		}
-		//scaling factor for t 
-		ct[t] = 1.0 / ct[t];
-		
-		//scale alpha(t)
-		for(int s = 0; s<N; s++){// s=new_state
-			alpha[s*T + t] *= ct[t];
-		}
-	}
-
-	//print_matrix(alpha,N,T);
-
-
-
-	//FUSED BACKWARD and UPDATE STEP
-
-
-	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
-
-	for(int t = 0; t < T; t++){
-		for(int s = 0; s < N; s++){ // s old state
-			gamma[s*T + t] = alpha[s*T + t] * beta[s*T + t];
-		}
-	}
-
-	for(int t = 1; t < T; t++){
-		for(int s = 0; s < N; s++){
-			for(int j = 0; j < N; j++){ // j new state
-				xi[((t-1) * N + s) * N + j] = alpha[s*T + t-1] * a[s*N + j] * beta[j*T + t] * b[j*K + y[t]]; 
-				//Unlike evidence, Xi has a and b under the line in Wikipedia. The notation "P(Y|theta)" on Wikipedia is misleading.
-				//Discussion from 22.4.20 showed that this should be the same. Notation on wikipedia is consistent.
-			}
-		}
-	}
-
-	for(int s = 0; s < N; s++){
-		// new pi
-		//XXX the next line is not in the r library hmm.
-    		p[s] = gamma[s*T]/ct[0];
-    
-		for(int j = 0; j < N; j++){
-			xi_sum = 0.;
-			gamma_sum_denominator = 0.;
-			for(int t = 1; t < T; t++){
-				xi_sum += xi[((t-1) * N + s) * N + j];
-				gamma_sum_denominator += gamma[s*T + t-1]/ct[t-1];
-			}
-			// new transition matrix
-			a[s*N + j] = xi_sum / gamma_sum_denominator;
-		}
-
-		gamma_sum_denominator += gamma[s*T + T-1]/ct[T-1];
-
-		for(int v = 0; v < K; v++){
-			gamma_sum_numerator = 0.;
-			for(int t = 0; t < T; t++){//why 1 indented => better?
-				if(y[t] == v){// XXX rather AllPossibleValues[v] ??? => don't understand the question. What is AllPossibleValues[v]?
-					gamma_sum_numerator += gamma[s*T + t]/ct[t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
-				}
-			}
-			// new emmision matrix
-			b[s*K + v] = gamma_sum_numerator / gamma_sum_denominator;
-		}
-	}
-	
-	return;
-
 }
 
 
 int main(int argc, char *argv[]){
-
 
 	if(argc != 5){
 		printf("USAGE: ./run <seed> <hiddenStates> <observables> <T> \n");
@@ -426,16 +421,9 @@ int main(int argc, char *argv[]){
 	double* stateProb  = (double*) malloc(hiddenStates * sizeof(double));
 	double* stateProbSafe  = (double*) malloc(hiddenStates * sizeof(double));
 
-	//double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
-	//double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
-	//double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
-	//double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); 
-
-	//sum of gamma over t for all states
-	double* gamma_sum = (double*) malloc(hiddenStates * sizeof(double));
-	//gamma for all states at time T
-	double* gamma_T = (double*) malloc(hiddenStates * sizeof(double));
-
+	double* gamma_T = (double*) malloc( hiddenStates * sizeof(double));
+	double* gamma_sum = (double*) malloc( hiddenStates * sizeof(double));
+	
 	double* ct = (double*) malloc(T*sizeof(double));
 
 	//make some random observations
@@ -447,13 +435,16 @@ int main(int argc, char *argv[]){
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
 	makeProbabilities(stateProb,hiddenStates);
 
+	transpose(emissionMatrix, hiddenStates, differentObservables);
+
 	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
 	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
       	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
 
+
 	//heat up cache
-	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
         int steps=0;
 	for (int run=0; run<1; run++){
@@ -470,27 +461,36 @@ int main(int argc, char *argv[]){
         
         	steps=0;
 		start = start_tsc();
-	
+
+		//for(int i = 0; i < 10; i++){
 		do{
-			//forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
-			//backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
-			//update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
-            		
-			baum_welch(transitionMatrix,emissionMatrix, stateProb, observations, gamma_sum, gamma_T, ct, hiddenStates, differentObservables, T);	
 
-			steps+=1;
+			baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,ct, hiddenStates, differentObservables, T);
+            		steps+=1;
 		}while (!finished(ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
-
+		
 		cycles = stop_tsc(start);
         	cycles = cycles/steps;
 		//Jan
+				
 
-		//DEBUGGING
+		transpose(emissionMatrix,differentObservables,hiddenStates);
+
+		printf("a \n");
 		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
-		print_matrix(emissionMatrix, hiddenStates,differentObservables);
+		printf("b \n");
+		print_matrix(emissionMatrix,hiddenStates,differentObservables);
+		printf("state \n");
+		print_matrix(stateProb,1,hiddenStates);
+		
+		//print_matrix(xi,T,hiddenStates*hiddenStates);
+		//print_matrix(emissionMatrix, hiddenStates,differentObservables);
 
-
+		//emissionMatrix is not in state major order
+		transpose(emissionMatrixSafe, differentObservables,hiddenStates);
         	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
+
+
 		if (similar(transitionMatrixSafe,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixSafe,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
             //DEBUG OFF
@@ -507,9 +507,9 @@ int main(int argc, char *argv[]){
 			//free(beta);
 			//free(gamma);
 			//free(xi);
-			free(gamma_sum);
 			free(gamma_T);
-			free(ct);
+			free(gamma_sum);
+			
 			printf("Something went wrong! \n");
 			return -1;//error Jan
 		}
@@ -533,10 +533,8 @@ int main(int argc, char *argv[]){
 	//free(beta);
 	//free(gamma);
 	//free(xi);
-
-	free(gamma_sum);
 	free(gamma_T);
-	free(ct);
+	free(gamma_sum);
 
 	return 0; 
 } 
