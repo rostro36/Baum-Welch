@@ -32,10 +32,14 @@ and for the normal plots also the roofline plot.
     - read-out statistics for cache misses/branch predictions etc.
 
 ## Optimization history
-- op1: 		Using scalar replacement
-- op2:		transpose alpha, beta and gamma array to improve access pattern
-- op3.0:	Rewrite and fuse backward and update step without basic optimizations
-- op3:		Like 3.0 but the update of the transitionMatrix and emissionMatrix is in the forward step
+- op1: 
+	* Using scalar replacement
+- op2:
+	* transpose alpha, beta and gamma array to improve access pattern
+- op3.0:
+	* Rewrite and fuse backward and update step without basic optimizations
+- op3:
+	* Like 3.0 but the update of the transitionMatrix and emissionMatrix is in the forward step
 
 ## Usage baum-welch.r
 - open with RStudio
