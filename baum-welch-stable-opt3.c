@@ -287,6 +287,9 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 		
 	}
 
+	free(beta);
+	free(beta_new);
+	free(alpha);
 	return;
 
 }

@@ -509,6 +509,8 @@ int main(int argc, char *argv[]){
         		free(emissionMatrix);
         		free(stateProb);
           	  	free(ct);
+          	  	free(gamma_T);
+          	  	free(gamma_sum);
             		free(transitionMatrixSafe);
         		free(emissionMatrixSafe);
            		free(stateProbSafe);
@@ -535,6 +537,8 @@ int main(int argc, char *argv[]){
 	free(emissionMatrix);
 	free(stateProb);
    	free(ct);
+        free(gamma_T);
+        free(gamma_sum);
     	free(transitionMatrixSafe);
 	free(emissionMatrixSafe);
    	free(stateProbSafe);
