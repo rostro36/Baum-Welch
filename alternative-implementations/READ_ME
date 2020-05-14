@@ -1,8 +1,0 @@
-USAGE of baum-welch.r
-
-- open with RStudio
-- Go the session -> Set Working Directory -> to source file location
-
-Make sure you have a folder 'alternative-implemenations' which contains baum-welch.r
-Make sure you have a folder 'test_matrices' which contains a observations.csv file
-
