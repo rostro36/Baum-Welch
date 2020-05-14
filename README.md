@@ -44,6 +44,8 @@ and for the normal plots also the roofline plot.
 	* Like 3 but with scalar replacement
 - op3.2:
 	* precomputing indicator function is not worth it
+- op3.3:
+	* tranpose transitionMatrix to get better access pattern in forward step. Is not worth it.
 
 ## Usage baum-welch.r
 - open with RStudio
