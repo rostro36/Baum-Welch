@@ -31,7 +31,7 @@ and for the normal plots also the roofline plot.
 - kcachegrind cachegrindfile
     - read-out statistics for cache misses/branch predictions etc.
 
-##Optimization history
+## Optimization history
 - op1: 		Using scalar replacement
 - op2:		transpose alpha, beta and gamma array to improve access pattern
 - op3.0:	Rewrite and fuse backward and update step without basic optimizations
