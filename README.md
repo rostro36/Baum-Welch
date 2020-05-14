@@ -40,6 +40,8 @@ and for the normal plots also the roofline plot.
 	* Rewrite and fuse backward and update step without basic optimizations
 - op3:
 	* Like 3.0 but the update of the transitionMatrix and emissionMatrix is in the forward step
+- op3.1:
+	* Like 3 but with scalar replacement
 
 ## Usage baum-welch.r
 - open with RStudio
