@@ -367,7 +367,13 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
 		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);//Ang
 	}	
-	
+
+	free(alpha);
+	free(beta);
+	free(gamma);
+	free(xi);
+   	free(ct);
+   	free(inv_ct);	
 }
 
 void wikipedia_example(){
@@ -419,6 +425,12 @@ void wikipedia_example(){
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrix, hiddenStates,differentObservables);
 	print_vector(piMatrix,2);
+
+	free(alpha);
+	free(beta);
+	free(gamma);
+	free(xi);
+   	free(ct);
 }
 
 int main(int argc, char *argv[]){

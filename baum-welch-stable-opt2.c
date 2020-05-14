@@ -210,7 +210,7 @@ void backward(const double* const a, const double* const b, double* const beta, 
 	return;
 }
 
-void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const double* const inv_ct,const int N, const int K, const int T){
+void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,double* const inv_ct,const int N, const int K, const int T){
 
 
 	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
@@ -399,12 +399,20 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
 	double* ct = (double*) malloc(T * sizeof(double));
+	double* inv_ct = (double*) malloc(T * sizeof(double));
 	
 	for(int j=0;j<10;j++){
 		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
 		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
 		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);//Ang
 	}	
+
+	free(alpha);
+	free(beta);
+	free(gamma);
+	free(xi);
+   	free(ct);
+   	free(inv_ct);
 	
 }
 
@@ -446,7 +454,6 @@ void wikipedia_example(){
 	double* gamma = (double*) malloc(T * hiddenStates  * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
 	double* ct = (double*) malloc(T * sizeof(double));
-		//to save T divisions (in if y[t] == v block)
 	double* inv_ct = (double*) malloc(T * sizeof(double));
 
 	for(int t = 0; t < 1000; t++){
@@ -459,6 +466,14 @@ void wikipedia_example(){
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrix, hiddenStates,differentObservables);
 	print_vector(piMatrix,2);
+
+
+	free(alpha);
+	free(beta);
+	free(gamma);
+	free(xi);
+   	free(ct);
+   	free(inv_ct);
 }
 
 int main(int argc, char *argv[]){
@@ -501,53 +516,57 @@ int main(int argc, char *argv[]){
 	//the observations we made
 	int* observations = (int*) malloc ( T * sizeof(int));
 	makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations);//??? added
-	
+
 	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* transitionMatrixSafe = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
+	double* transitionMatrixTesting=(double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 	double* emissionMatrixSafe = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
+	double* emissionMatrixTesting=(double*) malloc(hiddenStates*differentObservables*sizeof(double));
 
 	//init state distribution
 	double* stateProb  = (double*) malloc(hiddenStates * sizeof(double));
 	double* stateProbSafe  = (double*) malloc(hiddenStates * sizeof(double));
+	double* stateProbTesting  = (double*) malloc(hiddenStates * sizeof(double));
 
-	double* alpha = (double*) malloc( T *hiddenStates * sizeof(double));
-	double* beta = (double*) malloc(T *hiddenStates *  sizeof(double));
-	double* gamma = (double*) malloc(T * hiddenStates * sizeof(double));
-	double* xi = (double*) malloc((T-1) * hiddenStates * hiddenStates *  sizeof(double)); 
-
+	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
+	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); 
 
 	double* ct = (double*) malloc(T*sizeof(double));
-		//to save T divisions (in if y[t] == v block)
-	double* inv_ct = (double*) malloc(T * sizeof(double));
+	double* inv_ct = (double*) malloc(T*sizeof(double));
 	
-	//heatup needs some data.
+	//Generate matrices
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
 	makeProbabilities(stateProb,hiddenStates);
-	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+
+	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
+	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
+   	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
+      	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
+
+
+	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
         int steps=0;
 	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
-		makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
-       		memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
-		makeMatrix(hiddenStates, differentObservables, emissionMatrix);
-	   	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
-		makeProbabilities(stateProb,hiddenStates);
-        	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));	
-		//XXX brauchen wir nach jedem run neue transitionMatrix, emissionMatrix und stateProb?
+       		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+        	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
+	
+		//used for testing
+		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+      		memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
 
         	double logLikelihood=-DBL_MAX; //Took down here.
-		double Likelihood = 0;
-		//make some random observations
-		int groundInitialState = rand()%hiddenStates;
-		makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations); //??? ground___ zu ___ wechseln? => Verstehe deine Frage nicht...
-		//XXX Ist es notwendig nach jedem run neue observations zu machen?
 
-		//only needed for testing
+		//only needed for testing with R
 		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
         
 		//XXX start after makeMatrix
@@ -556,43 +575,56 @@ int main(int argc, char *argv[]){
 
 	
 		do{
-			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
-			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
-			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);  //Ang
+			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
+			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);
+			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);
             		steps+=1;
 		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 
 		cycles = stop_tsc(start);
         	cycles = cycles/steps;
-		//Jan
+	
+		/*
+		//Show results
+		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
+		print_matrix(emissionMatrix, hiddenStates,differentObservables);
+		print_vector(stateProb, hiddenStates);
+		*/
 
+        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 
-		//print_matrix(xi,T,hiddenStates*hiddenStates);
-		//print_matrix(emissionMatrix, hiddenStates,differentObservables);
-
-
-        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixSafe, emissionMatrixSafe, stateProbSafe, observations);
-		if (similar(transitionMatrixSafe,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixSafe,emissionMatrix,differentObservables,hiddenStates)){
+		/*
+		//Show tested results
+		printf("tested \n");
+		print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
+		print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
+		print_vector(stateProbTesting, hiddenStates);
+		*/
+ 
+		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
             //DEBUG OFF
 			//printf("run %i: \t %llu cycles \n",run, cycles);
 		}else{	
 		
-				free(groundTransitionMatrix);
-            	free(groundEmissionMatrix);
-            	free(observations);
-            	free(transitionMatrix);
-            	free(emissionMatrix);
-            	free(stateProb);
-            	free(alpha);
-            	free(beta);
-            	free(gamma);
-            	free(xi);
-                free(ct);
-                free(inv_ct);
-                free(transitionMatrixSafe);
-            	free(emissionMatrixSafe);
-                free(stateProbSafe);
+			free(groundTransitionMatrix);
+        		free(groundEmissionMatrix);
+        		free(observations);
+        		free(transitionMatrix);
+        		free(emissionMatrix);
+        		free(stateProb);
+   		     	free(alpha);
+       		 	free(beta);
+   		     	free(gamma);
+        		free(xi);
+          	  	free(ct);
+          	  	free(inv_ct);
+            		free(transitionMatrixSafe);
+        		free(emissionMatrixSafe);
+           		free(stateProbSafe);
+            		free(transitionMatrixTesting);
+        		free(emissionMatrixTesting);
+           		free(stateProbTesting);
 			printf("Something went wrong! \n");
 			return -1;//error Jan
 		}
@@ -606,7 +638,7 @@ int main(int argc, char *argv[]){
 
 	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
-	free(groundTransitionMatrix);
+    	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -616,11 +648,14 @@ int main(int argc, char *argv[]){
 	free(beta);
 	free(gamma);
 	free(xi);
-    free(ct);
-    free(inv_ct);
-    free(transitionMatrixSafe);
+   	free(ct);
+   	free(inv_ct);
+    	free(transitionMatrixSafe);
 	free(emissionMatrixSafe);
-    free(stateProbSafe);
+   	free(stateProbSafe);
+	free(transitionMatrixTesting);
+	free(emissionMatrixTesting);
+	free(stateProbTesting);
 
 	return 0; 
 } 
