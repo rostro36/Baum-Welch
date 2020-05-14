@@ -42,6 +42,8 @@ and for the normal plots also the roofline plot.
 	* Like 3.0 but the update of the transitionMatrix and emissionMatrix is in the forward step
 - op3.1:
 	* Like 3 but with scalar replacement
+- op3.2:
+	* precomputing indicator function is not worth it
 
 ## Usage baum-welch.r
 - open with RStudio
