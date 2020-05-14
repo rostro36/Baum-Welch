@@ -278,14 +278,15 @@ void update(double* const a, double* const p, double* const b, const double* con
 			// new transition matrix
 			a[s*N + j] = xi_sum / gamma_sum_denominator;
 		}
-
-		gamma_sum_denominator += gamma[(T-1)*N + s]/ct[T-1];
+		double inv_ctt1 = 1/ct[T-1];
+		inv_ct[T-1]=inv_ctt1;
+		gamma_sum_denominator += gamma[(T-1)*N + s]*inv_ctt1;//ct[T-1];
 		const double gamma_sum_denominator_div = 1/gamma_sum_denominator ;
 		for(int v = 0; v < K; v++){
 			gamma_sum_numerator = 0.;
 			for(int t = 0; t < T; t++){//why 1 indented => better?
 				if(y[t] == v){// XXX rather AllPossibleValues[v] ??? => don't understand the question. What is AllPossibleValues[v]?
-					gamma_sum_numerator += gamma[t*N + s]/ct[t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
+					gamma_sum_numerator += gamma[t*N + s]*inv_ct[t];//ct[t];//why different t here than in y[t] => I think this was a typo. Indeed it should be the same t for gamma and y.
 				}
 			}
 			// new emmision matrix
@@ -552,7 +553,7 @@ int main(int argc, char *argv[]){
 	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
         int steps=0;
-	for (int run=0; run<maxRuns; run++){
+	for (int run=0; run<1; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
        		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
@@ -584,22 +585,22 @@ int main(int argc, char *argv[]){
 		cycles = stop_tsc(start);
         	cycles = cycles/steps;
 	
-		/*
+		
 		//Show results
 		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 		print_matrix(emissionMatrix, hiddenStates,differentObservables);
 		print_vector(stateProb, hiddenStates);
-		*/
+		
 
         	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 
-		/*
+		
 		//Show tested results
 		printf("tested \n");
 		print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
 		print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
 		print_vector(stateProbTesting, hiddenStates);
-		*/
+		
  
 		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
