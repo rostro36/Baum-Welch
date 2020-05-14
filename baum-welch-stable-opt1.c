@@ -405,7 +405,7 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	free(gamma);
 	free(xi);
    	free(ct);
-   	free(inv_ct);	
+
 }
 
 void wikipedia_example(){
