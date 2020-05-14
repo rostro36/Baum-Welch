@@ -553,7 +553,7 @@ int main(int argc, char *argv[]){
 	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
         int steps=0;
-	for (int run=0; run<1; run++){
+	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
        		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
@@ -585,22 +585,22 @@ int main(int argc, char *argv[]){
 		cycles = stop_tsc(start);
         	cycles = cycles/steps;
 	
-		
+		/*
 		//Show results
 		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 		print_matrix(emissionMatrix, hiddenStates,differentObservables);
 		print_vector(stateProb, hiddenStates);
-		
+		*/
 
         	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 
-		
+		/*
 		//Show tested results
 		printf("tested \n");
 		print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
 		print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
 		print_vector(stateProbTesting, hiddenStates);
-		
+		*/
  
 		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
