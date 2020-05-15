@@ -1,7 +1,7 @@
 wichtiger_param=1
 parameter_names=['flag','hiddenstate','different observables','T']
 aktuelle_version=0
-file_name="model_output.txt"
+file_name="../output_measures/model_output.txt"
 #machine specs
 scalar_pi=6
 vector_pi=12

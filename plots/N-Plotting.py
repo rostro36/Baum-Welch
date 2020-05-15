@@ -3,7 +3,7 @@ import re
 import statistics as stats
 import time
 
-file_name="N.txt"
+file_name="../output_measures/N.txt"
 #machine specs
 scalar_pi=6
 vector_pi=12
