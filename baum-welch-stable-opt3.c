@@ -297,33 +297,32 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 
-	//XXX It is not optimal to create four arrays in each iteration.
+	//XXX It is not optimal to create three arrays in each iteration.
 	//This is only used to demonstarte the use of the pointer swap at the end
 	//When inlined the  arrays should be generated at the beginning of the main function like the other arrays we use
-	//Then the next four lines can be deleted 
+	//Then the next three lines can be deleted 
 	//Rest needs no modification
 	double* beta = (double*) malloc(T  * sizeof(double));
 	double* beta_new = (double*) malloc(T * sizeof(double));
 	double* alpha = (double*) malloc(N * T * sizeof(double));
-	double* gamma_sum_1 = (double*) malloc(N  * sizeof(double));
-	
-	memcpy(gamma_sum_1, gamma_sum, N*sizeof(double));
+
 
 	//add remaining parts of the sum of gamma 
 	for(int s = 0; s < N; s++){
 		//if you use real gamma you have to divide by ct[t-1]
-		gamma_sum[s] += gamma_T[s] /* /ct[T-1] */;
+		double gamma_Ts = gamma_T[s];
+		gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
 		for(int v = 0; v < K; v++){
 			int indicator = (int)(y[T-1] == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator*gamma_T[s] /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator*gamma_Ts /* /ct[T-1] */ ;
 		}
 	}
 
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
 		for(int s = 0; s < N; s++){
-			b[v*N + s] = b_new[v*N + s] / gamma_sum[s];
+			b[v*N + s] = b_new[v*N + s] / gamma_T[s];
 			//printf(" %lf %lf %lf \n", b[i*K + v], b_new[i*K + v] , gamma_sum[i]);
 		}
 	}
@@ -360,7 +359,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		double alphatNs = 0;
 		//alpha[s*T + t] = 0;
 		for(int j = 0; j < N; j++){//j=old_states
-			double ajNs =  a_new[j*N + s] / gamma_sum_1[j];
+			double ajNs =  a_new[j*N + s] / gamma_sum[j];
 			a[j*N + s] = ajNs;
 			alphatNs += alpha[0*N + j] * ajNs;
 			//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
@@ -530,7 +529,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	free(alpha);
 	free(beta);
 	free(beta_new);
-	free(gamma_sum_1);
 	
 	return;
 }
