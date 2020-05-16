@@ -53,6 +53,8 @@ From inside code folder:
 	* precomputing indicator function is not worth it
 - op3.3:
 	* tranpose transitionMatrix to get better access pattern in forward step. Is not worth it.
+- op3.4:
+	* using blocking for computation of emission Matrix (blocksize 4x4)
 
 ## Usage baum-welch.r
 - open with RStudio
