@@ -65,6 +65,7 @@ void makeObservations(const int hiddenStates, const int differentObservables, co
 		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
 		//choose next State, given transitionMatrix of currentState
 	    currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
+
 	}
 }
 
@@ -170,7 +171,10 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 		for(int j = 0; j < N; j++){//j=old_states
 			alphatNs += alpha[(T-2)*N + j] * a[j*N + s];
 			//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
+
+			
 		}
+
 		alphatNs *= b[yt*N + s];	
 		//print_matrix(alpha,N,T);
 		ctt += alphatNs;
@@ -213,6 +217,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 			b_new[v*N + s] = 0.0;
 		}
 	}
+
 	//print_matrix(beta,1,N);
 	//print_matrix(gamma_T,1,N);
 
@@ -272,7 +277,9 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 		double * temp = beta_new;
 		beta_new = beta;
 		beta = temp;
-        yt=yt1;
+		yt = yt1;
+		
+		
 		/*
 		//This needs additional accesses to p[i] and alpha[(t-1)*N +i]
 		for(int i = 0; i < N; i++){
@@ -299,7 +306,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 }
 
 
-void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
+void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int* const indicator, const int N, const int K, const int T){
 
 	//XXX It is not optimal to create four arrays in each iteration.
 	//This is only used to demonstarte the use of the pointer swap at the end
@@ -315,11 +322,11 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	for(int s = 0; s < N; s++){
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
-		gamma_T[s] += gamma_sum[s]; /* /ct[T-1] */;
+		gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
 		for(int v = 0; v < K; v++){
-			int indicator = (int)(yt == v);
+			//int indicator = (int)(yt == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator*gamma_Ts /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator[(T-1)*K + v]*gamma_Ts /* /ct[T-1] */ ;
 		}
 	}
 
@@ -418,11 +425,8 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		//alpha[s*T + t] = 0;
 		for(int j = 0; j < N; j++){//j=old_states
 			alphatNs += alpha[(T-2)*N + j] * a[j*N + s];
-			//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
-
-			
+			//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);	
 		}
-
 		alphatNs *= b[yt*N + s];	
 		//print_matrix(alpha,N,T);
 		ctt += alphatNs;
@@ -470,7 +474,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 			//beta_new[s]=0.0;
 			for(int j = 0; j < N; j++){
 				double temp = a[s*N +j] * beta[j] * b[yt*N + j];
-				
 				double xi_sjt = alphat1Ns * temp;
 				a_new[s*N+j] +=xi_sjt;
 				//XXX NEW COMPUTATION OF BETA DOES NOT NEED THIS
@@ -499,9 +502,9 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 			gamma_sum[s]+= ps /* /ct[t-1] */ ;
 
 			for(int v = 0; v < K; v++){
-				int indicator = (int)(yt1 == v);
+				//int indicator = (int)(yt1 == v);
 				//if you use real gamma you have to divide by ct[t-1]
-				b_new[v*N + s] += (double)(indicator)*ps /* /ct[t-1]*/;
+				b_new[v*N + s] += indicator[(t-1)*K + v]*ps /* /ct[t-1]*/;
 				
 				//printf(" %i %lf \n ", indicator,p[i]);
 			}
@@ -512,7 +515,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		double * temp = beta_new;
 		beta_new = beta;
 		beta = temp;
-		yt=yt1;
 		/*
 		//This needs additional accesses to p[i] and alpha[(t-1)*N +i]
 		for(int i = 0; i < N; i++){
@@ -520,14 +522,13 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 			beta[i] =p[i] *ct[t-1] / alpha[(t-1)*N + i] ;
 		}
 		*/	
-
 		//printf("beta \n");
 		//print_matrix(beta,1,N);
 		//printf("gamma \n");
 		//print_matrix(gamma_t,1,N);
 		//printf("gamma sum \n");		
 		//print_matrix(gamma_sum,1,N);
-		
+		yt=yt1;
 	}
 
 	free(alpha);
@@ -537,7 +538,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	return;
 }
 
-void final_scaling(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
+void final_scaling(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int* const indicator, const int N, const int K, const int T){
 	//compute new transition matrix
 	for(int s = 0; s < N; s++){
 		double gamma_sums_inv = 1./gamma_sum[s];
@@ -547,20 +548,18 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 		}
 	}
 	//print_matrix(a,N,N);
-
-	int yt =y[T-1];
+    int yt =y[T-1];
 	//add remaining parts of the sum of gamma 
 	for(int s = 0; s < N; s++){	
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
 		gamma_sum[s] += gamma_Ts /* /ct[T-1] */;
 		for(int v = 0; v < K; v++){
-			int indicator = (int)(yt == v);
+			//int indicator = (int)(yt == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator*gamma_Ts /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator[(T-1)*K + v]*gamma_Ts /* /ct[T-1] */ ;
 		}
 	}
-
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
 		for(int s = 0; s < N; s++){
@@ -569,17 +568,14 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 		}
 	}
 	//print_matrix(b,N,K);
-
 }
 //Jan
 int finished(const double* const ct, double* const l,const int N,const int T){
 
 	//log likelihood
 	double oldLogLikelihood=*l;
-
 	double newLogLikelihood = 0.0;
 	//evidence with alpha only:
-
 	for(int time = 0; time < T; time++){
 		newLogLikelihood -= log10(ct[time]);
 	}
@@ -615,16 +611,18 @@ void heatup(double* const transitionMatrix,double* const stateProb,double* const
 	double* gamma_sum = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* a_new = (double*) malloc(hiddenStates * hiddenStates * sizeof(double));
 	double* b_new = (double*) malloc(differentObservables*hiddenStates * sizeof(double));
+	int* indicator = (int*) calloc(T*differentObservables, sizeof(int));
 	
 	for(int j=0;j<10;j++){
-		baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
+		baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, indicator, hiddenStates, differentObservables, T);
 	}
 
 	free(ct);
 	free(gamma_T);
 	free(gamma_sum);
 	free(a_new);
-	free(b_new);	
+	free(b_new);
+	free(indicator);	
 	
 }
 
@@ -641,14 +639,7 @@ int main(int argc, char *argv[]){
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
 	const int T = atoi(argv[4]); 
-    /*
-	printf("Parameters: \n");
-	printf("seed = %i \n", seed);
-	printf("hidden States = %i \n", hiddenStates);
-	printf("different Observables = %i \n", differentObservables);
-	printf("number of observations= %i \n", T);
-	printf("\n");
-    */
+
 	myInt64 cycles;
    	myInt64 start;
 	double runs[maxRuns]; //for medianTime
@@ -688,6 +679,8 @@ int main(int argc, char *argv[]){
 	double* b_new = (double*) malloc(differentObservables*hiddenStates * sizeof(double));
 	
 	double* ct = (double*) malloc(T*sizeof(double));
+
+	int* indicator = (int*) malloc(T*differentObservables*sizeof(int));
 	
 	//random init transition matrix, emission matrix and state probabilities.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -721,18 +714,25 @@ int main(int argc, char *argv[]){
 		//only needed for testing with R
 		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
         
-        steps=1;
+
 		start = start_tsc();
 
+		for(int t = 0; t < T; t++){
+			const int yt = observations[t];
+			for(int v = 0; v < differentObservables; v++){
+				indicator[t*differentObservables + v] = (yt ==v);
+			}
+		}
+       	steps=1;
 		initial_step(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
 
 		//for(int i = 0; i < 1; i++){
 		do{
-			baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
+			baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, indicator, hiddenStates, differentObservables, T);
             steps+=1;
 		}while (!finished(ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 		
-		final_scaling(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
+		final_scaling(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, indicator, hiddenStates, differentObservables, T);
 
 		cycles = stop_tsc(start);
         cycles = cycles/steps;
@@ -750,7 +750,7 @@ int main(int argc, char *argv[]){
 
 		//emissionMatrix is not in state major order
 		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
-        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+       	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 		
 		/*
 		//Show tested results
@@ -774,6 +774,7 @@ int main(int argc, char *argv[]){
 			free(emissionMatrix);
 			free(stateProb);
    			free(ct);
+   			free(indicator);
 			free(gamma_T);
 			free(gamma_sum);
 			free(a_new);
@@ -804,6 +805,7 @@ int main(int argc, char *argv[]){
 	free(emissionMatrix);
 	free(stateProb);
    	free(ct);
+   	free(indicator);
 	free(gamma_T);
 	free(gamma_sum);
 	free(a_new);
