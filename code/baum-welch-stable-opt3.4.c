@@ -590,7 +590,7 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 	for(int s = 0; s < N; s++){	
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
-		gamma_sum[s] += gamma_Ts /* /ct[T-1] */;
+		gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
         b_new[yt*N+s]+=gamma_Ts;
         /*
 		for(int v = 0; v < K; v++){
