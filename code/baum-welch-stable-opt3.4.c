@@ -260,15 +260,16 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= ps /* /ct[t-1] */ ;
-
+            b_new[yt1*N+s]+=ps;
+            /*
 			for(int v = 0; v < K; v++){
 				int indicator = (int)(yt1 == v);
 				//if you use real gamma you have to divide by ct[t-1]
-				b_new[v*N + s] += (double)(indicator)*ps /* /ct[t-1]*/;
+				b_new[v*N + s] += (double)(indicator)*ps;
 				
 				//printf(" %i %lf \n ", indicator,p[i]);
 			}
-			
+			*/
 			//printf(" %lf %lf %lf \n", p[i],  ct[t-1],alpha[(t-1)*N+i]);
 		}
 		//printf("T = %li\n",t);
@@ -324,11 +325,14 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
 		gamma_T[s] += gamma_sum[s]; /* /ct[T-1] */;
+        b_new[yt*N+s]+=gamma_Ts;
+        /*
 		for(int v = 0; v < K; v++){
 			int indicator = (int)(yt == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator*gamma_Ts /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator*gamma_Ts;
 		}
+        */
 	}
 
 	const int block_size_x = 4;
@@ -525,15 +529,16 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= ps /* /ct[t-1] */ ;
-
+            b_new[yt1*N+s]+=ps;
+            /*
 			for(int v = 0; v < K; v++){
 				int indicator = (int)(yt1 == v);
 				//if you use real gamma you have to divide by ct[t-1]
-				b_new[v*N + s] += (double)(indicator)*ps /* /ct[t-1]*/;
+				b_new[v*N + s] += (double)(indicator)*ps;
 				
 				//printf(" %i %lf \n ", indicator,p[i]);
 			}
-			
+			*/
 			//printf(" %lf %lf %lf \n", p[i],  ct[t-1],alpha[(t-1)*N+i]);
 		}
 		//printf("T = %li\n",t);
@@ -586,11 +591,14 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
 		gamma_sum[s] += gamma_Ts /* /ct[T-1] */;
+        b_new[yt*N+s]+=gamma_Ts;
+        /*
 		for(int v = 0; v < K; v++){
 			int indicator = (int)(yt == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator*gamma_Ts /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator*gamma_Ts;
 		}
+        */
 	}
 
 	const int block_size_x = 4;

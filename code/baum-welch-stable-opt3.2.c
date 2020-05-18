@@ -260,15 +260,17 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= ps /* /ct[t-1] */ ;
-
+            
+            b_new[yt1*N+s]+=ps;
+            /*            
 			for(int v = 0; v < K; v++){
 				int indicator = (int)(yt1 == v);
 				//if you use real gamma you have to divide by ct[t-1]
-				b_new[v*N + s] += (double)(indicator)*ps /* /ct[t-1]*/;
+				b_new[v*N + s] += (double)(indicator)*ps;
 				
 				//printf(" %i %lf \n ", indicator,p[i]);
 			}
-			
+			*/
 			//printf(" %lf %lf %lf \n", p[i],  ct[t-1],alpha[(t-1)*N+i]);
 		}
 		//printf("T = %li\n",t);
@@ -323,11 +325,14 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
 		gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
-		for(int v = 0; v < K; v++){
+        b_new[yt*N+s]+=gamma_Ts;
+        /*		
+        for(int v = 0; v < K; v++){
 			//int indicator = (int)(yt == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator[(T-1)*K + v]*gamma_Ts /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator[(T-1)*K + v]*gamma_Ts;
 		}
+        */
 	}
 
 	//compute new emission matrix
@@ -500,15 +505,16 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= ps /* /ct[t-1] */ ;
-
+            b_new[yt1*N+s]+=ps;
+            /*
 			for(int v = 0; v < K; v++){
 				//int indicator = (int)(yt1 == v);
 				//if you use real gamma you have to divide by ct[t-1]
-				b_new[v*N + s] += indicator[(t-1)*K + v]*ps /* /ct[t-1]*/;
+				b_new[v*N + s] += indicator[(t-1)*K + v]*ps;
 				
 				//printf(" %i %lf \n ", indicator,p[i]);
 			}
-			
+			*/
 			//printf(" %lf %lf %lf \n", p[i],  ct[t-1],alpha[(t-1)*N+i]);
 		}
 		//printf("T = %li\n",t);
@@ -554,11 +560,14 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 		double gamma_Ts = gamma_T[s];
 		//if you use real gamma you have to divide by ct[t-1]
 		gamma_sum[s] += gamma_Ts /* /ct[T-1] */;
+        b_new[yt*N+s]+=gamma_Ts;        
+        /*
 		for(int v = 0; v < K; v++){
 			//int indicator = (int)(yt == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator[(T-1)*K + v]*gamma_Ts /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator[(T-1)*K + v]*gamma_Ts;
 		}
+        */
 	}
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
@@ -716,13 +725,14 @@ int main(int argc, char *argv[]){
         
 
 		start = start_tsc();
-
+        /*
 		for(int t = 0; t < T; t++){
 			const int yt = observations[t];
 			for(int v = 0; v < differentObservables; v++){
 				indicator[t*differentObservables + v] = (yt ==v);
 			}
 		}
+        */
        	steps=1;
 		initial_step(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
 

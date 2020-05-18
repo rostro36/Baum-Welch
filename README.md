@@ -33,7 +33,11 @@ From inside code folder:
     - generate statistics
 - kcachegrind ../valgrind/$abbrevation-cache
     - read-out statistics for cache misses/branch predictions etc.
+## Intel Math Kernel (BLAS)
+- download mkl from [here](https://dynamicinstaller.intel.com/system-studio/download)
 
+file:///opt/intel/sw_dev_tools/documentation_2020/en/compiler_c/iss2020/get_started_lc.htm
+source opt/intel/sw_dev_tools/compilers_and_libraries_2020.1.219/linux/bin/compilervars.sh intel64
 ## Optimization history
 - std:
     * [like Wikipedia](https://en.wikipedia.org/wiki/Baum%E2%80%93Welch_algorithm)
