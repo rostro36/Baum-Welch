@@ -33,11 +33,13 @@ From inside code folder:
     - generate statistics
 - kcachegrind ../valgrind/$abbrevation-cache
     - read-out statistics for cache misses/branch predictions etc.
-## Intel Math Kernel (BLAS)
-- download mkl from [here](https://dynamicinstaller.intel.com/system-studio/download)
 
-file:///opt/intel/sw_dev_tools/documentation_2020/en/compiler_c/iss2020/get_started_lc.htm
-source opt/intel/sw_dev_tools/compilers_and_libraries_2020.1.219/linux/bin/compilervars.sh intel64
+## Intel Math Kernel (BLAS)
+- download mkl and icc from [here](https://dynamicinstaller.intel.com/system-studio/download)
+- get mkl to path with ~~~source /opt/intel/sw_dev_tools/compilers_and_libraries_2020.1.219/linux/bin/compilervars.sh intel64~~~
+- get linking part from [here](https://software.intel.com/content/www/us/en/develop/articles/intel-mkl-link-line-advisor.html)
+    - add this to other files e.g. ~~~gcc -o blas bw-bla.c io.c bw-tested.c -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl~~~
+
 ## Optimization history
 - std:
     * [like Wikipedia](https://en.wikipedia.org/wiki/Baum%E2%80%93Welch_algorithm)
@@ -53,12 +55,14 @@ source opt/intel/sw_dev_tools/compilers_and_libraries_2020.1.219/linux/bin/compi
 	* Like 3.0 but the update of the transitionMatrix and emissionMatrix is in the forward step
 - op3.1:
 	* Like 3 but with scalar replacement
+- bla:
+    * added BLAS instuctions to 3.1
 - op3.2:
 	* precomputing indicator function is not worth it
 - op3.3:
 	* tranpose transitionMatrix to get better access pattern in forward step. Is not worth it.
 - op3.4:
-	* using blocking for computation of emission Matrix (blocksize 4x4)
+	* using blocking for computation of emission Matrix (blocksize 4x4) 
 
 ## Usage baum-welch.r
 - open with RStudio
