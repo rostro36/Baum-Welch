@@ -63,6 +63,12 @@ From inside code folder:
 	* tranpose transitionMatrix to get better access pattern in forward step. Is not worth it.
 - op3.4:
 	* using blocking for computation of emission Matrix (blocksize 4x4) 
+- op3.5:
+	* like 3.4 but with blocking in forward step
+- op 3.6:
+	* like 3.1 but precomputing a*b for update step and reduced number of divisions
+- op3.7:
+	* like 3.1 but with blocking in forward step (uses another blocking than 3.5)
 
 ## Usage baum-welch.r
 - open with RStudio
