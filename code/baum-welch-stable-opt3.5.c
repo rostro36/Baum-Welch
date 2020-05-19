@@ -416,22 +416,42 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		alpha[1*N+s] *= ctt;
 	}
 	ct[1] = ctt;
-
+	
+	
+	const int block_j=4;
+	const int block_s=4;
+	//
+	double alphatNs[block_s];//one variable for each unrolled s
 	for(int t = 2; t < T-1; t++){
 		ctt = 0.0;	
-		yt = y[t];	
-		for(int s = 0; s<N; s++){// s=new_state
-			double alphatNs = 0;
-			//alpha[s*T + t] = 0;
-			for(int j = 0; j < N; j++){//j=old_states
-				alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
-				//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
+		yt = y[t];
+
+
+		
+		for(int s = 0; s<N; s+=block_s){// s=new_state
+			for(int q=0;q<block_s;q++){
+				alphatNs[q]=0; //clear variables for next value of s
 			}
-			alphatNs *= b[yt*N + s];
-			//print_matrix(alpha,N,T);
-			ctt += alphatNs;
-			alpha[t*N + s] = alphatNs;
+			for(int j = 0; j < N; j+=block_j){//j=old_states
+				for(int q=0; q<block_s; q++){//q: overhead over s, i.e. position-s
+					for(int l=j; l<j+block_j; l++){//l: new j in the blocks
+						alphatNs[q] += alpha[(t-1)*N + l] * a[l*N + s+q];
+						//printf("%lf %lf %lf %lf %i \n", alpha[s*T + t], alpha[s*T + t-1], a[j*N+s], b[s*K+y[t+1]],y[t]);
+					}
+				}
+			}
+			for(int q=0;q<block_s; q++){//iterate over all s+q
+				alphatNs[q] *= b[yt*N + s+q];
+				//print_matrix(alpha,N,T);
+				ctt += alphatNs[q];					
+				alpha[t*N + s+q] = alphatNs[q];
+			}
 		}
+		
+		
+		
+		
+		
 		//scaling factor for t 
 		ctt = 1.0 / ctt;
 		
@@ -800,27 +820,27 @@ int main(int argc, char *argv[]){
 
 		transpose(emissionMatrix,differentObservables,hiddenStates);
 
-		/*
+		/* 
 		//Show results
 		printf(" %i \n", steps);
 		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 		print_matrix(emissionMatrix, hiddenStates,differentObservables);
 		print_vector(stateProb, hiddenStates);
-		*/
+		 */
 
 
 		//emissionMatrix is not in state major order
 		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
         	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 		
-		/*
+/* 		
 		//Show tested results
 		printf("tested \n");
 		print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
 		print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
 		print_vector(stateProbTesting, hiddenStates);
-		*/
-
+		
+ */
 
 		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 			runs[run]=cycles;
