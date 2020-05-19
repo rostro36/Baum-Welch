@@ -14,6 +14,17 @@
 #define DELTA 1e-2
 #define maxSteps 100
 
+void transpose(double* a, const int rows, const int cols){
+	double* transpose = (double*)calloc(cols*rows, sizeof(double));
+	memcpy(transpose, a, rows*cols*sizeof(double));
+	for(int row = 0 ; row < rows; row++){
+		for(int col =0; col < cols; col++){
+			a[col * rows + row]  = transpose[row * cols + col];
+			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
+		}
+	}
+	free(transpose);
+}
 //for sorting at the end
 int compare_doubles (const void *a, const void *b){
 	const double *da = (const double *) a;
@@ -102,6 +113,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 	double ct0 = 0.0;
 	//compute alpha(0) and scaling factor for t = 0
+    
 	int y0 = y[0];
 	for(int s = 0; s < N; s++){
 		double alphas = p[s] * b[y0*N + s];
@@ -110,21 +122,19 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	}
 	
 	ct0 = 1.0 / ct0;
-
-	//scale alpha(0)
-	for(int s = 0; s < N; s++){
-		alpha[s] *= ct0;
-	}
+    
+    cblas_dscal(N,ct0,alpha,1);
 	ct[0] = ct0;
 
 	for(int t = 1; t < T-1; t++){
 		double ctt = 0.0;	
 		const int yt = y[t];	
 		for(int s = 0; s<N; s++){// s=new_state
-			double alphatNs = 0;
-			for(int j = 0; j < N; j++){//j=old_states
-				alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
-			}
+			double alphatNs = cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
+            //double alphatNs=0;
+			//for(int j = 0; j < N; j++){//j=old_states
+			//	alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
+			//}
 			alphatNs *= b[yt*N + s];
 			ctt += alphatNs;
 			alpha[t*N + s] = alphatNs;
@@ -133,9 +143,10 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 		ctt = 1.0 / ctt;
 		
 		//scale alpha(t)
-		for(int s = 0; s<N; s++){// s=new_state
-			alpha[t*N+s] *= ctt;
-		}
+        cblas_dscal(N,ctt,alpha+t*N,1);
+		//for(int s = 0; s<N; s++){// s=new_state
+		//	alpha[t*N+s] *= ctt;
+		//}
 		ct[t] = ctt;
 	}
 		
@@ -145,9 +156,10 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	for(int s = 0; s<N; s++){// s=new_state
 		double alphatNs = 0;
 		//alpha[s*T + t] = 0;
-		for(int j = 0; j < N; j++){//j=old_states
-			alphatNs += alpha[(T-2)*N + j] * a[j*N + s];	
-		}
+        alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);		
+        //for(int j = 0; j < N; j++){//j=old_states
+		//	alphatNs += alpha[(T-2)*N + j] * a[j*N + s];	
+		//}
 
 		alphatNs *= b[yt*N + s];
 		ctt += alphatNs;
@@ -157,12 +169,14 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	ctt = 1.0 / ctt;
 		
 	//scale alpha(t)
-	for(int s = 0; s<N; s++){// s=new_state
-		alpha[(T-1)*N+s] *= ctt;
-		//XXX Last iteration explicit because of this line
-		gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
-	}
-	ct[T-1] = ctt;
+	//for(int s = 0; s<N; s++){// s=new_state
+	//	alpha[(T-1)*N+s] *= ctt;
+	//	//XXX Last iteration explicit because of this line
+	//	gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
+	//}
+    cblas_dscal(N,ctt,alpha+(T-1)*N,1);
+    cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
+    ct[T-1] = ctt;
 
 	//FUSED BACKWARD and UPDATE STEP
 
@@ -176,7 +190,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 			b_new[v*N + s] = 0.0;
 		}
 	}
-
+    
 	//compute sum of xi and gamma from t= 0...T-2
 	for(int t = T-1; t > 0; t--){
 		for(int s = 0; s < N ; s++){
@@ -220,16 +234,14 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 
 	//add remaining parts of the sum of gamma 
-	for(int s = 0; s < N; s++){
-		//if you use real gamma you have to divide by ct[t-1]
-		double gamma_Ts = gamma_T[s];
-		gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
-		for(int v = 0; v < K; v++){
-			int indicator = (int)(y[T-1] == v);
-			b_new[v*N + s] += indicator*gamma_Ts /* /ct[T-1] */ ;
-		}
-	}
-
+	//for(int s = 0; s < N; s++){
+	//	//if you use real gamma you have to divide by ct[t-1]
+	//	double gamma_Ts = gamma_T[s];
+	//	gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
+    //    b_new[y[T-1]*N+s]+=gamma_Ts;
+	//}
+    cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
+    cblas_daxpy(N,1,gamma_sum,1,gamma_T,1);
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
 		for(int s = 0; s < N; s++){
@@ -248,7 +260,6 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	}
 	
 	ctt = 1.0 / ctt;
-
 	//scale alpha(0)
     cblas_dscal(N,ctt,alpha,1);
 	//for(int s = 0; s < N; s++){
@@ -279,30 +290,32 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	ctt = 1.0 / ctt;
 	
 	//scale alpha(t)
-	for(int s = 0; s<N; s++){// s=new_state
-		alpha[1*N+s] *= ctt;
-	}
+	//for(int s = 0; s<N; s++){// s=new_state
+	//	alpha[1*N+s] *= ctt;
+	//}
+    cblas_dscal(N,ctt,alpha+N,1);
 	ct[1] = ctt;
 
 	for(int t = 2; t < T-1; t++){
 		ctt = 0.0;	
 		yt = y[t];	
 		for(int s = 0; s<N; s++){// s=new_state
-			double alphatNs = 0;
-			for(int j = 0; j < N; j++){//j=old_states
-				alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
-			}
+			//double alphatNs = 0;
+			//for(int j = 0; j < N; j++){//j=old_states
+			//	alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
+			//}
+            double alphatNs=cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
 			alphatNs *= b[yt*N + s];
 			ctt += alphatNs;
 			alpha[t*N + s] = alphatNs;
 		}
 		//scaling factor for t 
 		ctt = 1.0 / ctt;
-		
+		cblas_dscal(N,ctt,alpha+t*N,1);
 		//scale alpha(t)
-		for(int s = 0; s<N; s++){// s=new_state
-			alpha[t*N+s] *= ctt;
-		}
+		//for(int s = 0; s<N; s++){// s=new_state
+		//	alpha[t*N+s] *= ctt;
+		//}
 		ct[t] = ctt;
 	}
 		
@@ -310,11 +323,11 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	ctt = 0.0;	
 	yt = y[T-1];	
 	for(int s = 0; s<N; s++){// s=new_state
-		double alphatNs = 0;
-		for(int j = 0; j < N; j++){//j=old_states
-			alphatNs += alpha[(T-2)*N + j] * a[j*N + s];		
-		}
-
+		//double alphatNs = 0;
+		//for(int j = 0; j < N; j++){//j=old_states
+		//	alphatNs += alpha[(T-2)*N + j] * a[j*N + s];		
+		//}
+        double alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);
 		alphatNs *= b[yt*N + s];
 		ctt += alphatNs;
 		alpha[(T-1)*N + s] = alphatNs;
@@ -322,13 +335,16 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	//scaling factor for T-1
 	ctt = 1.0 / ctt;
 		
-	//scale alpha(t)
-	for(int s = 0; s<N; s++){// s=new_state
-		alpha[(T-1)*N+s] *= ctt;
-		gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
-	}
-	ct[T-1] = ctt;
+//	//scale alpha(t)
+//	for(int s = 0; s<N; s++){// s=new_state
+//		alpha[(T-1)*N+s] *= ctt;
+//		gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
+//	}
+//	ct[T-1] = ctt;
 
+    cblas_dscal(N,ctt,alpha+(T-1)*N,1);
+    cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
+    ct[T-1] = ctt;
 	//FUSED BACKWARD and UPDATE STEP
 
 	for(int s = 0; s < N; s++){
@@ -360,12 +376,12 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= p[s] /* /ct[t-1] */ ;
-
-			for(int v = 0; v < K; v++){
-				int indicator = (int)(y[t-1] == v);
-				//if you use real gamma you have to divide by ct[t-1]
-				b_new[v*N + s] += (double)(indicator)*p[s] /* /ct[t-1]*/;
-			}
+            b_new[y[t-1]*N+s]+=p[s];
+//			for(int v = 0; v < K; v++){
+//				int indicator = (int)(y[t-1] == v);
+//				//if you use real gamma you have to divide by ct[t-1]
+//				b_new[v*N + s] += (double)(indicator)*p[s] /* /ct[t-1]*/;
+//			}
 		}
 		
 		double * temp = beta_new;
@@ -391,16 +407,20 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 	}
 
 	//add remaining parts of the sum of gamma 
-	for(int s = 0; s < N; s++){
+	//for(int s = 0; s < N; s++){
 		//if you use real gamma you have to divide by ct[t-1]
-		gamma_sum[s] += gamma_T[s] /* /ct[T-1] */;
+		//gamma_sum[s] += gamma_T[s] /* /ct[T-1] */;
+        //b_new[y[T-1]*N+s]+=gamma_T[s];
+        /*
 		for(int v = 0; v < K; v++){
 			int indicator = (int)(y[T-1] == v);
 			//if you use real gamma you have to divide by ct[t-1]
-			b_new[v*N + s] += indicator*gamma_T[s] /* /ct[T-1] */ ;
+			b_new[v*N + s] += indicator*gamma_T[s];
 		}
-	}
-
+        */
+	//}
+    cblas_daxpy(N,1,gamma_T,1,gamma_sum,1);
+    cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
 		for(int s = 0; s < N; s++){
@@ -418,7 +438,7 @@ int finished(const double* const ct, double* const l,const int N,const int T){
 	//evidence with alpha only:
 
 	for(int time = 0; time < T; time++){
-		newLogLikelihood -= log10(ct[time]);
+		newLogLikelihood -= log2(ct[time]);
 	}
 	
 	*l=newLogLikelihood;
@@ -568,7 +588,7 @@ int main(int argc, char *argv[]){
 
 		//emissionMatrix is not in state major order
 		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
-        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+       	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 
 
 		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
