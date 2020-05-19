@@ -487,7 +487,7 @@ int main(int argc, char *argv[]){
 	        //evidence with alpha only:
 
 	        for(int time = 0; time < T; time++){
-		        newLogLikelihood -= log10(ct[time]);
+		        newLogLikelihood -= log2(ct[time]);
 	        }
 	        
 	        logLikelihood=newLogLikelihood;
