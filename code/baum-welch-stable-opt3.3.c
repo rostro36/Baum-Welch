@@ -116,8 +116,15 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 	//FORWARD
 
-
-	transpose(a,N,N);
+	for(int row = 0 ; row < N; row++){
+		for(int col =row+1; col < N; col++){
+			double temp = a[col*N+row];
+			a[col * N + row]  = a[row * N + col];
+			a[row*N + col] = temp;
+			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
+		}
+	}
+	
 
 	double ct0 = 0.0;
 	//ct[0]=0.0;
@@ -222,8 +229,16 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	}
 
 	//print_matrix(beta,1,N);
-	//print_matrix(gamma_T,1,N);
-	transpose(a,N,N);
+	//print_matrix(gamma_T,1,N);	for(int row = 0 ; row < N; row++){
+	for(int row = 0 ; row < N; row++){
+		for(int col =row+1; col < N; col++){
+			double temp = a[col*N+row];
+			a[col * N + row]  = a[row * N + col];
+			a[row*N + col] = temp;
+			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
+		}
+	}
+
     yt = y[T-1];
 	//compute sum of xi and gamma from t= 0...T-2
 	for(int t = T-1; t > 0; t--){
@@ -351,21 +366,33 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 
 
-	double* transpose = (double*)calloc(N*N, sizeof(double));
-	memcpy(transpose, a, N*N*sizeof(double));
+	//double* transpose = (double*)calloc(N*N, sizeof(double));
+	//memcpy(transpose, a, N*N*sizeof(double));
 	for(int row = 0 ; row < N; row++){
-		for(int col =0; col < N; col++){
-			a[col * N + row]  = transpose[row * N + col];
+		for(int col =row+1; col < N; col++){
+			double temp = a[col*N+row];
+			a[col * N + row]  = a[row * N + col];
+			a[row*N + col] = temp;
 			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
 		}
 	}
+	
+	for(int row = 0 ; row < N; row++){
+		for(int col =row+1; col < N; col++){
+			double temp = a_new[col*N+row];
+			a_new[col * N + row]  = a_new[row * N + col];
+			a_new[row*N + col] = temp;
+			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
+		}
+	}
+	/*
 	memcpy(transpose, a_new, N*N*sizeof(double));
 	for(int row = 0 ; row < N; row++){
 		for(int col =0; col < N; col++){
 			a_new[col * N + row]  = transpose[row * N + col];
 			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
 		}
-	}
+	}*/
 
 	double ctt = 0.0;
 	//ct[0]=0.0;
@@ -473,17 +500,20 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	//print_matrix(ct,1,T);
 
 	//FUSED BACKWARD and UPDATE STEP
-	memcpy(transpose, a, N*N*sizeof(double));
 	for(int row = 0 ; row < N; row++){
-		for(int col =0; col < N; col++){
-			a[col * N + row]  = transpose[row * N + col];
+		for(int col =row+1; col < N; col++){
+			double temp = a[col*N+row];
+			a[col * N + row]  = a[row * N + col];
+			a[row*N + col] = temp;
 			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
 		}
 	}
-	memcpy(transpose, a_new, N*N*sizeof(double));
+	
 	for(int row = 0 ; row < N; row++){
-		for(int col =0; col < N; col++){
-			a_new[col * N + row]  = transpose[row * N + col];
+		for(int col =row+1; col < N; col++){
+			double temp = a_new[col*N+row];
+			a_new[col * N + row]  = a_new[row * N + col];
+			a_new[row*N + col] = temp;
 			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
 		}
 	}
@@ -582,7 +612,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	free(alpha);
 	free(beta);
 	free(beta_new);
-	free(transpose);
+	//free(transpose);
 	
 	return;
 }
