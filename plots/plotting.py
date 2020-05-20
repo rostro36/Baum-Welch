@@ -1,11 +1,11 @@
-wichtiger_param=1
+wichtiger_param=3
 parameter_names=['flag','hiddenstate','different observables','T']
 aktuelle_version=0
-file_name="../output_measures/model_output.txt"
+file_name="../output_measures/model_output_20_5_10_55.txt"
 #machine specs
-scalar_pi=6
-vector_pi=12
-mem_beta=5
+scalar_pi=4
+vector_pi=16
+mem_beta=25
 
 
 
@@ -42,8 +42,9 @@ work_functions=[base_work]
 
 def base_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
+    #Compulsory misses only: 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
     #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1)+ 2∗T∗K∗N+ N∗N+ N∗K [Latex]
-    return 8*((12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables))
+    return  8*((12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables))
 memory_functions=[base_memory]
 
 
@@ -82,14 +83,14 @@ while(re.search('FLAG', text)):
         flags[order_params[0]][order_params[1]][order_params[2]][order_params[3]]=[]
     flags[order_params[0]][order_params[1]][order_params[2]][order_params[3]].append(cycles)
     #print(flag)
-#     print(seed)
-#     print('HiddenState')
-#     print(hiddenstate)
-#     print(dO)
-#     print(T)
-#    print(cycles)
+    #print(seed)
+    #print('HiddenState')
+    #print(hiddenstate)
+    #print(dO)
+    #print(T)
+    #print(cycles)
 
-
+#print(flags)
 plt.xlabel(order_names[-1])
 plt.ylabel('cycles/iteration')
 plt.title('Impact of '+order_names[-1])
@@ -106,13 +107,18 @@ for flag in flags.keys():
             for hiddenstate in flags[flag][dO][T]:
                 x.append(hiddenstate)
                 y.append(stats.median(flags[flag][dO][T][hiddenstate]))
+                
             plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
-            style=style+1
+            style=(style+1)%len(styles)
         style=0
-        color+=1
+        color=(color+1)%len(colors)
     color=0
-    marker+=1
+    marker= (marker + 1) % len(markers)
 plt.legend()
+
+figure = plt.gcf()
+figure.set_size_inches(16,9)
+
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig(timestr+".png")
 plt.clf()
@@ -131,23 +137,26 @@ for flag in flags.keys():
             y=[]
             for hiddenstate in flags[flag][dO][T]:
                 params=to_order([flag,dO,T,hiddenstate], wichtiger_param)
+                print(params)
                 work=work_functions[aktuelle_version](params)
                 memory=memory_functions[aktuelle_version](params)
                 cycles=stats.median(flags[flag][dO][T][hiddenstate])
                 x.append(work/memory)
                 y.append(work/cycles)
             plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
-            style=style+1
+            style=(style+1)%len(styles)
         style=0
-        color+=1
+        color=(color+1)%len(colors)
     color=0
-    marker+=1
+    marker= (marker + 1) % len(markers)
     
 xstart, xend = plt.xlim()
 
 #Vector line
 #Probably have to change in the future
 end=min(xend,vector_pi/mem_beta)
+#print(xend)
+#print(vector_pi/mem_beta)
 x=[xstart,end]
 plt.fill_between(x, vector_pi, 0, alpha=0.2, color='y')
 #Scalar line
@@ -161,9 +170,12 @@ y=[xstart*mem_beta, end*mem_beta]
 plt.fill_between(x, y, 0, alpha=0.2, color='b')
 plt.yscale('log')
 plt.xscale('log')
-
+figure = plt.gcf()
+figure.set_size_inches(16,9)
+#plt.show()
 
 plt.legend()
+#plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig(timestr+"-roof.png")
 plt.clf()
