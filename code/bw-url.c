@@ -403,24 +403,46 @@ int main(int argc, char *argv[]){
         
         steps=1;
 		start = start_tsc();
-
+		
+//Assumptions for unrolling: hiddenStates%4=0, differentObservables%4=0
+		
 //Initial step
 
 	//FORWARD
 
 	double ct0 = 0.0;
 	int y0 = observations[0];
-	for(int s = 0; s < hiddenStates; s++){
+	for(int s = 0; s < hiddenStates; s+=4){
+		//s
 		double alphas = stateProb[s] * emissionMatrix[y0*hiddenStates + s];
 		ct0 += alphas;
 		alpha[s] = alphas;
+		//s+1
+		alphas = stateProb[s+1] * emissionMatrix[y0*hiddenStates + s+1];
+		ct0 += alphas;
+		alpha[s+1] = alphas;
+		//s+2
+		alphas = stateProb[s+2] * emissionMatrix[y0*hiddenStates + s+2];
+		ct0 += alphas;
+		alpha[s+2] = alphas;
+		//s+3
+		alphas = stateProb[s+3] * emissionMatrix[y0*hiddenStates + s+3];
+		ct0 += alphas;
+		alpha[s+3] = alphas;
 	}
 	
 	ct0 = 1.0 / ct0;
 
 	//scale alpha(0)
-	for(int s = 0; s < hiddenStates; s++){
+	for(int s = 0; s < hiddenStates; s+=4){
+		//s
 		alpha[s] *= ct0;
+		//s+1
+		alpha[s+1] *= ct0;
+		//s+2
+		alpha[s+2] *= ct0;
+		//s+3
+		alpha[s+3] *= ct0;
 	}
 	//print_matrix(alpha,N,T);
 	ct[0] = ct0;
@@ -428,61 +450,254 @@ int main(int argc, char *argv[]){
 	for(int t = 1; t < T-1; t++){
 		double ctt = 0.0;	
 		const int yt = observations[t];	
-		for(int s = 0; s<hiddenStates; s++){// s=new_state
+		for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 			double alphatNs = 0;
-			for(int j = 0; j < hiddenStates; j++){//j=old_states
+			double alphatNs1 = 0;
+			double alphatNs2 = 0;
+			double alphatNs3 = 0;
+			for(int j = 0; j < hiddenStates; j+=4){//j=old_states
+				//s,j
 				alphatNs += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s];
+				//s,j+1
+				alphatNs += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s];
+				//s,j+2
+				alphatNs += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s];
+				//s,j+3
+				alphatNs += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s];
+				//s+1,j
+				alphatNs1 += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+1];
+				//s+1,j+1
+				alphatNs1 += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+1];
+				//s+1,j+2
+				alphatNs1 += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+1];
+				//s+1,j+3
+				alphatNs1 += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+1];
+				//s+2,j
+				alphatNs2 += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+2];
+				//s+2,j+1
+				alphatNs2 += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+2];
+				//s+2,j+2
+				alphatNs2 += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+2];
+				//s+2,j+3
+				alphatNs2 += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+2];
+				//s+3,j
+				alphatNs3 += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+3];
+				//s+3,j+1
+				alphatNs3 += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+3];
+				//s+3,j+2
+				alphatNs3 += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+3];
+				//s+3,j+3
+				alphatNs3 += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+3];
 			}
 			alphatNs *= emissionMatrix[yt*hiddenStates + s];
 			ctt += alphatNs;
 			alpha[t*hiddenStates + s] = alphatNs;
+			alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
+			ctt += alphatNs1;
+			alpha[t*hiddenStates + s+1] = alphatNs1;
+			alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
+			ctt += alphatNs2;
+			alpha[t*hiddenStates + s+2] = alphatNs2;
+			alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
+			ctt += alphatNs3;
+			alpha[t*hiddenStates + s+3] = alphatNs3;
+			
+			
+		
 		}
 		//scaling factor for t 
 		ctt = 1.0 / ctt;
 		
 		//scale alpha(t)
-		for(int s = 0; s<hiddenStates; s++){// s=new_state
+		for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 			alpha[t*hiddenStates+s] *= ctt;
+			alpha[t*hiddenStates+s+1] *= ctt;
+			alpha[t*hiddenStates+s+2] *= ctt;
+			alpha[t*hiddenStates+s+3] *= ctt;
 		}
 		ct[t] = ctt;
+		
 	}
 		
-	
 	double ctt = 0.0;	
 	int yt = observations[T-1];	
-	for(int s = 0; s<hiddenStates; s++){// s=new_state
-		double alphatNs = 0;
-		//alpha[s*T + t] = 0;
-		for(int j = 0; j < hiddenStates; j++){//j=old_states
+	for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+		double alphatNs = 0; //alpha[s*T + t] = 0;
+		double alphatNs1 = 0;
+		double alphatNs2 = 0;
+		double alphatNs3 = 0;
+		for(int j = 0; j < hiddenStates; j+=4){//j=old_states
+			//s
+			//j
 			alphatNs += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s];
+			//j+1
+			alphatNs += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s];
+			//j+2
+			alphatNs += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s];
+			//j+3
+			alphatNs += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s];
+			//s+1
+			//j
+			alphatNs1 += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+1];
+			//j+1
+			alphatNs1 += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+1];
+			//j+2
+			alphatNs1 += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+1];
+			//j+3
+			alphatNs1 += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+1];
+			//s+2
+			//j
+			alphatNs2 += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+2];
+			//j+1
+			alphatNs2 += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+2];
+			//j+2
+			alphatNs2 += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+2];
+			//j+3
+			alphatNs2 += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+2];
+			//s+3
+			//j
+			alphatNs3 += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+3];
+			//j+1
+			alphatNs3 += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+3];
+			//j+2
+			alphatNs3 += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+3];
+			//j+3
+			alphatNs3 += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+3];
 		}
 		alphatNs *= emissionMatrix[yt*hiddenStates + s];
 		ctt += alphatNs;
 		alpha[(T-1)*hiddenStates + s] = alphatNs;
+		
+		alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
+		ctt += alphatNs1;
+		alpha[(T-1)*hiddenStates + s+1] = alphatNs1;
+		
+		alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
+		ctt += alphatNs2;
+		alpha[(T-1)*hiddenStates + s+2] = alphatNs2;
+		
+		alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
+		ctt += alphatNs3;
+		alpha[(T-1)*hiddenStates + s+3] = alphatNs3;
+		
 	}
 	//scaling factor for T-1
 	ctt = 1.0 / ctt;
 		
 	//scale alpha(t)
-	for(int s = 0; s<hiddenStates; s++){// s=new_state
+	for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+		//s
 		double alphaT1Ns = alpha[(T-1) * hiddenStates + s]*ctt;
-		alpha[(T-1)*hiddenStates+s] = alphaT1Ns;
+		alpha[(T-1)*hiddenStates + s] = alphaT1Ns;
 		gamma_T[s] = alphaT1Ns /* *ct[T-1]*/;
+		//s+1
+		alphaT1Ns = alpha[(T-1) * hiddenStates + s+1]*ctt;
+		alpha[(T-1)*hiddenStates + s+1] = alphaT1Ns;
+		gamma_T[s+1] = alphaT1Ns /* *ct[T-1]*/;
+		//s+2
+		alphaT1Ns = alpha[(T-1) * hiddenStates + s+2]*ctt;
+		alpha[(T-1)*hiddenStates + s+2] = alphaT1Ns;
+		gamma_T[s+2] = alphaT1Ns /* *ct[T-1]*/;
+		//s+3
+		alphaT1Ns = alpha[(T-1) * hiddenStates + s+3]*ctt;
+		alpha[(T-1)*hiddenStates + s+3] = alphaT1Ns;
+		gamma_T[s+3] = alphaT1Ns /* *ct[T-1]*/;
 	}
 	ct[T-1] = ctt;
+	
+	
+	
+	
 	//FUSED BACKWARD and UPDATE STEP
 
-	for(int s = 0; s < hiddenStates; s++){
+	for(int s = 0; s < hiddenStates; s+=4){
+		for(int j = 0; j < hiddenStates; j+=4){
+			//s
+			//j
+			a_new[s*hiddenStates + j] =0.0;
+			//j+1
+			a_new[s*hiddenStates + j+1] =0.0;
+			//j+2
+			a_new[s*hiddenStates + j+2] =0.0;
+			//j+3
+			a_new[s*hiddenStates + j+3] =0.0;
+			//s+1
+			//j
+			a_new[(s+1)*hiddenStates + j] =0.0;
+			//j+1
+			a_new[(s+1)*hiddenStates + j+1] =0.0;
+			//j+2
+			a_new[(s+1)*hiddenStates + j+2] =0.0;
+			//j+3
+			a_new[(s+1)*hiddenStates + j+3] =0.0;
+			//s+2
+			//j
+			a_new[(s+2)*hiddenStates + j] =0.0;
+			//j+1
+			a_new[(s+2)*hiddenStates + j+1] =0.0;
+			//j+2
+			a_new[(s+2)*hiddenStates + j+2] =0.0;
+			//j+3
+			a_new[(s+2)*hiddenStates + j+3] =0.0;
+			//s+3
+			//j
+			a_new[(s+3)*hiddenStates + j] =0.0;
+			//j+1
+			a_new[(s+3)*hiddenStates + j+1] =0.0;
+			//j+2
+			a_new[(s+3)*hiddenStates + j+2] =0.0;
+			//j+3
+			a_new[(s+3)*hiddenStates + j+3] =0.0;
+		}
+		
+		//s
 		beta[s] = /* 1* */ctt;
 		gamma_sum[s] = 0.0;
-		for(int j = 0; j < hiddenStates; j++){
-			a_new[s*hiddenStates + j] =0.0;
-		}
+		//s+1
+		beta[s+1] = /* 1* */ctt;
+		gamma_sum[s+1] = 0.0;
+		//s+2
+		beta[s+2] = /* 1* */ctt;
+		gamma_sum[s+2] = 0.0;
+		//s+3
+		beta[s+3] = /* 1* */ctt;
+		gamma_sum[s+3] = 0.0;
 	}
 
-	for(int v = 0;  v < differentObservables; v++){
-		for(int s = 0; s < hiddenStates; s++){
+	for(int v = 0;  v < differentObservables; v+=4){
+		for(int s = 0; s < hiddenStates; s+=4){
+			//v,s
 			b_new[v*hiddenStates + s] = 0.0;
+			//v,s+1
+			b_new[v*hiddenStates + s+1] = 0.0;
+			//v,s+2
+			b_new[v*hiddenStates + s+2] = 0.0;
+			//v,s+3
+			b_new[v*hiddenStates + s+3] = 0.0;
+			//v+1,s
+			b_new[(v+1)*hiddenStates + s] = 0.0;
+			//v+1,s+1
+			b_new[(v+1)*hiddenStates + s+1] = 0.0;
+			//v+1,s+2
+			b_new[(v+1)*hiddenStates + s+2] = 0.0;
+			//v+1,s+3
+			b_new[(v+1)*hiddenStates + s+3] = 0.0;
+			//v+2,s
+			b_new[(v+2)*hiddenStates + s] = 0.0;
+			//v+2,s+1
+			b_new[(v+2)*hiddenStates + s+1] = 0.0;
+			//v+2,s+2
+			b_new[(v+2)*hiddenStates + s+2] = 0.0;
+			//v+2,s+3
+			b_new[(v+2)*hiddenStates + s+3] = 0.0;
+			//v+3,s
+			b_new[(v+3)*hiddenStates + s] = 0.0;
+			//v+3,s+1
+			b_new[(v+3)*hiddenStates + s+1] = 0.0;
+			//v+3,s+2
+			b_new[(v+3)*hiddenStates + s+2] = 0.0;
+			//v+3,s+3
+			b_new[(v+3)*hiddenStates + s+3] = 0.0;
 		}
 	}
 
@@ -491,46 +706,247 @@ int main(int argc, char *argv[]){
 	for(int t = T-1; t > 0; t--){
 		const int yt1 = observations[t-1];
 		const double ctt = ct[t-1];
-		for(int s = 0; s < hiddenStates ; s++){
+		for(int s = 0; s < hiddenStates ; s+=4){
 			double beta_news = 0.0;
 			double alphat1Ns = alpha[(t-1)*hiddenStates + s];
-			for(int j = 0; j < hiddenStates; j++){
+			double beta_news1 = 0.0;
+			double alphat1Ns1 = alpha[(t-1)*hiddenStates + s+1];
+			double beta_news2 = 0.0;
+			double alphat1Ns2 = alpha[(t-1)*hiddenStates + s+2];
+			double beta_news3 = 0.0;
+			double alphat1Ns3 = alpha[(t-1)*hiddenStates + s+3];
+			for(int j = 0; j < hiddenStates; j+=4){
+				//s
+				//j
 				double temp = transitionMatrix[s*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
-				
 				double xi_sjt = alphat1Ns * temp;
 				a_new[s*hiddenStates+j] +=xi_sjt;
 				beta_news += temp;
 				
+				//j+1
+				temp = transitionMatrix[s*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				xi_sjt = alphat1Ns * temp;
+				a_new[s*hiddenStates + j+1] +=xi_sjt;
+				beta_news += temp;
+				
+				//j+2
+				temp = transitionMatrix[s*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				xi_sjt = alphat1Ns * temp;
+				a_new[s*hiddenStates + j+2] +=xi_sjt;
+				beta_news += temp;
+				
+				//j+3
+				temp = transitionMatrix[s*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				xi_sjt = alphat1Ns * temp;
+				a_new[s*hiddenStates + j+3] +=xi_sjt;
+				beta_news += temp;
+				
+				
+				//s+1
+				
+				//j
+				temp = transitionMatrix[(s+1)*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
+				xi_sjt = alphat1Ns1 * temp;
+				a_new[(s+1)*hiddenStates+j] +=xi_sjt;
+				beta_news1 += temp;
+				
+				//j+1
+				temp = transitionMatrix[(s+1)*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				xi_sjt = alphat1Ns1 * temp;
+				a_new[(s+1)*hiddenStates + j+1] +=xi_sjt;
+				beta_news1 += temp;
+				
+				//j+2
+				temp = transitionMatrix[(s+1)*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				xi_sjt = alphat1Ns1 * temp;
+				a_new[(s+1)*hiddenStates + j+2] +=xi_sjt;
+				beta_news1 += temp;
+				
+				//j+3
+				temp = transitionMatrix[(s+1)*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				xi_sjt = alphat1Ns1 * temp;
+				a_new[(s+1)*hiddenStates + j+3] +=xi_sjt;
+				beta_news1 += temp;
+				
+				//s+2
+				
+				//j
+				temp = transitionMatrix[(s+2)*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
+				xi_sjt = alphat1Ns2 * temp;
+				a_new[(s+2)*hiddenStates+j] +=xi_sjt;
+				beta_news2 += temp;
+				
+				//j+1
+				temp = transitionMatrix[(s+2)*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				xi_sjt = alphat1Ns2 * temp;
+				a_new[(s+2)*hiddenStates + j+1] +=xi_sjt;
+				beta_news2 += temp;
+				
+				//j+2
+				temp = transitionMatrix[(s+2)*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				xi_sjt = alphat1Ns2 * temp;
+				a_new[(s+2)*hiddenStates + j+2] +=xi_sjt;
+				beta_news2 += temp;
+				
+				//j+3
+				temp = transitionMatrix[(s+2)*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				xi_sjt = alphat1Ns2 * temp;
+				a_new[(s+2)*hiddenStates + j+3] +=xi_sjt;
+				beta_news2 += temp;
+				
+				//s+3
+				
+				//j
+				temp = transitionMatrix[(s+3)*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
+				xi_sjt = alphat1Ns3 * temp;
+				a_new[(s+3)*hiddenStates+j] +=xi_sjt;
+				beta_news3 += temp;
+				
+				//j+1
+				temp = transitionMatrix[(s+3)*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				xi_sjt = alphat1Ns3 * temp;
+				a_new[(s+3)*hiddenStates + j+1] +=xi_sjt;
+				beta_news3 += temp;
+				
+				//j+2
+				temp = transitionMatrix[(s+3)*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				xi_sjt = alphat1Ns3 * temp;
+				a_new[(s+3)*hiddenStates + j+2] +=xi_sjt;
+				beta_news3 += temp;
+				
+				//j+3
+				temp = transitionMatrix[(s+3)*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				xi_sjt = alphat1Ns3 * temp;
+				a_new[(s+3)*hiddenStates + j+3] +=xi_sjt;
+				beta_news3 += temp;
 			}
+			//s
 			double ps =alphat1Ns*beta_news/* *ct[t-1]*/;  
 			stateProb[s] = ps;
 			beta_new[s] = beta_news*ctt;
-
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= ps /* /ct[t-1] */ ;
             b_new[yt1*hiddenStates+s]+=ps;
+			
+			//s+1
+			ps =alphat1Ns1*beta_news1/* *ct[t-1]*/;  
+			stateProb[s+1] = ps;
+			beta_new[s+1] = beta_news1*ctt;
+			//if you use real gamma you have to divide with ct[t-1]
+			gamma_sum[s+1]+= ps /* /ct[t-1] */ ;
+            b_new[yt1*hiddenStates+ s+1]+=ps;
+			
+			//s+2
+			ps =alphat1Ns2*beta_news2/* *ct[t-1]*/;  
+			stateProb[s+2] = ps;
+			beta_new[s+2] = beta_news2*ctt;
+			//if you use real gamma you have to divide with ct[t-1]
+			gamma_sum[s+2]+= ps /* /ct[t-1] */ ;
+            b_new[yt1*hiddenStates+ s+2]+=ps;
+			
+			
+			//s+3
+			ps =alphat1Ns3*beta_news3/* *ct[t-1]*/;  
+			stateProb[s+3] = ps;
+			beta_new[s+3] = beta_news3*ctt;
+			//if you use real gamma you have to divide with ct[t-1]
+			gamma_sum[s+3]+= ps /* /ct[t-1] */ ;
+            b_new[yt1*hiddenStates+ s+3]+=ps;
 		}
 		double * temp = beta_new;
 		beta_new = beta;
 		beta = temp;
         yt=yt1;		
     }
+	
 		do{
 //BAUM-WELCH
 	        int yt = observations[T-1];
 	        //add remaining parts of the sum of gamma 
-	        for(int s = 0; s < hiddenStates; s++){
+	        for(int s = 0; s < hiddenStates; s+=4){
+				//s
 		        double gamma_Ts = gamma_T[s];
 		        //if you use real gamma you have to divide by ct[t-1]
 		        gamma_T[s] += gamma_sum[s]; /* /ct[T-1] */;
-                b_new[yt*hiddenStates+s]+=gamma_Ts;
+                b_new[yt*hiddenStates + s]+=gamma_Ts;
+				
+				//s+1
+		        gamma_Ts = gamma_T[s+1];
+		        //if you use real gamma you have to divide by ct[t-1]
+		        gamma_T[s+1] += gamma_sum[s+1]; /* /ct[T-1] */;
+                b_new[yt*hiddenStates + s+1]+=gamma_Ts;
+				
+				//s+2
+		        gamma_Ts = gamma_T[s+2];
+		        //if you use real gamma you have to divide by ct[t-1]
+		        gamma_T[s+2] += gamma_sum[s+2]; /* /ct[T-1] */;
+                b_new[yt*hiddenStates + s+2]+=gamma_Ts;
+				
+				//s+3
+		        gamma_Ts = gamma_T[s+3];
+		        //if you use real gamma you have to divide by ct[t-1]
+		        gamma_T[s+3] += gamma_sum[s+3]; /* /ct[T-1] */;
+                b_new[yt*hiddenStates + s+3]+=gamma_Ts;
 	        }
 
 	        //compute new emission matrix
-	        for(int v = 0; v < differentObservables; v++){
-		        for(int s = 0; s < hiddenStates; s++){
-			        emissionMatrix[v*hiddenStates + s] = b_new[v*hiddenStates + s] / gamma_T[s];
+	        for(int v = 0; v < differentObservables; v+=4){
+		        for(int s = 0; s < hiddenStates; s+=4){
+					double scalingFactor=1.0/gamma_T[s];
+					double scalingFactor1=1.0/gamma_T[s+1];
+					double scalingFactor2=1.0/gamma_T[s+2];
+					double scalingFactor3=1.0/gamma_T[s+3];
+					//v,s
+			        emissionMatrix[v*hiddenStates + s] = b_new[v*hiddenStates + s] * scalingFactor;
 			        b_new[v*hiddenStates + s] = 0.0;
+					//v,s+1
+			        emissionMatrix[v*hiddenStates + s+1] = b_new[v*hiddenStates + s+1] * scalingFactor1;
+			        b_new[v*hiddenStates + s+1] = 0.0;
+					//v,s+2
+			        emissionMatrix[v*hiddenStates + s+2] = b_new[v*hiddenStates + s+2] * scalingFactor2;
+			        b_new[v*hiddenStates + s+2] = 0.0;
+					//v,s+3
+			        emissionMatrix[v*hiddenStates + s+3] = b_new[v*hiddenStates + s+3] * scalingFactor3;
+			        b_new[v*hiddenStates + s+3] = 0.0;
+					
+					//v+1,s
+			        emissionMatrix[(v+1)*hiddenStates + s] = b_new[(v+1)*hiddenStates + s] * scalingFactor;
+			        b_new[(v+1)*hiddenStates + s] = 0.0;
+					//v+1,s+1
+			        emissionMatrix[(v+1)*hiddenStates + s+1] = b_new[(v+1)*hiddenStates + s+1] * scalingFactor1;
+			        b_new[(v+1)*hiddenStates + s+1] = 0.0;
+					//v+1,s+2
+			        emissionMatrix[(v+1)*hiddenStates + s+2] = b_new[(v+1)*hiddenStates + s+2] * scalingFactor2;
+			        b_new[(v+1)*hiddenStates + s+2] = 0.0;
+					//v+1,s+3
+			        emissionMatrix[(v+1)*hiddenStates + s+3] = b_new[(v+1)*hiddenStates + s+3] * scalingFactor3;
+			        b_new[(v+1)*hiddenStates + s+3] = 0.0;
+					
+					//v+2,s
+			        emissionMatrix[(v+2)*hiddenStates + s] = b_new[(v+2)*hiddenStates + s] * scalingFactor;
+			        b_new[(v+2)*hiddenStates + s] = 0.0;
+					//v+2,s+1
+			        emissionMatrix[(v+2)*hiddenStates + s+1] = b_new[(v+2)*hiddenStates + s+1] * scalingFactor1;
+			        b_new[(v+2)*hiddenStates + s+1] = 0.0;
+					//v+2,s+2
+			        emissionMatrix[(v+2)*hiddenStates + s+2] = b_new[(v+2)*hiddenStates + s+2] * scalingFactor2;
+			        b_new[(v+2)*hiddenStates + s+2] = 0.0;
+					//v+2,s+3
+			        emissionMatrix[(v+2)*hiddenStates + s+3] = b_new[(v+2)*hiddenStates + s+3] * scalingFactor3;
+			        b_new[(v+2)*hiddenStates + s+3] = 0.0;
+					
+					//v+3,s
+			        emissionMatrix[(v+3)*hiddenStates + s] = b_new[(v+3)*hiddenStates + s] * scalingFactor;
+			        b_new[(v+3)*hiddenStates + s] = 0.0;
+					//v+3,s+1
+			        emissionMatrix[(v+3)*hiddenStates + s+1] = b_new[(v+3)*hiddenStates + s+1] * scalingFactor1;
+			        b_new[(v+3)*hiddenStates + s+1] = 0.0;
+					//v+3,s+2
+			        emissionMatrix[(v+3)*hiddenStates + s+2] = b_new[(v+3)*hiddenStates + s+2] * scalingFactor2;
+			        b_new[(v+3)*hiddenStates + s+2] = 0.0;
+					//v+3,s+3
+			        emissionMatrix[(v+3)*hiddenStates + s+3] = b_new[(v+3)*hiddenStates + s+3] * scalingFactor3 ;
+			        b_new[(v+3)*hiddenStates + s+3] = 0.0;
 		        }
 	        }
 
@@ -539,17 +955,33 @@ int main(int argc, char *argv[]){
 	        double ctt = 0.0;
 	        //compute alpha(0) and scaling factor for t = 0
 	        int y0 = observations[0];
-	        for(int s = 0; s < hiddenStates; s++){
+	        for(int s = 0; s < hiddenStates; s+=4){
+				//s
 		        double alphas = stateProb[s] * emissionMatrix[y0*hiddenStates + s];
 		        ctt += alphas;
 		        alpha[s] = alphas;
+				//s+1
+		        alphas = stateProb[s+1] * emissionMatrix[y0*hiddenStates + s+1];
+		        ctt += alphas;
+		        alpha[s+1] = alphas;
+				//s+2
+		        alphas = stateProb[s+2] * emissionMatrix[y0*hiddenStates + s+2];
+		        ctt += alphas;
+		        alpha[s+2] = alphas;
+				//s+3
+		        alphas = stateProb[s+3] * emissionMatrix[y0*hiddenStates + s+3];
+		        ctt += alphas;
+		        alpha[s+3] = alphas;
 	        }
 	        
 	        ctt = 1.0 / ctt;
 
 	        //scale alpha(0)
-	        for(int s = 0; s < hiddenStates; s++){
+	        for(int s = 0; s < hiddenStates; s+=4){
 		        alpha[s] *= ctt;
+		        alpha[s+1] *= ctt;
+		        alpha[s+2] *= ctt;
+		        alpha[s+3] *= ctt;
 	        }
 	        //print_matrix(alpha,N,T);
 	        ct[0] = ctt;
@@ -557,80 +989,287 @@ int main(int argc, char *argv[]){
 	        //Compute alpha(1) and scale transitionMatrix
 	        ctt = 0.0;	
 	        yt = observations[1];	
-	        for(int s = 0; s<hiddenStates; s++){// s=new_state
+	        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 		        double alphatNs = 0;
-		        for(int j = 0; j < hiddenStates; j++){//j=old_states
-			        double ajNs =  a_new[j*hiddenStates + s] / gamma_sum[j];
+		        double alphatNs1 = 0;
+		        double alphatNs2 = 0;
+		        double alphatNs3 = 0;
+		        for(int j = 0; j < hiddenStates; j+=4){//j=old_states
+					double gamma_sums_inv = 1./gamma_sum[j];
+					double gamma_sums_inv1 = 1./gamma_sum[j+1];
+					double gamma_sums_inv2 = 1./gamma_sum[j+2];
+					double gamma_sums_inv3 = 1./gamma_sum[j+3];
+					//s
+					//j
+			        double ajNs =  a_new[j*hiddenStates + s] * gamma_sums_inv;
 			        transitionMatrix[j*hiddenStates + s] = ajNs;
 			        alphatNs += alpha[0*hiddenStates + j] * ajNs;
-			        a_new[j*hiddenStates+s] = 0.0;
+			        a_new[j*hiddenStates + s] = 0.0;
+					//j+1
+			        ajNs =  a_new[(j+1)*hiddenStates + s] * gamma_sums_inv1;
+			        transitionMatrix[(j+1)*hiddenStates + s] = ajNs;
+			        alphatNs += alpha[0*hiddenStates + j+1] * ajNs;
+			        a_new[(j+1)*hiddenStates + s] = 0.0;
+					//j+2
+			        ajNs =  a_new[(j+2)*hiddenStates + s] * gamma_sums_inv2;
+			        transitionMatrix[(j+2)*hiddenStates + s] = ajNs;
+			        alphatNs += alpha[0*hiddenStates + j+2] * ajNs;
+			        a_new[(j+2)*hiddenStates + s] = 0.0;
+					//j+3
+			        ajNs =  a_new[(j+3)*hiddenStates + s] * gamma_sums_inv3;
+			        transitionMatrix[(j+3)*hiddenStates + s] = ajNs;
+			        alphatNs += alpha[0*hiddenStates + j+3] * ajNs;
+			        a_new[(j+3)*hiddenStates + s] = 0.0;
+					
+					//s+1
+					//j
+			        ajNs =  a_new[j*hiddenStates + s+1] * gamma_sums_inv;
+			        transitionMatrix[j*hiddenStates + s+1] = ajNs;
+			        alphatNs1 += alpha[0*hiddenStates + j] * ajNs;
+			        a_new[j*hiddenStates + s+1] = 0.0;
+					//j+1
+			        ajNs =  a_new[(j+1)*hiddenStates + s+1] * gamma_sums_inv1;
+			        transitionMatrix[(j+1)*hiddenStates + s+1] = ajNs;
+			        alphatNs1 += alpha[0*hiddenStates + j+1] * ajNs;
+			        a_new[(j+1)*hiddenStates + s+1] = 0.0;
+					//j+2
+			        ajNs =  a_new[(j+2)*hiddenStates + s+1] * gamma_sums_inv2;
+			        transitionMatrix[(j+2)*hiddenStates + s+1] = ajNs;
+			        alphatNs1 += alpha[0*hiddenStates + j+2] * ajNs;
+			        a_new[(j+2)*hiddenStates + s+1] = 0.0;
+					//j+3
+			        ajNs =  a_new[(j+3)*hiddenStates + s+1] * gamma_sums_inv3;
+			        transitionMatrix[(j+3)*hiddenStates + s+1] = ajNs;
+			        alphatNs1 += alpha[0*hiddenStates + j+3] * ajNs;
+			        a_new[(j+3)*hiddenStates + s+1] = 0.0;
+					
+					//s+2
+					//j
+			        ajNs =  a_new[j*hiddenStates + s+2] * gamma_sums_inv;
+			        transitionMatrix[j*hiddenStates + s+2] = ajNs;
+			        alphatNs2 += alpha[0*hiddenStates + j] * ajNs;
+			        a_new[j*hiddenStates + s+2] = 0.0;
+					//j+1
+			        ajNs =  a_new[(j+1)*hiddenStates + s+2] * gamma_sums_inv1;
+			        transitionMatrix[(j+1)*hiddenStates + s+2] = ajNs;
+			        alphatNs2 += alpha[0*hiddenStates + j+1] * ajNs;
+			        a_new[(j+1)*hiddenStates + s+2] = 0.0;
+					//j+2
+			        ajNs =  a_new[(j+2)*hiddenStates + s+2] * gamma_sums_inv2;
+			        transitionMatrix[(j+2)*hiddenStates + s+2] = ajNs;
+			        alphatNs2 += alpha[0*hiddenStates + j+2] * ajNs;
+			        a_new[(j+2)*hiddenStates + s+2] = 0.0;
+					//j+3
+			        ajNs =  a_new[(j+3)*hiddenStates + s+2] * gamma_sums_inv3;
+			        transitionMatrix[(j+3)*hiddenStates + s+2] = ajNs;
+			        alphatNs2 += alpha[0*hiddenStates + j+3] * ajNs;
+			        a_new[(j+3)*hiddenStates + s+2] = 0.0;
+					
+					//s+3
+					//j
+			        ajNs =  a_new[j*hiddenStates + s+3] * gamma_sums_inv;
+			        transitionMatrix[j*hiddenStates + s+3] = ajNs;
+			        alphatNs3 += alpha[0*hiddenStates + j] * ajNs;
+			        a_new[j*hiddenStates + s+3] = 0.0;
+					//j+1
+			        ajNs =  a_new[(j+1)*hiddenStates + s+3] * gamma_sums_inv1;
+			        transitionMatrix[(j+1)*hiddenStates + s+3] = ajNs;
+			        alphatNs3 += alpha[0*hiddenStates + j+1] * ajNs;
+			        a_new[(j+1)*hiddenStates + s+3] = 0.0;
+					//j+2
+			        ajNs =  a_new[(j+2)*hiddenStates + s+3] * gamma_sums_inv2;
+			        transitionMatrix[(j+2)*hiddenStates + s+3] = ajNs;
+			        alphatNs3 += alpha[0*hiddenStates + j+2] * ajNs;
+			        a_new[(j+2)*hiddenStates + s+3] = 0.0;
+					//j+3
+			        ajNs =  a_new[(j+3)*hiddenStates + s+3] * gamma_sums_inv3;
+			        transitionMatrix[(j+3)*hiddenStates + s+3] = ajNs;
+			        alphatNs3 += alpha[0*hiddenStates + j+3] * ajNs;
+			        a_new[(j+3)*hiddenStates + s+3] = 0.0;
 		        }
+				//s
 		        alphatNs *= emissionMatrix[yt*hiddenStates + s];
 		        ctt += alphatNs;
 		        alpha[1*hiddenStates + s] = alphatNs;
+				//s+1
+		        alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
+		        ctt += alphatNs1;
+		        alpha[1*hiddenStates + s+1] = alphatNs1;
+				//s+2
+		        alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
+		        ctt += alphatNs2;
+		        alpha[1*hiddenStates + s+2] = alphatNs2;
+				//s+3
+		        alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
+		        ctt += alphatNs3;
+		        alpha[1*hiddenStates + s+3] = alphatNs3;
 	        }
 	        //scaling factor for t 
 	        ctt = 1.0 / ctt;
 	        
 	        //scale alpha(t)
-	        for(int s = 0; s<hiddenStates; s++){// s=new_state
-		        alpha[1*hiddenStates+s] *= ctt;
+	        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+		        alpha[1*hiddenStates + s] *= ctt;
+		        alpha[1*hiddenStates + s+1] *= ctt;
+		        alpha[1*hiddenStates + s+2] *= ctt;
+		        alpha[1*hiddenStates + s+3] *= ctt;
 	        }
 	        ct[1] = ctt;
 
+			
 	        for(int t = 2; t < T-1; t++){
 		        ctt = 0.0;	
 		        yt = observations[t];	
-		        for(int s = 0; s<hiddenStates; s++){// s=new_state
+		        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 			        double alphatNs = 0;
+			        double alphatNs1 = 0;
+			        double alphatNs2 = 0;
+			        double alphatNs3 = 0;
 			        //alpha[s*T + t] = 0;
-			        for(int j = 0; j < hiddenStates; j++){//j=old_states
+			        for(int j = 0; j < hiddenStates; j+=4){//j=old_states
+						//s
 				        alphatNs += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s];
+				        alphatNs += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s];
+				        alphatNs += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s];
+				        alphatNs += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s];
+						//s+1
+				        alphatNs1 += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+1];
+				        alphatNs1 += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+1];
+				        alphatNs1 += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+1];
+				        alphatNs1 += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+1];
+						//s+2
+				        alphatNs2 += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+2];
+				        alphatNs2 += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+2];
+				        alphatNs2 += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+2];
+				        alphatNs2 += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+2];
+						//s+3
+				        alphatNs3 += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+3];
+				        alphatNs3 += alpha[(t-1)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+3];
+				        alphatNs3 += alpha[(t-1)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+3];
+				        alphatNs3 += alpha[(t-1)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+3];
 			        }
+					//s
 			        alphatNs *= emissionMatrix[yt*hiddenStates + s];
 			        ctt += alphatNs;
 			        alpha[t*hiddenStates + s] = alphatNs;
+					
+					//s+1
+			        alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
+			        ctt += alphatNs1;
+			        alpha[t*hiddenStates + s+1] = alphatNs1;
+					
+					//s+2
+			        alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
+			        ctt += alphatNs2;
+			        alpha[t*hiddenStates + s+2] = alphatNs2;
+					
+					//s+3
+			        alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
+			        ctt += alphatNs3;
+			        alpha[t*hiddenStates + s+3] = alphatNs3;
+					
+					
 		        }
 		        //scaling factor for t 
 		        ctt = 1.0 / ctt;
 		        
 		        //scale alpha(t)
-		        for(int s = 0; s<hiddenStates; s++){// s=new_state
-			        alpha[t*hiddenStates+s] *= ctt;
+		        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+			        alpha[t*hiddenStates + s] *= ctt;
+			        alpha[t*hiddenStates + s+1] *= ctt;
+			        alpha[t*hiddenStates + s+2] *= ctt;
+			        alpha[t*hiddenStates + s+3] *= ctt;
 		        }
 		        ct[t] = ctt;
 	        }
-		        
+			
+			
 	        //compute alpha(T-1)
 	        ctt = 0.0;	
 	        yt = observations[T-1];	
-	        for(int s = 0; s<hiddenStates; s++){// s=new_state
+	        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 		        double alphatNs = 0;
+		        double alphatNs1 = 0;
+		        double alphatNs2 = 0;
+		        double alphatNs3 = 0;
 		        //alpha[s*T + t] = 0;
-		        for(int j = 0; j < hiddenStates; j++){//j=old_states
+		        for(int j = 0; j < hiddenStates; j+=4){//j=old_states
+					//s
 			        alphatNs += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s];
+			        alphatNs += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s];
+			        alphatNs += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s];
+			        alphatNs += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s];
+					//s+1
+			        alphatNs1 += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+1];
+			        alphatNs1 += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+1];
+			        alphatNs1 += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+1];
+			        alphatNs1 += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+1];
+					//s+2
+			        alphatNs2 += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+2];
+			        alphatNs2 += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+2];
+			        alphatNs2 += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+2];
+			        alphatNs2 += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+2];
+					//s+3
+			        alphatNs3 += alpha[(T-2)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s+3];
+			        alphatNs3 += alpha[(T-2)*hiddenStates + j+1] * transitionMatrix[(j+1)*hiddenStates + s+3];
+			        alphatNs3 += alpha[(T-2)*hiddenStates + j+2] * transitionMatrix[(j+2)*hiddenStates + s+3];
+			        alphatNs3 += alpha[(T-2)*hiddenStates + j+3] * transitionMatrix[(j+3)*hiddenStates + s+3];
 		        }
-
+				//s
 		        alphatNs *= emissionMatrix[yt*hiddenStates + s];
 		        ctt += alphatNs;
 		        alpha[(T-1)*hiddenStates + s] = alphatNs;
+				
+				//s+1
+		        alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
+		        ctt += alphatNs1;
+		        alpha[(T-1)*hiddenStates + s+1] = alphatNs1;
+				
+				//s+2
+		        alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
+		        ctt += alphatNs2;
+		        alpha[(T-1)*hiddenStates + s+2] = alphatNs2;
+				
+				//s+3
+		        alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
+		        ctt += alphatNs3;
+		        alpha[(T-1)*hiddenStates + s+3] = alphatNs3;
 	        }
 	        //scaling factor for T-1
 	        ctt = 1.0 / ctt;
 		        
 	        //scale alpha(t)
-	        for(int s = 0; s<hiddenStates; s++){// s=new_state
+	        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+				//s
 		        double alphaT1Ns = alpha[(T-1) * hiddenStates + s]*ctt;
 		        alpha[(T-1)*hiddenStates+s] = alphaT1Ns;
 		        gamma_T[s] = alphaT1Ns /* *ct[T-1]*/;
+				//s+1
+		        alphaT1Ns = alpha[(T-1) * hiddenStates + s+1]*ctt;
+		        alpha[(T-1)*hiddenStates + s+1] = alphaT1Ns;
+		        gamma_T[s+1] = alphaT1Ns /* *ct[T-1]*/;
+				//s+2
+		        alphaT1Ns = alpha[(T-1) * hiddenStates + s+2]*ctt;
+		        alpha[(T-1)*hiddenStates + s+2] = alphaT1Ns;
+		        gamma_T[s+2] = alphaT1Ns /* *ct[T-1]*/;
+				//s+3
+		        alphaT1Ns = alpha[(T-1) * hiddenStates + s+3]*ctt;
+		        alpha[(T-1)*hiddenStates + s+3] = alphaT1Ns;
+		        gamma_T[s+3] = alphaT1Ns /* *ct[T-1]*/;
 	        }
 	        ct[T-1] = ctt;
 
 	        //FUSED BACKWARD and UPDATE STEP
 
-	        for(int s = 0; s < hiddenStates; s++){
+	        for(int s = 0; s < hiddenStates; s+=4){
 		        beta[s] = /* 1* */ctt;
 		        gamma_sum[s] = 0.0;
+		        beta[s+1] = /* 1* */ctt;
+		        gamma_sum[s+1] = 0.0;
+		        beta[s+2] = /* 1* */ctt;
+		        gamma_sum[s+2] = 0.0;
+		        beta[s+3] = /* 1* */ctt;
+		        gamma_sum[s+3] = 0.0;
 	        }
 
 	        //compute sum of xi and gamma from t= 0...T-2
@@ -638,15 +1277,103 @@ int main(int argc, char *argv[]){
 	        for(int t = T-1; t > 0; t--){
 		        const int yt1 = observations[t-1];
 		        ctt = ct[t-1];
-		        for(int s = 0; s < hiddenStates ; s++){
+		        for(int s = 0; s < hiddenStates ; s+=4){
 			        double beta_news = 0.0;
 			        double alphat1Ns = alpha[(t-1)*hiddenStates + s];
-			        for(int j = 0; j < hiddenStates; j++){
+			        double beta_news1 = 0.0;
+			        double alphat1Ns1 = alpha[(t-1)*hiddenStates + s+1];
+			        double beta_news2 = 0.0;
+			        double alphat1Ns2 = alpha[(t-1)*hiddenStates + s+2];
+			        double beta_news3 = 0.0;
+			        double alphat1Ns3 = alpha[(t-1)*hiddenStates + s+3];
+			        for(int j = 0; j < hiddenStates; j+=4){
+						//s
+						//j
 				        double temp = transitionMatrix[s*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
-				        
 				        double xi_sjt = alphat1Ns * temp;
 				        a_new[s*hiddenStates+j] +=xi_sjt;
 				        beta_news += temp;
+						//j+1
+				        temp = transitionMatrix[s*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				        xi_sjt = alphat1Ns * temp;
+				        a_new[s*hiddenStates + j+1] +=xi_sjt;
+				        beta_news += temp;
+						//j+2
+				        temp = transitionMatrix[s*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				        xi_sjt = alphat1Ns * temp;
+				        a_new[s*hiddenStates + j+2] +=xi_sjt;
+				        beta_news += temp;
+						//j+3
+				        temp = transitionMatrix[s*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				        xi_sjt = alphat1Ns * temp;
+				        a_new[s*hiddenStates + j+3] +=xi_sjt;
+				        beta_news += temp;
+						
+						//s+1
+						//j
+				        temp = transitionMatrix[(s+1)*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
+				        xi_sjt = alphat1Ns1 * temp;
+				        a_new[(s+1)*hiddenStates+j] +=xi_sjt;
+				        beta_news1 += temp;
+						//j+1
+				        temp = transitionMatrix[(s+1)*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				        xi_sjt = alphat1Ns1 * temp;
+				        a_new[(s+1)*hiddenStates + j+1] +=xi_sjt;
+				        beta_news1 += temp;
+						//j+2
+				        temp = transitionMatrix[(s+1)*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				        xi_sjt = alphat1Ns1 * temp;
+				        a_new[(s+1)*hiddenStates + j+2] +=xi_sjt;
+				        beta_news1 += temp;
+						//j+3
+				        temp = transitionMatrix[(s+1)*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				        xi_sjt = alphat1Ns1 * temp;
+				        a_new[(s+1)*hiddenStates + j+3] +=xi_sjt;
+				        beta_news1 += temp;
+						
+						//s+2
+						//j
+				        temp = transitionMatrix[(s+2)*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
+				        xi_sjt = alphat1Ns2 * temp;
+				        a_new[(s+2)*hiddenStates+j] +=xi_sjt;
+				        beta_news2 += temp;
+						//j+1
+				        temp = transitionMatrix[(s+2)*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				        xi_sjt = alphat1Ns2 * temp;
+				        a_new[(s+2)*hiddenStates + j+1] +=xi_sjt;
+				        beta_news2 += temp;
+						//j+2
+				        temp = transitionMatrix[(s+2)*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				        xi_sjt = alphat1Ns2 * temp;
+				        a_new[(s+2)*hiddenStates + j+2] +=xi_sjt;
+				        beta_news2 += temp;
+						//j+3
+				        temp = transitionMatrix[(s+2)*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				        xi_sjt = alphat1Ns2 * temp;
+				        a_new[(s+2)*hiddenStates + j+3] +=xi_sjt;
+				        beta_news2 += temp;
+						
+						//s+3
+						//j
+				        temp = transitionMatrix[(s+3)*hiddenStates +j] * beta[j] * emissionMatrix[yt*hiddenStates + j];
+				        xi_sjt = alphat1Ns3 * temp;
+				        a_new[(s+3)*hiddenStates+j] +=xi_sjt;
+				        beta_news3 += temp;
+						//j+1
+				        temp = transitionMatrix[(s+3)*hiddenStates + j+1] * beta[j+1] * emissionMatrix[yt*hiddenStates + j+1];
+				        xi_sjt = alphat1Ns3 * temp;
+				        a_new[(s+3)*hiddenStates + j+1] +=xi_sjt;
+				        beta_news3 += temp;
+						//j+2
+				        temp = transitionMatrix[(s+3)*hiddenStates + j+2] * beta[j+2] * emissionMatrix[yt*hiddenStates + j+2];
+				        xi_sjt = alphat1Ns3 * temp;
+				        a_new[(s+3)*hiddenStates + j+2] +=xi_sjt;
+				        beta_news3 += temp;
+						//j+3
+				        temp = transitionMatrix[(s+3)*hiddenStates + j+3] * beta[j+3] * emissionMatrix[yt*hiddenStates + j+3];
+				        xi_sjt = alphat1Ns3 * temp;
+				        a_new[(s+3)*hiddenStates + j+3] +=xi_sjt;
+				        beta_news3 += temp;
 				        
 			        }
 			        double ps =alphat1Ns*beta_news/* *ct[t-1]*/;  
@@ -654,6 +1381,27 @@ int main(int argc, char *argv[]){
 			        beta_new[s] = beta_news*ctt;
 			        gamma_sum[s]+= ps /* /ct[t-1] */ ;
                     b_new[yt1*hiddenStates+s]+=ps;
+					
+					//s+1
+			        ps =alphat1Ns1*beta_news1/* *ct[t-1]*/;  
+			        stateProb[s+1] = ps;
+			        beta_new[s+1] = beta_news1*ctt;
+			        gamma_sum[s+1]+= ps /* /ct[t-1] */ ;
+                    b_new[yt1*hiddenStates+ s+1]+=ps;
+					
+					//s+2
+			        ps =alphat1Ns2*beta_news2/* *ct[t-1]*/;  
+			        stateProb[s+2] = ps;
+			        beta_new[s+2] = beta_news2*ctt;
+			        gamma_sum[s+2]+= ps /* /ct[t-1] */ ;
+                    b_new[yt1*hiddenStates+ s+2]+=ps;
+					
+					//s+3
+			        ps =alphat1Ns3*beta_news3/* *ct[t-1]*/;  
+			        stateProb[s+3] = ps;
+			        beta_new[s+3] = beta_news3*ctt;
+			        gamma_sum[s+3]+= ps /* /ct[t-1] */ ;
+                    b_new[yt1*hiddenStates+ s+3]+=ps;
 		        }
 		        double * temp = beta_new;
 		        beta_new = beta;
@@ -661,7 +1409,7 @@ int main(int argc, char *argv[]){
 		        yt=yt1;
 	        }
             steps+=1;
-
+			
 //FINISHING
 	        //log likelihood
 	        double oldLogLikelihood=logLikelihood;
@@ -680,26 +1428,100 @@ int main(int argc, char *argv[]){
 		}while (disparance>EPSILON && steps<maxSteps);
 //Final Scaling
 	    //compute new transition matrix
-	    for(int s = 0; s < hiddenStates; s++){
+	    for(int s = 0; s < hiddenStates; s+=4){
 		    double gamma_sums_inv = 1./gamma_sum[s];
-		    for(int j = 0; j < hiddenStates; j++){
-			    transitionMatrix[s*hiddenStates+j] = a_new[s*hiddenStates+j]*gamma_sums_inv;
+			double gamma_sums_inv1 = 1./gamma_sum[s+1];
+		    double gamma_sums_inv2 = 1./gamma_sum[s+2];
+		    double gamma_sums_inv3 = 1./gamma_sum[s+3];
+		    for(int j = 0; j < hiddenStates; j+=4){
+				//s
+			    transitionMatrix[s*hiddenStates + j] = a_new[s*hiddenStates + j]*gamma_sums_inv;
+			    transitionMatrix[s*hiddenStates + j+1] = a_new[s*hiddenStates + j+1]*gamma_sums_inv;
+			    transitionMatrix[s*hiddenStates + j+2] = a_new[s*hiddenStates + j+2]*gamma_sums_inv;
+			    transitionMatrix[s*hiddenStates + j+3] = a_new[s*hiddenStates + j+3]*gamma_sums_inv;
+				//s+1
+			    transitionMatrix[(s+1)*hiddenStates + j] = a_new[(s+1)*hiddenStates + j]*gamma_sums_inv1;
+			    transitionMatrix[(s+1)*hiddenStates + j+1] = a_new[(s+1)*hiddenStates + j+1]*gamma_sums_inv1;
+			    transitionMatrix[(s+1)*hiddenStates + j+2] = a_new[(s+1)*hiddenStates + j+2]*gamma_sums_inv1;
+			    transitionMatrix[(s+1)*hiddenStates + j+3] = a_new[(s+1)*hiddenStates + j+3]*gamma_sums_inv1;
+				//s+2
+			    transitionMatrix[(s+2)*hiddenStates + j] = a_new[(s+2)*hiddenStates + j]*gamma_sums_inv2;
+			    transitionMatrix[(s+2)*hiddenStates + j+1] = a_new[(s+2)*hiddenStates + j+1]*gamma_sums_inv2;
+			    transitionMatrix[(s+2)*hiddenStates + j+2] = a_new[(s+2)*hiddenStates + j+2]*gamma_sums_inv2;
+			    transitionMatrix[(s+2)*hiddenStates + j+3] = a_new[(s+2)*hiddenStates + j+3]*gamma_sums_inv2;
+				//s+3
+			    transitionMatrix[(s+3)*hiddenStates + j] = a_new[(s+3)*hiddenStates + j]*gamma_sums_inv3;
+			    transitionMatrix[(s+3)*hiddenStates + j+1] = a_new[(s+3)*hiddenStates + j+1]*gamma_sums_inv3;
+			    transitionMatrix[(s+3)*hiddenStates + j+2] = a_new[(s+3)*hiddenStates + j+2]*gamma_sums_inv3;
+			    transitionMatrix[(s+3)*hiddenStates + j+3] = a_new[(s+3)*hiddenStates + j+3]*gamma_sums_inv3;
 		    }
 	    }
 
 	    yt =observations[T-1];
 	    //add remaining parts of the sum of gamma 
-	    for(int s = 0; s < hiddenStates; s++){	
+	    for(int s = 0; s < hiddenStates; s+=4){
+			//s
 		    double gamma_Ts = gamma_T[s];
 		    //if you use real gamma you have to divide by ct[t-1]
 		    gamma_sum[s] += gamma_Ts /* /ct[T-1] */;
-            b_new[yt*hiddenStates+s]+=gamma_Ts;
+            b_new[yt*hiddenStates + s]+=gamma_Ts;
+			//s+1
+		    gamma_Ts = gamma_T[s+1];
+		    //if you use real gamma you have to divide by ct[t-1]
+		    gamma_sum[s+1] += gamma_Ts /* /ct[T-1] */;
+            b_new[yt*hiddenStates + s+1]+=gamma_Ts;
+			//s+2
+		    gamma_Ts = gamma_T[s+2];
+		    //if you use real gamma you have to divide by ct[t-1]
+		    gamma_sum[s+2] += gamma_Ts /* /ct[T-1] */;
+            b_new[yt*hiddenStates + s+2]+=gamma_Ts;
+			//s+3
+		    gamma_Ts = gamma_T[s+3];
+		    //if you use real gamma you have to divide by ct[t-1]
+		    gamma_sum[s+3] += gamma_Ts /* /ct[T-1] */;
+            b_new[yt*hiddenStates + s+3]+=gamma_Ts;
 	    }
 
 	    //compute new emission matrix
-	    for(int v = 0; v < differentObservables; v++){
-		    for(int s = 0; s < hiddenStates; s++){
-			    emissionMatrix[v*hiddenStates + s] = b_new[v*hiddenStates + s] / gamma_sum[s];
+	    for(int v = 0; v < differentObservables; v+=4){
+		    
+		    for(int s = 0; s < hiddenStates; s+=4){	
+				double gamma_sums_inv = 1./gamma_sum[s];
+				double gamma_sums_inv1 = 1./gamma_sum[s+1];
+				double gamma_sums_inv2 = 1./gamma_sum[s+2];
+				double gamma_sums_inv3 = 1./gamma_sum[s+3];
+				//v,s
+			    emissionMatrix[v*hiddenStates + s] = b_new[v*hiddenStates + s] * gamma_sums_inv;
+				//v,s+1
+			    emissionMatrix[v*hiddenStates + s+1] = b_new[v*hiddenStates + s+1] * gamma_sums_inv1;
+				//v,s+2
+			    emissionMatrix[v*hiddenStates + s+2] = b_new[v*hiddenStates + s+2] * gamma_sums_inv2;
+				//v,s+2
+			    emissionMatrix[v*hiddenStates + s+3] = b_new[v*hiddenStates + s+3] * gamma_sums_inv3;
+				//v+1,s
+			    emissionMatrix[(v+1)*hiddenStates + s] = b_new[(v+1)*hiddenStates + s] * gamma_sums_inv;
+				//v+1,s+1
+			    emissionMatrix[(v+1)*hiddenStates + s+1] = b_new[(v+1)*hiddenStates + s+1] * gamma_sums_inv1;
+				//v+1,s+2
+			    emissionMatrix[(v+1)*hiddenStates + s+2] = b_new[(v+1)*hiddenStates + s+2] * gamma_sums_inv2;
+				//v+1,s+3
+			    emissionMatrix[(v+1)*hiddenStates + s+3] = b_new[(v+1)*hiddenStates + s+3] * gamma_sums_inv3;
+				//v+2,s
+			    emissionMatrix[(v+2)*hiddenStates + s] = b_new[(v+2)*hiddenStates + s] * gamma_sums_inv;
+				//v+2,s+1
+			    emissionMatrix[(v+2)*hiddenStates + s+1] = b_new[(v+2)*hiddenStates + s+1] * gamma_sums_inv1;
+				//v+2,s+2
+			    emissionMatrix[(v+2)*hiddenStates + s+2] = b_new[(v+2)*hiddenStates + s+2] * gamma_sums_inv2;
+				//v+2,s+3
+			    emissionMatrix[(v+2)*hiddenStates + s+3] = b_new[(v+2)*hiddenStates + s+3] * gamma_sums_inv3;
+				//v+3,s
+			    emissionMatrix[(v+3)*hiddenStates + s] = b_new[(v+3)*hiddenStates + s] * gamma_sums_inv;
+				//v+3,s+1
+			    emissionMatrix[(v+3)*hiddenStates + s+1] = b_new[(v+3)*hiddenStates + s+1] * gamma_sums_inv1;
+				//v+3,s+2
+			    emissionMatrix[(v+3)*hiddenStates + s+2] = b_new[(v+3)*hiddenStates + s+2] * gamma_sums_inv2;
+				//v+3,s+3
+			    emissionMatrix[(v+3)*hiddenStates + s+3] = b_new[(v+3)*hiddenStates + s+3] * gamma_sums_inv3;
 		    }
 	    }
 
