@@ -81,6 +81,8 @@ From inside code folder:
 	* like url1.2 but without transposition of transition Matrix. Still precomputing a*b and more efficient computation of division with gamma.
 - url1.4:
 	* like url1.3 but without precomputing a*b. Also this is like url1.1 but with better computation of the divisions of gamma.
+- vec1.2:
+	* like url1.2 but with vectorized update step, final scaling and finishing criteria. To use vectorized finishing criteria you have to compile with icc and the number of observations (T) has to be divisible by 4.
 
 ## Usage baum-welch.r
 - open with RStudio
