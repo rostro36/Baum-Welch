@@ -1,13 +1,14 @@
 #!/bin/bash
 
+file="bw-cop.c"
 flags=( -O0 -O2 )
 seeds=( 0 36 )
-hiddenStates=( 4 8 16 62 64 )
+hiddenStates=( 4 8 )
 differentObservables=( 4 8 )
-Ts=( 1028 2056 )
+Ts=( 16 32 )
 for flag in "${flags[@]}"
 do
-	gcc $flag -o run baum-welch-stable.c io.c bw-tested.c tested.h -lm
+	gcc $flag -o run "$file" io.c bw-tested.c tested.h -lm
     for seed in "${seeds[@]}"
     do
         for hiddenState in "${hiddenStates[@]}"
@@ -18,6 +19,7 @@ do
                 do
                 echo "DAS SEI UESI PARAMETER" "FLAG" $flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T
                 ./run $seed $hiddenState $differentObservable $T
+                valgrind --tool=cachegrind --cachegrind-out-file=../valgrind/$file-$hiddenState-$differentObservable-$T-cache --cache-sim=yes  --branch-sim=yes ./run $seed $hiddenState $differentObservable $T > bin.txt
                 done
             done
         done

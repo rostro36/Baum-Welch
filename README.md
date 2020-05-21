@@ -67,6 +67,8 @@ From inside code folder:
 	* like 3.4 but with blocking in forward step
 - op 3.6:
 	* like 3.1 but precomputing a*b for update step and reduced number of divisions
+- reo2:
+    * inlined of 3.6
 - op3.7:
 	* like 3.1 but with blocking in forward step (uses another blocking than 3.5)
 - url1.0:
