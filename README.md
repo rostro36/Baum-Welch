@@ -69,6 +69,16 @@ From inside code folder:
 	* like 3.1 but precomputing a*b for update step and reduced number of divisions
 - op3.7:
 	* like 3.1 but with blocking in forward step (uses another blocking than 3.5)
+- url1.0:
+	* ???
+- url1.1:
+	* unrolled version of opt1.1
+- url1.2:
+	* unrolled version of opt3.6. Difference to url1.1 is transposition of transitionMatrix before and after forward step to get better access pattern, precomputing a*b before the update step and computing more efficient the divisions of gamma.
+- url1.3:
+	* like url1.2 but without transposition of transition Matrix. Still precomputing a*b and more efficient computation of division with gamma.
+- url1.4:
+	* like url1.3 but without precomputing a*b. Also this is like url1.1 but with better computation of the divisions of gamma.
 
 ## Usage baum-welch.r
 - open with RStudio
