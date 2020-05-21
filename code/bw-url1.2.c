@@ -863,7 +863,7 @@ int main(int argc, char *argv[]){
         
         	const int block_size = 4;
         
-		for(int by = 0; by < hiddenStates; by+=block_size){
+		for(int by = 0; by < hiddenStates; by+=4){
 			const int end = by + block_size;
 			
 			//Diagonal 4x4 blocks
@@ -893,7 +893,7 @@ int main(int argc, char *argv[]){
 
 			
 			//Offdiagonal blocks
-			for(int bx = end; bx < hiddenStates; bx+= block_size){
+			for(int bx = end; bx < hiddenStates; bx+= 4){
 		
 				double temp00 = transitionMatrix[by*hiddenStates+bx];
 				transitionMatrix[by * hiddenStates + bx]  = transitionMatrix[bx * hiddenStates + by];
@@ -972,7 +972,7 @@ int main(int argc, char *argv[]){
 		
 		//compute alpha(0) and scaling factor for t = 0
 		int y0 = observations[0];
-		for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int s = 0; s < hiddenStates; s+=4){
 			//s
 			double alphas = stateProb[s] * emissionMatrix[y0*hiddenStates + s];
 			ct0 += alphas;
@@ -994,7 +994,7 @@ int main(int argc, char *argv[]){
 		ct0 = 1.0 / ct0;
 	
 		//scale alpha(0)
-		for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int s = 0; s < hiddenStates; s+=4){
 			//s
 			alpha[s] *= ct0;
 			//s+1
@@ -1010,13 +1010,13 @@ int main(int argc, char *argv[]){
 		for(int t = 1; t < T-1; t++){
 			double ctt = 0.0;	
 			const int yt = observations[t];	
-			for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 				double alphatNs0 = 0;
 				double alphatNs1 = 0;
 				double alphatNs2 = 0;
 				double alphatNs3 = 0;
 				
-				for(int j = 0; j < hiddenStates; j+=unroll_inc){//j=old_states
+				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 				
 					double alphaFactor0 = alpha[(t-1)*hiddenStates + j];
 					double alphaFactor1 = alpha[(t-1)*hiddenStates + j+1];
@@ -1064,7 +1064,7 @@ int main(int argc, char *argv[]){
 			ctt = 1.0 / ctt;
 			
 			//scale alpha(t)
-			for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 				alpha[t*hiddenStates+s] *= ctt;
 				alpha[t*hiddenStates+s+1] *= ctt;
 				alpha[t*hiddenStates+s+2] *= ctt;
@@ -1078,13 +1078,13 @@ int main(int argc, char *argv[]){
 		int yt = observations[T-1];	
 
 		
-		for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+		for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 			double alphatNs0 = 0;
 			double alphatNs1 = 0;
 			double alphatNs2 = 0;
 			double alphatNs3 = 0;
 			
-			for(int j = 0; j < hiddenStates; j+=unroll_inc){//j=old_states
+			for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 			
 				double alphaFactor0 = alpha[(T-2)*hiddenStates + j];
 				double alphaFactor1 = alpha[(T-2)*hiddenStates + j+1];
@@ -1134,7 +1134,7 @@ int main(int argc, char *argv[]){
 		ctt = 1.0 / ctt;
 		
 		//scale alpha(t)
-		for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+		for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 			//s
 			double alphaT1Ns0 = alpha[(T-1) * hiddenStates + s]*ctt;
 			alpha[(T-1)*hiddenStates + s] = alphaT1Ns0;
@@ -1157,7 +1157,7 @@ int main(int argc, char *argv[]){
 
 		//FUSED BACKWARD and UPDATE STEP
 
-		for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int s = 0; s < hiddenStates; s+=4){
 			beta[s] = /* 1* */ctt;
 			beta[s+1] = /* 1* */ctt;
 			beta[s+2] = /* 1* */ctt;
@@ -1166,7 +1166,7 @@ int main(int argc, char *argv[]){
 			gamma_sum[s+1] = 0.0;
 			gamma_sum[s+2] = 0.0;
 			gamma_sum[s+3] = 0.0;
-			for(int j = 0; j < hiddenStates; j+=unroll_inc){
+			for(int j = 0; j < hiddenStates; j+=4){
 				a_new[s*hiddenStates + j] =0.0;
 				a_new[s*hiddenStates + j+1] =0.0;
 				a_new[s*hiddenStates + j+2] =0.0;
@@ -1190,8 +1190,8 @@ int main(int argc, char *argv[]){
 		}
 
 
-		for(int v = 0;  v < differentObservables; v+=unroll_inc){
-			for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int v = 0;  v < differentObservables; v+=4){
+			for(int s = 0; s < hiddenStates; s+=4){
 				//v,s
 				b_new[v*hiddenStates + s] = 0.0;
 				//v,s+1
@@ -1228,7 +1228,7 @@ int main(int argc, char *argv[]){
 		}
 
 		//Transpose transitionMatrix
-		for(int by = 0; by < hiddenStates; by+=block_size){
+		for(int by = 0; by < hiddenStates; by+=4){
 			const int end = by + block_size;
 			
 			//Diagonal 4x4 blocks
@@ -1258,10 +1258,10 @@ int main(int argc, char *argv[]){
 
 			
 			//Offdiagonal blocks
-			for(int bx = end; bx < hiddenStates; bx+= block_size){
+			for(int bx = end; bx < hiddenStates; bx+= 4){
 				const int end_x = block_size + bx;
-				for(int i = by; i < end; i+=unroll_inc){
-					for(int j = bx; j < end_x; j+=unroll_inc){
+				for(int i = by; i < end; i+=4){
+					for(int j = bx; j < end_x; j+=4){
 						double temp00 = transitionMatrix[i*hiddenStates+j];
 						transitionMatrix[i * hiddenStates + j]  = transitionMatrix[j * hiddenStates + i];
 						transitionMatrix[j*hiddenStates+ i] = temp00;	
@@ -1337,8 +1337,8 @@ int main(int argc, char *argv[]){
 	
 	
 		for(int v = 0; v < differentObservables; v++){
-			for(int s = 0; s < hiddenStates; s+=unroll_inc){
-				for(int j = 0; j < hiddenStates; j+=unroll_inc){
+			for(int s = 0; s < hiddenStates; s+=4){
+				for(int j = 0; j < hiddenStates; j+=4){
 					ab[(v*hiddenStates + s) * hiddenStates + j] = transitionMatrix[s*hiddenStates + j] * emissionMatrix[v*hiddenStates +j];
 					ab[(v*hiddenStates + s) * hiddenStates + j+1] = transitionMatrix[s*hiddenStates + j+1] * emissionMatrix[v*hiddenStates +j+1];
 					ab[(v*hiddenStates + s) * hiddenStates + j+2] = transitionMatrix[s*hiddenStates + j+2] * emissionMatrix[v*hiddenStates +j+2];
@@ -1369,7 +1369,7 @@ int main(int argc, char *argv[]){
 		for(int t = T-1; t > 0; t--){
 			const int yt1 = observations[t-1];
 			const double ctt = ct[t-1];
-			for(int s = 0; s < hiddenStates ; s+=unroll_inc){
+			for(int s = 0; s < hiddenStates ; s+=4){
 				double beta_news0 = 0.0;
 				double alphat1Ns0 = alpha[(t-1)*hiddenStates + s];
 				double beta_news1 = 0.0;
@@ -1378,7 +1378,7 @@ int main(int argc, char *argv[]){
 				double alphat1Ns2 = alpha[(t-1)*hiddenStates + s+2];
 				double beta_news3 = 0.0;
 				double alphat1Ns3 = alpha[(t-1)*hiddenStates + s+3];
-				for(int j = 0; j < hiddenStates; j+=unroll_inc){
+				for(int j = 0; j < hiddenStates; j+=4){
 					double beta0 = beta[j];
 					double beta1 = beta[j+1];
 					double beta2 = beta[j+2];
@@ -1527,7 +1527,7 @@ int main(int argc, char *argv[]){
 		
 			yt = observations[T-1];
 			//add remaining parts of the sum of gamma 
-			for(int s = 0; s < hiddenStates; s+=unroll_inc){
+			for(int s = 0; s < hiddenStates; s+=4){
 				double gamma_Ts0 = gamma_T[s];
 				//if you use real gamma you have to divide by ct[t-1]
 				double gamma_sums0 = gamma_sum[s];
@@ -1563,8 +1563,8 @@ int main(int argc, char *argv[]){
 			}
 
 			//compute new emission matrix
-			for(int v = 0; v < differentObservables; v+=unroll_inc){
-				for(int s = 0; s < hiddenStates; s+=unroll_inc){
+			for(int v = 0; v < differentObservables; v++/*=4*/){
+				for(int s = 0; s < hiddenStates; s+=4){
 				
 					double gamma_T0 = gamma_T[s];
 					double gamma_T1 = gamma_T[s+1];
@@ -1584,7 +1584,7 @@ int main(int argc, char *argv[]){
 					b_new[v*hiddenStates + s+3] = 0.0;
 					
 					
-					
+					/*
 					emissionMatrix[(v+1)*hiddenStates + s] = b_new[(v+1)*hiddenStates + s] * gamma_T0;
 					b_new[(v+1)*hiddenStates + s] = 0.0;
 					
@@ -1625,7 +1625,7 @@ int main(int argc, char *argv[]){
 					emissionMatrix[(v+3)*hiddenStates + s+3] = b_new[(v+3)*hiddenStates + s+3] * gamma_T3;
 					b_new[(v+3)*hiddenStates + s+3] = 0.0;
 		
-					
+					*/
 					
 		
 				}
@@ -1636,7 +1636,7 @@ int main(int argc, char *argv[]){
 			//Transpose a_new. Note that it is not necessary to transpose matrix a.
 			//Transpose transitionMatrix
 			    
-			for(int by = 0; by < hiddenStates; by+=block_size){
+			for(int by = 0; by < hiddenStates; by+=4){
 				const int end = by + block_size;
 			
 				//Diagonal 4x4 blocks
@@ -1666,7 +1666,7 @@ int main(int argc, char *argv[]){
 	
 				
 				//Offdiagonal blocks
-				for(int bx = end; bx < hiddenStates; bx+= block_size){
+				for(int bx = end; bx < hiddenStates; bx+= 4){
 			
 					double temp00 = a_new[by*hiddenStates+bx];
 					a_new[by * hiddenStates + bx]  = a_new[bx * hiddenStates + by];
@@ -1744,7 +1744,7 @@ int main(int argc, char *argv[]){
 			//compute alpha(0) and scaling factor for t = 0
 			int y0 = observations[0];
 		  
-		        for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		        for(int s = 0; s < hiddenStates; s+=4){
 				//s
 		  	      double alphas0 = stateProb[s] * emissionMatrix[y0*hiddenStates + s];
 		  	      ctt += alphas0;
@@ -1766,7 +1766,7 @@ int main(int argc, char *argv[]){
 	        	ctt = 1.0 / ctt;
 
 	        	//scale alpha(0)
-	        	for(int s = 0; s < hiddenStates; s+=unroll_inc){
+	        	for(int s = 0; s < hiddenStates; s+=4){
 		        	alpha[s] *= ctt;
 		        	alpha[s+1] *= ctt;
 		        	alpha[s+2] *= ctt;
@@ -1779,13 +1779,13 @@ int main(int argc, char *argv[]){
 			ctt = 0.0;	
 			yt = observations[1];	
 			
-			for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 				double alphatNs0 = 0;
 				double alphatNs1 = 0;
 				double alphatNs2 = 0;
 				double alphatNs3 = 0;
 			
-				for(int j = 0; j < hiddenStates; j+=unroll_inc){//j=old_states
+				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 				
 					double alphaFactor0 = alpha[j];
 					double alphaFactor1 = alpha[j+1];
@@ -1900,7 +1900,7 @@ int main(int argc, char *argv[]){
 			ctt = 1.0 / ctt;
 	
 			//scale alpha(t)
-		        for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+		        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 		    	    alpha[1*hiddenStates + s] *= ctt;
 		    	    alpha[1*hiddenStates + s+1] *= ctt;
 		    	    alpha[1*hiddenStates + s+2] *= ctt;
@@ -1915,13 +1915,13 @@ int main(int argc, char *argv[]){
 			for(int t = 1; t < T-1; t++){
 				double ctt = 0.0;	
 				const int yt = observations[t];	
-				for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+				for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 					double alphatNs0 = 0;
 					double alphatNs1 = 0;
 					double alphatNs2 = 0;
 					double alphatNs3 = 0;
 				
-					for(int j = 0; j < hiddenStates; j+=unroll_inc){//j=old_states
+					for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 					
 						double alphaFactor0 = alpha[(t-1)*hiddenStates + j];
 						double alphaFactor1 = alpha[(t-1)*hiddenStates + j+1];
@@ -1969,7 +1969,7 @@ int main(int argc, char *argv[]){
 				ctt = 1.0 / ctt;
 			
 				//scale alpha(t)
-				for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+				for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 					alpha[t*hiddenStates+s] *= ctt;
 					alpha[t*hiddenStates+s+1] *= ctt;
 					alpha[t*hiddenStates+s+2] *= ctt;
@@ -1982,13 +1982,13 @@ int main(int argc, char *argv[]){
 			ctt = 0.0;	
 			yt = observations[T-1];	
 			
-			for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 				double alphatNs0 = 0;
 				double alphatNs1 = 0;
 				double alphatNs2 = 0;
 				double alphatNs3 = 0;
 			
-				for(int j = 0; j < hiddenStates; j+=unroll_inc){//j=old_states
+				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 			
 					double alphaFactor0 = alpha[(T-2)*hiddenStates + j];
 					double alphaFactor1 = alpha[(T-2)*hiddenStates + j+1];
@@ -2035,7 +2035,7 @@ int main(int argc, char *argv[]){
 			ctt = 1.0 / ctt;
 		
 		        //scale alpha(t)
-		        for(int s = 0; s<hiddenStates; s+=unroll_inc){// s=new_state
+		        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 					//s
 			        double alphaT1Ns0 = alpha[(T-1) * hiddenStates + s]*ctt;
 			        alpha[(T-1)*hiddenStates+s] = alphaT1Ns0;
@@ -2168,8 +2168,8 @@ int main(int argc, char *argv[]){
 	
 	
 			for(int v = 0; v < differentObservables; v++){
-				for(int s = 0; s < hiddenStates; s+=unroll_inc){
-					for(int j = 0; j < hiddenStates; j+=unroll_inc){
+				for(int s = 0; s < hiddenStates; s+=4){
+					for(int j = 0; j < hiddenStates; j+=4){
 						ab[(v*hiddenStates + s) * hiddenStates + j] = transitionMatrix[s*hiddenStates + j] * emissionMatrix[v*hiddenStates +j];
 						ab[(v*hiddenStates + s) * hiddenStates + j+1] = transitionMatrix[s*hiddenStates + j+1] * emissionMatrix[v*hiddenStates +j+1];
 						ab[(v*hiddenStates + s) * hiddenStates + j+2] = transitionMatrix[s*hiddenStates + j+2] * emissionMatrix[v*hiddenStates +j+2];
@@ -2190,19 +2190,19 @@ int main(int argc, char *argv[]){
 						ab[(v*hiddenStates + s+3) * hiddenStates + j+2] = transitionMatrix[(s+3)*hiddenStates + j+2] * emissionMatrix[v*hiddenStates +j+2];
 						ab[(v*hiddenStates + s+3) * hiddenStates + j+3] = transitionMatrix[(s+3)*hiddenStates + j+3] * emissionMatrix[v*hiddenStates +j+3];
 					
-					
+						
 					}
 				}
 			}
 			
-			for(int s = 0; s < hiddenStates; s+=unroll_inc){
+			for(int s = 0; s < hiddenStates; s+=4){
 			        beta[s] = /* 1* */ctt;
 			        beta[s+1] = /* 1* */ctt;
 			        beta[s+2] = /* 1* */ctt;
 			        beta[s+3] = /* 1* */ctt;
 	       	 }
 	        
-	       	for(int s = 0; s < hiddenStates; s+=unroll_inc){
+	       	for(int s = 0; s < hiddenStates; s+=4){
 			        gamma_sum[s] = 0.0;
 			        gamma_sum[s+1] = 0.0;
 			        gamma_sum[s+2] = 0.0;
@@ -2214,7 +2214,7 @@ int main(int argc, char *argv[]){
 			for(int t = T-1; t > 0; t--){
 				const int yt1 = observations[t-1];
 				const double ctt = ct[t-1];
-				for(int s = 0; s < hiddenStates ; s+=unroll_inc){
+				for(int s = 0; s < hiddenStates ; s+=4){
 					double beta_news0 = 0.0;
 					double alphat1Ns0 = alpha[(t-1)*hiddenStates + s];
 					double beta_news1 = 0.0;
@@ -2223,7 +2223,7 @@ int main(int argc, char *argv[]){
 					double alphat1Ns2 = alpha[(t-1)*hiddenStates + s+2];
 					double beta_news3 = 0.0;
 					double alphat1Ns3 = alpha[(t-1)*hiddenStates + s+3];
-					for(int j = 0; j < hiddenStates; j+=unroll_inc){
+					for(int j = 0; j < hiddenStates; j+=4){
 						
 						double beta0 = beta[j];
 						double beta1 = beta[j+1];
@@ -2321,6 +2321,7 @@ int main(int argc, char *argv[]){
 						double temp33 = ab[(yt*hiddenStates + s+3)*hiddenStates + j+3] * beta3;
 						a_new[(s+3)*hiddenStates+j+3] += alphat1Ns3 * temp33;
 						beta_news3 += temp33;
+						
 					}
 					//s
 					double ps0 =alphat1Ns0*beta_news0/* *ct[t-1]*/;  
@@ -2329,6 +2330,7 @@ int main(int argc, char *argv[]){
 					//if you use real gamma you have to divide with ct[t-1]
 					gamma_sum[s]+= ps0 /* /ct[t-1] */ ;
             				b_new[yt1*hiddenStates+s]+=ps0;
+            				
             				
             				//s+1
 					double ps1 =alphat1Ns1*beta_news1/* *ct[t-1]*/;  
@@ -2391,12 +2393,12 @@ int main(int argc, char *argv[]){
 		
 		
 		
-		for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int s = 0; s < hiddenStates; s+=4){
 			double gamma_sums_inv0 = 1./gamma_sum[s];
 			double gamma_sums_inv1 = 1./gamma_sum[s+1];
 			double gamma_sums_inv2 = 1./gamma_sum[s+2];
 			double gamma_sums_inv3 = 1./gamma_sum[s+3];
-			for(int j = 0; j < hiddenStates; j+=unroll_inc){
+			for(int j = 0; j < hiddenStates; j+=4){
 				transitionMatrix[s*hiddenStates+j] = a_new[s*hiddenStates+j]*gamma_sums_inv0;
 				transitionMatrix[s*hiddenStates+j+1] = a_new[s*hiddenStates+j+1]*gamma_sums_inv0;
 				transitionMatrix[s*hiddenStates+j+2] = a_new[s*hiddenStates+j+2]*gamma_sums_inv0;
@@ -2424,7 +2426,7 @@ int main(int argc, char *argv[]){
 		
 		yt = observations[T-1];
 		//add remaining parts of the sum of gamma 
-		for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int s = 0; s < hiddenStates; s+=4){
 			double gamma_Ts0 = gamma_T[s];
 			//if you use real gamma you have to divide by ct[t-1]
 			double gamma_tot0 = gamma_Ts0 + gamma_sum[s] /* /ct[T-1] */;
@@ -2452,8 +2454,8 @@ int main(int argc, char *argv[]){
 		}
 		
 		//compute new emission matrix
-		for(int v = 0; v < differentObservables; v+=unroll_inc){
-			for(int s = 0; s < hiddenStates; s+=unroll_inc){
+		for(int v = 0; v < differentObservables; v+=4){
+			for(int s = 0; s < hiddenStates; s+=4){
 			
 				double gamma_T0 = gamma_T[s];
 				double gamma_T1 = gamma_T[s+1];
