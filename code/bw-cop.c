@@ -346,18 +346,15 @@ int main(int argc, char *argv[]){
 
 	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
-    int steps=0;
+	int steps=0;
 	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
        	memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-        memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
+	        memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
 	
-		//used for testing
-		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
-   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-      	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
+
 
         double logLikelihood=-DBL_MAX;
         double disparance;
@@ -511,7 +508,12 @@ int main(int argc, char *argv[]){
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
-	
+		
+	//used for testing
+	memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+	memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
+
 	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 
 	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){

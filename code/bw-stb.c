@@ -512,15 +512,10 @@ int main(int argc, char *argv[]){
 	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
-       		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+       	memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
         	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
 	
-		//used for testing
-		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
-   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-      		memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
-
         	double logLikelihood=-DBL_MAX; //Took down here.
 
 		//only needed for testing with R
@@ -566,6 +561,13 @@ int main(int argc, char *argv[]){
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
+
+	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
+
+	//used for testing
+	memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+	memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
 
 	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 

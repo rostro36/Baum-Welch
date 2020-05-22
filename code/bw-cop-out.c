@@ -92,9 +92,9 @@ void makeMatrix(const int rows,const int columns, double* const matrix){
 
 myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, double* const alpha, double* beta,double* const gamma, double* const xi,   const int * const observations, double* const ct,double* const inv_ct, const int hiddenStates, const int differentObservables, const int T){
 //Luca
-        double logLikelihood=-DBL_MAX;
-        double disparance;
-        int steps=0;
+        	double logLikelihood=-DBL_MAX;
+        	double disparance;
+        	int steps=0;
 		myInt64 start = start_tsc();
 
 		do{
@@ -211,7 +211,7 @@ myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, 
 			        emissionMatrix[s*differentObservables + v] = gamma_sum_numerator * gamma_sum_denominator_div;
 		        }
 	        }
-            steps+=1;
+            	steps+=1;
 
 	        //log likelihood
 	        double oldLogLikelihood=logLikelihood;
@@ -230,7 +230,8 @@ myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, 
 		}while (disparance>EPSILON && steps<maxSteps);
 
 		myInt64 cycles = stop_tsc(start);
-        return cycles/steps;
+		cycles = cycles/steps;
+        return cycles;
 }
 void forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
 
@@ -428,6 +429,7 @@ int main(int argc, char *argv[]){
 	}
 
 	const int maxRuns=10;
+	const int cachegrind_runs = 1;
 	const int seed = atoi(argv[1]);  
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
@@ -481,66 +483,46 @@ int main(int argc, char *argv[]){
 	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
 	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
-    memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
+    	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
 
 
 	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
-    int steps=0;
-	for (int run=0; run<maxRuns; run++){
+    	int steps=0;
+	for (int run=0; run<cachegrind_runs; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
        	memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-        memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
-	
-		//used for testing
-		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
-   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-      	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
+        	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
 
-        myInt64 cycles=bw(transitionMatrix, stateProb,  emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);
+       	myInt64 cycles=bw(transitionMatrix, stateProb,  emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);
 	
-        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
- 
-		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
-			runs[run]=cycles;
-            //DEBUG OFF
-			//printf("run %i: \t %llu cycles \n",run, cycles);
-		}else{	
-		
-			free(groundTransitionMatrix);
-    		free(groundEmissionMatrix);
-    		free(observations);
-    		free(transitionMatrix);
-    		free(emissionMatrix);
-    		free(stateProb);
-	     	free(alpha);
-   		 	free(beta);
-	     	free(gamma);
-    		free(xi);
-      	  	free(ct);
-      	  	free(inv_ct);
-        	free(transitionMatrixSafe);
-    		free(emissionMatrixSafe);
-       		free(stateProbSafe);
-        	free(transitionMatrixTesting);
-    		free(emissionMatrixTesting);
-       		free(stateProbTesting);
-			printf("Something went wrong! \n");
-			return -1;//error Jan
-		}
+		runs[run]=cycles;
+
 
 
 	}
 
-	qsort (runs, maxRuns, sizeof (double), compare_doubles);
-  	double medianTime = runs[maxRuns/2];
+	qsort (runs, cachegrind_runs, sizeof (double), compare_doubles);
+  	double medianTime = runs[(int)(cachegrind_runs/2)];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
-	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
-        
-    free(groundTransitionMatrix);
+	//used for testing
+	memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+	memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
+
+	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
+        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+		
+
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+		printf("Something went wrong !");	
+		
+	}  
+	
+    	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -552,7 +534,7 @@ int main(int argc, char *argv[]){
 	free(xi);
    	free(ct);
    	free(inv_ct);
-    free(transitionMatrixSafe);
+    	free(transitionMatrixSafe);
 	free(emissionMatrixSafe);
    	free(stateProbSafe);
 	free(transitionMatrixTesting);

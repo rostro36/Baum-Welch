@@ -848,10 +848,6 @@ int main(int argc, char *argv[]){
    		memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
         	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));
 		
-		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
-   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-      		memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
-
         	double logLikelihood=-DBL_MAX; //Took down here.
 
 		//only needed for testing with R
@@ -2377,6 +2373,12 @@ int main(int argc, char *argv[]){
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
+	
+	//used for testing
+	memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+	memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
+
 	
 	transpose(emissionMatrix,differentObservables,hiddenStates);
 	//emissionMatrix is not in state major order
