@@ -2259,11 +2259,12 @@ int main(int argc, char *argv[]){
 		        double newLogLikelihood = 0.0;
 		        //evidence with alpha only:
 	
-			/*
+			#ifdef __GNUC__
 		        for(int time = 0; time < T; time++){
 			        newLogLikelihood -= log2(ct[time]);
 			 }
-			*/ 
+			
+			#elif __INTEL_COMPILER__
 			
 			__m256d logLikelihood_vec = _mm256_setzero_pd();
 			
@@ -2276,6 +2277,7 @@ int main(int argc, char *argv[]){
 		        _mm256_store_pd(reduction,logLikelihood_vec);
 		       
 			newLogLikelihood = reduction[0] +reduction[1] +reduction[2] +reduction[3];
+			#endif
 			
 		        logLikelihood=newLogLikelihood;
 		        
