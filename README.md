@@ -72,7 +72,7 @@ From inside code folder:
 - op3.7:
 	* like 3.1 but with blocking in forward step (uses another blocking than 3.5)
 - url1.0:
-	* unrolled version of opt1.1
+	* unrolled version of opt3.1
 - url1.1:
 	* url1.1 with scalar replacement
 - url1.2:
