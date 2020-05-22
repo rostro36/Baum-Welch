@@ -121,11 +121,9 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	}
 	//print_matrix(alpha,N,T);
 	ct[0] = ct0;
-    #pragma GCC ivdep
 	for(int t = 1; t < T-1; t++){
 		double ctt = 0.0;	
 		const int yt = observations[t];
-        #pragma GCC ivdep	
 		for(int s = 0; s<hiddenStates; s++){// s=new_state
 			double alphatNs = 0;
             #pragma GCC ivdep
@@ -150,7 +148,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	
 	double ctt = 0.0;	
 	int yt = observations[T-1];
-    #pragma GCC ivdep	
 	for(int s = 0; s<hiddenStates; s++){// s=new_state
 		double alphatNs = 0;
 		//alpha[s*T + t] = 0;
@@ -174,7 +171,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	}
 	ct[T-1] = ctt;
 	//FUSED BACKWARD and UPDATE STEP
-    #pragma GCC ivdep
 	for(int s = 0; s < hiddenStates; s++){
 		beta[s] = /* 1* */ctt;
 		gamma_sum[s] = 0.0;
@@ -183,7 +179,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 			a_new[s*hiddenStates + j] =0.0;
 		}
 	}
-    #pragma GCC ivdep
 	for(int v = 0;  v < differentObservables; v++){
         #pragma GCC ivdep
 		for(int s = 0; s < hiddenStates; s++){
@@ -193,11 +188,9 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 
 	//compute sum of xi and gamma from t= 0...T-2
     yt = observations[T-1];
-    #pragma GCC ivdep
 	for(int t = T-1; t > 0; t--){
 		const int yt1 = observations[t-1];
 		const double ctt = ct[t-1];
-		#pragma GCC ivdep
         for(int s = 0; s < hiddenStates ; s++){
 			double beta_news = 0.0;
 			double alphat1Ns = alpha[(t-1)*hiddenStates + s];
@@ -236,7 +229,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	        }
 
 	        //compute new emission matrix
-            #pragma GCC ivdep
 	        for(int v = 0; v < differentObservables; v++){
                 #pragma GCC ivdep
 		        for(int s = 0; s < hiddenStates; s++){
@@ -270,7 +262,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	        //Compute alpha(1) and scale transitionMatrix
 	        ctt = 0.0;	
 	        yt = observations[1];
-            #pragma GCC ivdep	
 	        for(int s = 0; s<hiddenStates; s++){// s=new_state
 		        double alphatNs = 0;
                 #pragma GCC ivdep
@@ -286,17 +277,15 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	        }
 	        //scaling factor for t 
 	        ctt = 1.0 / ctt;
-	        #pragma GCC ivdep
 	        //scale alpha(t)
+            #pragma GCC ivdep
 	        for(int s = 0; s<hiddenStates; s++){// s=new_state
 		        alpha[1*hiddenStates+s] *= ctt;
 	        }
 	        ct[1] = ctt;
-            #pragma GCC ivdep
 	        for(int t = 2; t < T-1; t++){
 		        ctt = 0.0;	
 		        yt = observations[t];
-                #pragma GCC ivdep	
 		        for(int s = 0; s<hiddenStates; s++){// s=new_state
 			        double alphatNs = 0;
 			        //alpha[s*T + t] = 0;
@@ -321,8 +310,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		        
 	        //compute alpha(T-1)
 	        ctt = 0.0;	
-	        yt = observations[T-1];
-            #pragma GCC ivdep	
+	        yt = observations[T-1];	
 	        for(int s = 0; s<hiddenStates; s++){// s=new_state
 		        double alphatNs = 0;
 		        //alpha[s*T + t] = 0;
@@ -356,11 +344,9 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 
 	        //compute sum of xi and gamma from t= 0...T-2
             yt = observations[T-1];
-            #pragma GCC ivdep
 	        for(int t = T-1; t > 0; t--){
 		        const int yt1 = observations[t-1];
 		        ctt = ct[t-1];
-                #pragma GCC ivdep
 		        for(int s = 0; s < hiddenStates ; s++){
 			        double beta_news = 0.0;
 			        double alphat1Ns = alpha[(t-1)*hiddenStates + s];
@@ -404,7 +390,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		}while (disparance>EPSILON && steps<maxSteps);
 //Final Scaling
 	    //compute new transition matrix
-        #pragma GCC ivdep
 	    for(int s = 0; s < hiddenStates; s++){
 		    double gamma_sums_inv = 1./gamma_sum[s];
             #pragma GCC ivdep
@@ -424,7 +409,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	    }
 
 	    //compute new emission matrix
-        #pragma GCC ivdep
 	    for(int v = 0; v < differentObservables; v++){
             #pragma GCC ivdep
 		    for(int s = 0; s < hiddenStates; s++){
