@@ -1,11 +1,11 @@
 #!/bin/bash
 
 file="cop"
-flags=( -O2 )
+flags=( "-O2" )
 seeds=( 36 )
-hiddenStates=( 4 8 )
-differentObservables=( 4 8 )
-Ts=( 16 32 )
+differentObservables=( 1024 4096 16384 65536 262144 1048576 4194304 )
+hiddenStates=( 64 )
+Ts=( 64 )
 for flag in "${flags[@]}"
 do
 	gcc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
