@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import re
 import statistics as stats
 import time
+import numpy as np
 
 
 styles=['-','--','-.',':']
@@ -42,11 +43,16 @@ work_functions=[base_work]
 
 def base_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
-    #Compulsory misses only: 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
     #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1)+ 2∗T∗K∗N+ N∗N+ N∗K [Latex]
     return  8*((12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables))
 memory_functions=[base_memory]
 
+
+def base_memory_compulsory(params):
+
+    (flag,hiddenstate,differentObservables,T)=params
+    #Compulsory misses only:
+    return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
 
 f = open(file_name)
 text=f.read()
@@ -91,6 +97,8 @@ while(re.search('FLAG', text)):
     #print(cycles)
 
 #print(flags)
+
+'''
 plt.xlabel(order_names[-1])
 plt.ylabel('cycles/iteration')
 plt.title('Impact of '+order_names[-1])
@@ -126,7 +134,9 @@ plt.clf()
 plt.xlabel('flops/byte')
 plt.ylabel('flops/cycle')
 plt.title('Roofline impact of '+order_names[-1])
+'''
 
+'''
 marker=0
 color=0
 style=0
@@ -179,3 +189,94 @@ plt.legend()
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig(timestr+"-roof.png")
 plt.clf()
+'''
+
+#Plot base model (empty rooflie model)
+
+ridge_point = scalar_pi/mem_beta
+#print(ridge_point)
+I = []
+flops_byte_scal = []
+flops_byte_vec = []
+for i in np.arange(0.001,10000*ridge_point,0.01):
+	I.append(i)
+	flops_byte_scal.append(min(scalar_pi, i * mem_beta))
+	flops_byte_vec.append(min(vector_pi, i * mem_beta))
+	
+
+plt.plot(I,flops_byte_scal)
+plt.plot(I,flops_byte_vec)
+plt.yscale('log')
+plt.xscale('log')
+figure = plt.gcf()
+figure.set_size_inches(16,9)
+plt.legend()
+plt.title('Roofline Model')
+plt.xlabel('Operational Intensity [flops/byte]')
+plt.ylabel('Performance [flops/cycle]')
+
+
+
+
+
+#plotting with operational intensity that counts every memory access (no chache model)
+marker=0
+color=0
+style=0
+for flag in flags.keys():
+    for dO in flags[flag].keys():
+        for T in flags[flag][dO]:
+            x=[]
+            y=[]
+            for hiddenstate in flags[flag][dO][T]:
+                params=to_order([flag,dO,T,hiddenstate], wichtiger_param)
+                print(params)
+                work=work_functions[aktuelle_version](params)
+                memory=memory_functions[aktuelle_version](params)
+                cycles=stats.median(flags[flag][dO][T][hiddenstate])
+                x.append(work/memory)
+                y.append(work/cycles)
+            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
+            style=(style+1)%len(styles)
+        style=0
+        color=(color+1)%len(colors)
+    color=0
+    marker= (marker + 1) % len(markers)
+
+
+
+
+
+#plotting with operational intensity that counts only compulsory misses
+marker=0
+color=0
+style=0
+for flag in flags.keys():
+    for dO in flags[flag].keys():
+        for T in flags[flag][dO]:
+            x=[]
+            y=[]
+            for hiddenstate in flags[flag][dO][T]:
+                params=to_order([flag,dO,T,hiddenstate], wichtiger_param)
+                print(params)
+                work=work_functions[aktuelle_version](params)
+                memory=base_memory_compulsory(params)
+                cycles=stats.median(flags[flag][dO][T][hiddenstate])
+                x.append(work/memory)
+                y.append(work/cycles)
+            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
+            style=(style+1)%len(styles)
+        style=0
+        color=(color+1)%len(colors)
+    color=0
+    marker= (marker + 1) % len(markers)
+
+
+
+plt.legend()
+plt.show()
+timestr = time.strftime("%d-%m_%H;%M")
+plt.savefig(timestr+"-roof.png")
+plt.clf()
+
+
