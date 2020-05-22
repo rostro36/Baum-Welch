@@ -2360,21 +2360,7 @@ int main(int argc, char *argv[]){
 		cycles = stop_tsc(start);
        	cycles = cycles/steps;
 
-		transpose(emissionMatrix,differentObservables,hiddenStates);
 
-		/*
-		//Show results
-		printf(" %i \n", steps);
-		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
-		print_matrix(emissionMatrix, hiddenStates,differentObservables);
-		print_vector(stateProb, hiddenStates);
-		*/
-
-		//emissionMatrix is not in state major order
-		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
-		//if(run == 0){
-    			tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
-		//}
 		/*
 		//Show tested results
 		printf("tested \n");
@@ -2383,46 +2369,25 @@ int main(int argc, char *argv[]){
 		print_vector(stateProbTesting, hiddenStates);
 		*/
 
-		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
-			runs[run]=cycles;
-            //DEBUG OFF
-			//printf("run %i: \t %llu cycles \n",run, cycles);
-		}else{	
-			
-  		  	_mm_free(groundTransitionMatrix);
-			_mm_free(groundEmissionMatrix);
-			_mm_free(observations);
-			_mm_free(transitionMatrix);
-			_mm_free(emissionMatrix);
-			_mm_free(stateProb);
-   			_mm_free(ct);
-			_mm_free(gamma_T);
-			_mm_free(gamma_sum);
-			_mm_free(a_new);
-			_mm_free(b_new);
-  			_mm_free(transitionMatrixSafe);
-			_mm_free(emissionMatrixSafe);
-   			_mm_free(stateProbSafe);
-			_mm_free(transitionMatrixTesting);
-			_mm_free(emissionMatrixTesting);
-			_mm_free(stateProbTesting);
-			_mm_free(beta);
-			_mm_free(beta_new);
-			_mm_free(alpha);
-			_mm_free(ab);
-			_mm_free(beta_workingset);
-			_mm_free(reduction);
-
-			printf("Something went wrong! \n");
-			return -1;
-		}	
+		runs[run]=cycles;
+	
 
 	}
 
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
+	
+	transpose(emissionMatrix,differentObservables,hiddenStates);
+	//emissionMatrix is not in state major order
+	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
+        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+		
 
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+		printf("Something went wrong !");	
+		
+	}
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
     	_mm_free(groundTransitionMatrix);

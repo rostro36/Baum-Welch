@@ -548,8 +548,7 @@ int main(int argc, char *argv[]){
 		print_vector(stateProb, hiddenStates);
 		*/
 
-        	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
-
+        	
 		/*
 		//Show tested results
 		printf("tested \n");
@@ -558,32 +557,8 @@ int main(int argc, char *argv[]){
 		print_vector(stateProbTesting, hiddenStates);
 		*/
  
-		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
-			runs[run]=cycles;
-            //DEBUG OFF
-			//printf("run %i: \t %llu cycles \n",run, cycles);
-		}else{	
-		
-			free(groundTransitionMatrix);
-        		free(groundEmissionMatrix);
-        		free(observations);
-        		free(transitionMatrix);
-        		free(emissionMatrix);
-        		free(stateProb);
-   		     	free(alpha);
-       		 	free(beta);
-   		     	free(gamma);
-        		free(xi);
-          	  	free(ct);
-            		free(transitionMatrixSafe);
-        		free(emissionMatrixSafe);
-           		free(stateProbSafe);
-            		free(transitionMatrixTesting);
-        		free(emissionMatrixTesting);
-           		free(stateProbTesting);
-			printf("Something went wrong! \n");
-			return -1;//error Jan
-		}
+		runs[run]=cycles;
+
 
 
 	}
@@ -592,6 +567,13 @@ int main(int argc, char *argv[]){
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
+	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+		printf("Something went wrong !");	
+		
+	}
+	
 	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
     	free(groundTransitionMatrix);

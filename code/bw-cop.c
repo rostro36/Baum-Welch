@@ -499,35 +499,9 @@ int main(int argc, char *argv[]){
 		cycles = stop_tsc(start);
         cycles = cycles/steps;
 	
-        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
- 
-		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
-			runs[run]=cycles;
-            //DEBUG OFF
-			//printf("run %i: \t %llu cycles \n",run, cycles);
-		}else{	
-		
-			free(groundTransitionMatrix);
-    		free(groundEmissionMatrix);
-    		free(observations);
-    		free(transitionMatrix);
-    		free(emissionMatrix);
-    		free(stateProb);
-	     	free(alpha);
-   		 	free(beta);
-	     	free(gamma);
-    		free(xi);
-      	  	free(ct);
-      	  	free(inv_ct);
-        	free(transitionMatrixSafe);
-    		free(emissionMatrixSafe);
-       		free(stateProbSafe);
-        	free(transitionMatrixTesting);
-    		free(emissionMatrixTesting);
-       		free(stateProbTesting);
-			printf("Something went wrong! \n");
-			return -1;//error Jan
-		}
+     
+		runs[run]=cycles;
+
 
 
 	}
@@ -536,9 +510,16 @@ int main(int argc, char *argv[]){
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
-	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
-        
-    free(groundTransitionMatrix);
+	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
+	
+	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+		printf("Something went wrong !");	
+		
+	}
+	
+    	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -550,7 +531,7 @@ int main(int argc, char *argv[]){
 	free(xi);
    	free(ct);
    	free(inv_ct);
-    free(transitionMatrixSafe);
+    	free(transitionMatrixSafe);
 	free(emissionMatrixSafe);
    	free(stateProbSafe);
 	free(transitionMatrixTesting);

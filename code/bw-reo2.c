@@ -242,7 +242,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	return;
 
 }
-myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double* const stateProb, const int* const observations, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int* const indicator, const int hiddenStates, const int differentObservables, const int T,double* beta, double* beta_new, double* alpha, double* ab){
+myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double* const stateProb, const int* const observations, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int hiddenStates, const int differentObservables, const int T,double* beta, double* beta_new, double* alpha, double* ab){
         double logLikelihood=-DBL_MAX;
         double disparance;
 		//only needed for testing with R
@@ -642,7 +642,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
         cycles = cycles/steps;
         return cycles;
 }
-void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int* const indicator, const int N, const int K, const int T){
+void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 
 	double* beta = (double*) malloc(T  * sizeof(double));
 	double* beta_new = (double*) malloc(T * sizeof(double));
@@ -871,7 +871,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	return;
 }
 
-void final_scaling(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int* const indicator, const int N, const int K, const int T){
+void final_scaling(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 	//compute new transition matrix
 	for(int s = 0; s < N; s++){
 		double gamma_sums_inv = 1./gamma_sum[s];
@@ -937,10 +937,9 @@ void heatup(double* const transitionMatrix,double* const stateProb,double* const
 	double* gamma_sum = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* a_new = (double*) malloc(hiddenStates * hiddenStates * sizeof(double));
 	double* b_new = (double*) malloc(differentObservables*hiddenStates * sizeof(double));
-	int* indicator = (int*) calloc(T*differentObservables, sizeof(int));
 	
 	for(int j=0;j<10;j++){
-		baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, indicator, hiddenStates, differentObservables, T);
+		baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
 	}
 
 	free(ct);
@@ -948,7 +947,6 @@ void heatup(double* const transitionMatrix,double* const stateProb,double* const
 	free(gamma_sum);
 	free(a_new);
 	free(b_new);
-	free(indicator);	
 	
 }
 
@@ -1006,8 +1004,6 @@ int main(int argc, char *argv[]){
 	
 	double* ct = (double*) malloc(T*sizeof(double));
 
-	int* indicator = (int*) malloc(T*differentObservables*sizeof(int));
-
     double* beta = (double*) malloc(T  * sizeof(double));
 	double* beta_new = (double*) malloc(T * sizeof(double));
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
@@ -1038,8 +1034,8 @@ int main(int argc, char *argv[]){
 		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
    		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
       	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
-        myInt64 cycles=bw(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new, ct, indicator, hiddenStates, differentObservables, T,beta, beta_new, alpha, ab);
-		transpose(emissionMatrix,differentObservables,hiddenStates);
+        myInt64 cycles=bw(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new, ct, hiddenStates, differentObservables, T,beta, beta_new, alpha, ab);
+
 
 		/*
 		//Show results
@@ -1049,11 +1045,6 @@ int main(int argc, char *argv[]){
 		print_vector(stateProb, hiddenStates);
 		*/
 
-
-		//emissionMatrix is not in state major order
-		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
-        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
-		
 		/*
 		//Show tested results
 		printf("tested \n");
@@ -1063,32 +1054,8 @@ int main(int argc, char *argv[]){
 		*/
 
 
-		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
-			runs[run]=cycles;
-		}else{	
-			
-		  	free(groundTransitionMatrix);
-			free(groundEmissionMatrix);
-			free(observations);
-			free(transitionMatrix);
-			free(emissionMatrix);
-			free(stateProb);
-   			free(ct);
-   			free(indicator);
-			free(gamma_T);
-			free(gamma_sum);
-			free(a_new);
-			free(b_new);
-  			free(transitionMatrixSafe);
-			free(emissionMatrixSafe);
-   			free(stateProbSafe);
-			free(transitionMatrixTesting);
-			free(emissionMatrixTesting);
-			free(stateProbTesting);
-
-			printf("Something went wrong! \n");
-			return -1;//error Jan
-		}	
+		runs[run]=cycles;
+	
 
 	}
 
@@ -1097,15 +1064,25 @@ int main(int argc, char *argv[]){
 	printf("Median Time: \t %lf cycles \n", medianTime); 
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
-        
-    free(groundTransitionMatrix);
+
+	transpose(emissionMatrix,differentObservables,hiddenStates);
+	//emissionMatrix is not in state major order
+	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
+        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+		
+
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+		printf("Something went wrong !");	
+		
+	}        
+	
+	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
 	free(emissionMatrix);
 	free(stateProb);
    	free(ct);
-   	free(indicator);
 	free(gamma_T);
 	free(gamma_sum);
 	free(a_new);
