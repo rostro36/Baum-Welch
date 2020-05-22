@@ -6,14 +6,11 @@
 
 ## Run suite of different params on same file
 - bash suite.sh (you may change some parameters by changing the first line of the file)
-
-pipe the output into "model_output.txt"
-- bash suite.sh > ../output_measures/$filename
+It will create two different files in the output_measures folder, one $file-cache.txt for cachegrind measures and one $file-timing.txt for timings. 
 
 ## Run suite with N and different files
-- bash N.sh (you may change some parameters by changing the first line of the file)
-- pipe the output into $filename
-- bash N.sh > ../output_measures/$filename
+- bash N.sh (you may change some parameters by changing the first lines of the file)
+It will create two different files in the output_measures folder, one $date-cache.txt for cachegrind measures and one $date-timing.txt for timings. 
 
 ## Plotting
 One of the first parameters is the filename from the suite.
@@ -40,6 +37,19 @@ From inside code folder:
 - get linking part from [here](https://software.intel.com/content/www/us/en/develop/articles/intel-mkl-link-line-advisor.html)
     - add this to other files e.g. ~~~gcc -o blas bw-bla.c io.c bw-tested.c -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl~~~
 
+## Naming schema
+There are different milestones of our program. The final version of that milestone is indicated with bw-$name.c. (url has no final version.)
+To each milestone version is next to the implementation also a bw-$name-cg.c file, which is used to read out cachegrind.
+All other files with numbers are listed in the history below for archive reasons. 
+
+## The milestones are
+- std For the most standard implementations
+- stb For the stable version
+- cop For all basic C optimizations
+- reo For the reordering (code motion) step
+- bla For the BLAS version
+- url For the unrolled version
+- vec For the vectorized version
 ## Optimization history
 - std:
     * [like Wikipedia](https://en.wikipedia.org/wiki/Baum%E2%80%93Welch_algorithm)
@@ -67,7 +77,7 @@ From inside code folder:
 	* like 3.4 but with blocking in forward step
 - op 3.6:
 	* like 3.1 but precomputing a*b for update step and reduced number of divisions
-- reo2:
+- reo:
     * inlined of 3.6
 - op3.7:
 	* like 3.1 but with blocking in forward step (uses another blocking than 3.5)
@@ -83,7 +93,7 @@ From inside code folder:
 	* like url1.3 but without precomputing a*b. Also this is like url1.1 but with better computation of the divisions of gamma.
 - vec1.2:
 	* like url1.2 but with vectorized update step, final scaling and finishing criteria. To use vectorized finishing criteria you have to compile with icc and the number of observations (T) has to be divisible by 4.
-- vec1.2.1:
+- vec:
     * like vec1.2 but with vectorized intial step and forward step
 
 ## Usage baum-welch.r

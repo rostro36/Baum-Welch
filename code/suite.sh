@@ -1,15 +1,15 @@
 #!/bin/bash
 
-file="bw-cop.c"
-flags=( -O0 -O2 )
-seeds=( 0 36 )
+file="cop"
+flags=( -O2 )
+seeds=( 36 )
 hiddenStates=( 4 8 )
 differentObservables=( 4 8 )
 Ts=( 16 32 )
 for flag in "${flags[@]}"
 do
-	gcc $flag -o time "$file" io.c bw-tested.c tested.h -lm
-    gcc $flag -o cache "$file" io.c bw-tested.c tested.h -lm
+	gcc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
+    gcc $flag -o cache "bw-$file-cg.c" io.c bw-tested.c tested.h -lm
     for seed in "${seeds[@]}"
     do
         for hiddenState in "${hiddenStates[@]}"
