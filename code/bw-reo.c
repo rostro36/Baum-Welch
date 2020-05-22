@@ -644,10 +644,10 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 }
 void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 
-	double* beta = (double*) malloc(T  * sizeof(double));
-	double* beta_new = (double*) malloc(T * sizeof(double));
+	double* beta = (double*) malloc(N  * sizeof(double));
+	double* beta_new = (double*) malloc(N * sizeof(double));
 	double* alpha = (double*) malloc(N * T * sizeof(double));
-	double* ab = (double*) malloc(N * N * (T-1) * sizeof(double));
+	double* ab = (double*) malloc(N * N * K * sizeof(double));
 
 	int yt = y[T-1];
 	//add remaining parts of the sum of gamma 
@@ -1004,10 +1004,10 @@ int main(int argc, char *argv[]){
 	
 	double* ct = (double*) malloc(T*sizeof(double));
 
-    	double* beta = (double*) malloc(T  * sizeof(double));
-	double* beta_new = (double*) malloc(T * sizeof(double));
+    	double* beta = (double*) malloc(hiddenStates  * sizeof(double));
+	double* beta_new = (double*) malloc(hiddenStates * sizeof(double));
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* ab = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double));
+	double* ab = (double*) malloc(hiddenStates * hiddenStates * differentObservables * sizeof(double));
 	
 	//random init transition matrix, emission matrix and state probabilities.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);

@@ -576,8 +576,7 @@ int main(int argc, char *argv[]){
 		
 	}
 	
-	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
-        
+	
     	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);

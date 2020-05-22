@@ -344,10 +344,10 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	//When inlined the  arrays should be generated at the beginning of the main function like the other arrays we use
 	//Then the next four lines can be deleted 
 	//Rest needs no modification
-	double* beta = (double*) malloc(T  * sizeof(double));
-	double* beta_new = (double*) malloc(T * sizeof(double));
+	double* beta = (double*) malloc(N  * sizeof(double));
+	double* beta_new = (double*) malloc(N * sizeof(double));
 	double* alpha = (double*) malloc(N * T * sizeof(double));
-	double* ab = (double*) malloc(N * N * (T-1) * sizeof(double));
+	double* ab = (double*) malloc(N * N * K * sizeof(double));
 
 	int yt = y[T-1];
 	//add remaining parts of the sum of gamma 
@@ -814,8 +814,8 @@ int main(int argc, char *argv[]){
 	
 	double* ct = (double*) _mm_malloc(T*sizeof(double),32);
 
-	double* beta = (double*) _mm_malloc(T  * sizeof(double),32);
-	double* beta_new = (double*) _mm_malloc(T * sizeof(double),32);
+	double* beta = (double*) _mm_malloc(hiddenStates  * sizeof(double),32);
+	double* beta_new = (double*) _mm_malloc(hiddenStates * sizeof(double),32);
 	double* alpha = (double*) _mm_malloc(hiddenStates * T * sizeof(double),32);
 	double* ab = (double*) _mm_malloc(hiddenStates * hiddenStates * differentObservables * sizeof(double),32);
 	
