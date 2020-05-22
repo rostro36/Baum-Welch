@@ -72,9 +72,9 @@ From inside code folder:
 - op3.7:
 	* like 3.1 but with blocking in forward step (uses another blocking than 3.5)
 - url1.0:
-	* ???
-- url1.1:
 	* unrolled version of opt1.1
+- url1.1:
+	* url1.1 with scalar replacement
 - url1.2:
 	* unrolled version of opt3.6. Difference to url1.1 is transposition of transitionMatrix before and after forward step to get better access pattern, precomputing a*b before the update step and computing more efficient the divisions of gamma.
 - url1.3:
@@ -83,6 +83,8 @@ From inside code folder:
 	* like url1.3 but without precomputing a*b. Also this is like url1.1 but with better computation of the divisions of gamma.
 - vec1.2:
 	* like url1.2 but with vectorized update step, final scaling and finishing criteria. To use vectorized finishing criteria you have to compile with icc and the number of observations (T) has to be divisible by 4.
+- vec1.2.1:
+    * like vec1.2 but with vectorized intial step and forward step
 
 ## Usage baum-welch.r
 - open with RStudio
