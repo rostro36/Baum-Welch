@@ -2,39 +2,16 @@ import matplotlib.pyplot as plt
 import re
 import statistics as stats
 import time
-import numpy as np
 
-folder = "../output_measures_N/"
-file_name = "05-22.20:13:08-time"
-full_name =folder + file_name
-
-#parameter im Performance plot auf x-achse
-wichtiger_param = 3
-#0 = flag	1 = states
-#2 = dO	3 = T
-
-#welche work und memory access fuction
-aktuelle_version = 'reo'
-
+file_name="../output_measures/N.txt"
 #machine specs
-scalar_pi=4
-vector_pi=scalar_pi*4
-mem_beta=25
-#compiler
-compiler ='gcc'
-
-
-
-
-
-plt.rcParams.update({'figure.autolayout': True})
-
-plt.rcParams.update({'font.size': 14})
+scalar_pi=6
+vector_pi=12
+mem_beta=5
 
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k']
 markers=[".","v","^","<",">","1","2","3","4","8","s","p","P","*","h","H","+","x","X","D","d","|","_"]
-
 
 def to_back(arrays, index):
     value0=arrays[0][index]
@@ -54,7 +31,7 @@ def to_order(array, index):
 def reo_work(params):
     (flag,hiddenstate,differentObservables,T)=params
     #KN^2+ 2KN+ 6N^2T−4N^2+ 7NT+ 4N+ 3T−2) [Latex]
-    return differentObservables*hiddenstate*hiddenstate+2*differentObservables*hiddenstate+6*hiddenstate*hiddenstate*T-4*hiddenstate*hiddenstate+7*hiddenstate*T +4*hiddenstate+ 3*T-2
+    return differentObservables*hiddenstate*hiddenstate+2*differentObservables*hiddenstate+6*hiddenstate*hiddenState*T-4*hiddenstate*hiddenstate+7*hiddenstate*T +4*hiddenstate+ 3*T-2
 
 def base_work(params):
     (flag,hiddenstate,differentObservables,T)=params
@@ -91,12 +68,7 @@ def base_memory_compulsory(params):
     return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
 
 
-
-
-
-
-
-f = open(full_name+'.txt')
+f = open(file_name)
 text=f.read()
 flags=dict()
 #read the file
@@ -122,6 +94,75 @@ while(re.search('FLAG', text)):
     if n not in flags[file][flag]:
         flags[file][flag][n]=[]
     flags[file][flag][n].append(cycles)
+
+    
+f = open(file_name+'-cache.txt')
+text=f.read()
+cache=dict()
+#read the file
+while(re.search('FLAG', text)):
+    #[Ir, I1mr, ILmr, Dr, D1mr,    DLmr, Dw, D1mw, DLmw, Bc, Bcm, Bi, Bim] 
+    #0  47391964 86   86  12110242 30259 0  4521166 26175 649 5028326 206065 0 0
+    text=re.split('FILE', text,1)[1:][0]
+    file=re.split('FLAG', text, maxsplit=1)[0].strip()
+    text=re.split('FLAG', text,1)[1:][0]
+    flag=re.split('SEED', text, maxsplit=1)[0].strip()
+    text=re.split('SEED', text,1)[1:][0]
+    seed=int(re.split('N', text)[0].strip())
+    text=re.split('N', text,1)[1:][0]
+    T=int(re.split('\n', text)[0].strip())
+    text=re.split('\n', text,1)[1:][0]
+    
+    Ir=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    I1mr=int(re.split('[\s\t]', text)[0].strip())
+    text=re.split('[\s\t]', text,1)[1:][0]
+    
+    ILmr=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    Dr=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    D1mr=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    DLmr=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    Dw=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    D1mw=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    DLmw=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    Bc=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    Bcm=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    Bi=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    Bim=int(re.split('\s', text)[0].strip())
+    text=re.split('\s', text,1)[1:][0]
+    
+    parameters=[flag,hiddenstate,dO,T]
+    parameter_names=['flag','hiddenstate','different observables','T']
+    (order_params,order_names)=to_back([parameters,parameter_names],wichtiger_param)
+    
+    if file not in cache:
+        cache[file]=dict()
+    if flag not in cache[file]:
+        cache[file][flag]=dict()
+    if n not in cache[file][flag]:
+        cache[file][flag][n]=[]
+    cache[file][flag][n].append([Ir, I1mr, ILmr, Dr, D1mr, DLmr, Dw, D1mw, DLmw, Bc, Bcm, Bi, Bim])
     
 plt.xlabel('N')
 plt.ylabel('cycles/iteration')
@@ -130,68 +171,22 @@ plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 marker=0
 color=0
-style=1
+style=0
 for file in flags.keys():
     for flag in flags[file].keys():
-        plot_flag = flag
         x=[]
         y=[]
         for n in flags[file][flag]:
             x.append(n)
             y.append(stats.median(flags[file][flag][n]))
-            if(file != 'vec'):
-                plot_flag = re.sub('\ -mfma$','',flag)
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+ compiler+' ' +str(plot_flag))
-        
-    color+=1
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+','+str(flag))
+        color+=1
+    color=0
     marker+=1
 plt.legend()
-figure = plt.gcf()
-figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-cycles.png",dpi=200)
-#plt.show()
+plt.savefig(timestr+".png")
 plt.clf()
-
-
-plt.xlabel('N')
-plt.ylabel('Performance [flops/cycle]')
-plt.title('Different implementations')
-plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
-
-marker=0
-color=0
-style=1
-for file in flags.keys():
-    for flag in flags[file].keys():
-        plot_flag = flag
-        x=[]
-        y=[]
-        for n in flags[file][flag]:
-            params=(flag,n,n,n*n)
-            (flag,hiddenstate,differentObservables,T)=params
-            work=work_functions[file](params)
-            x.append(n)
-            y.append(work/stats.median(flags[file][flag][n]))
-            if(file != 'vec'):
-                plot_flag = re.sub('\ -mfma$','',flag)
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+ compiler+' ' +str(plot_flag))
-        
-    color+=1
-    marker+=1
-plt.legend()
-figure = plt.gcf()
-figure.set_size_inches(8,4.5)
-timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-perf.png",dpi=200)
-#plt.show()
-plt.clf()
-
-
-
-
-#Plot base model (empty rooflie model)
-
 
 plt.xlabel('flops/byte')
 plt.ylabel('flops/cycle')
@@ -199,59 +194,43 @@ plt.title('Roofline impact of N')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 
-ridge_point = scalar_pi/mem_beta
-#print(ridge_point)
-I = []
-flops_byte_scal = []
-flops_byte_vec = []
-for i in np.arange(0.001,10000*ridge_point,0.01):
-	I.append(i)
-	flops_byte_scal.append(min(scalar_pi, i * mem_beta))
-	flops_byte_vec.append(min(vector_pi, i * mem_beta))
-	
 
-plt.plot(I,flops_byte_scal)
-plt.plot(I,flops_byte_vec)
-plt.yscale('log')
-plt.xscale('log')
-figure = plt.gcf()
-figure.set_size_inches(8,4.5)
-plt.legend()
-plt.title('Roofline Model')
-plt.xlabel('Operational Intensity [flops/byte]')
-plt.ylabel('Performance [flops/cycle]')
-
-
-
+##ROOFLINE NOCH NICHT GUT, DA NOCH MEMORY FUNKTIONEN FEHLEN
 marker=0
 color=0
-style=1
-for count, file in enumerate(flags.keys()):
+style=0
+for file in flags.keys():
     for flag in flags[file].keys():
-        plot_flag = flag
         x=[]
         y=[]
         for n in flags[file][flag]:
-            cycles=stats.median(flags[file][flag][n])
-            params=(flag,n,n,n*n)
+            params=(None,n,n,n*n)
             (flag,hiddenstate,differentObservables,T)=params
             work=work_functions[file](params)
             memory=memory_functions[file](params)
+            cycles=stats.median(flags[file][flag][n])
             x.append(work/memory)
             y.append(work/cycles)
-            if(file != 'vec'):
-                plot_flag = re.sub('\ -mfma$','',flag)
-
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+compiler + ' '+str(plot_flag))
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+','+str(flag))
         color+=1
-    #color=0
+    color=0
     marker+=1
+
+                         
+xstart, xend = plt.xlim()
+#Memory bound
+x=[xstart,vector_pi/mem_beta]
+y=[xstart*mem_beta, vector_pi]
+plt.fill_between(x, y, 0, alpha=0.2, color='r')
+#Vector line
+x=[xstart,xend]
+plt.fill_between(x, vector_pi, 0, alpha=0.2, color='y')
+#Scalar line
+plt.fill_between(x, scalar_pi, 0, alpha=0.2, color='b')
 
 
 
 plt.legend()
-#plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-'+timestr+"-roof.png",dpi=200)
+plt.savefig(timestr+"-roof.png")
 plt.clf()
-
