@@ -7,13 +7,12 @@ import numpy as np
 
 
 folder = "../output_measures/"
-file_name = "reo-time"
+file_name = "cop-time"
 full_name =folder + file_name
 
 #parameter im Performance plot auf x-achse
 wichtiger_param = 3
-#0 = flag	1 = states
-#2 = dO	3 = T
+#0 = flag	1 = states #2 = dO	3 = T
 
 #welche work und memory access fuction
 aktuelle_version = 'reo'
