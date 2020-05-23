@@ -133,12 +133,15 @@ color=0
 style=1
 for file in flags.keys():
     for flag in flags[file].keys():
+        plot_flag = flag
         x=[]
         y=[]
         for n in flags[file][flag]:
             x.append(n)
             y.append(stats.median(flags[file][flag][n]))
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+','+str(flag))
+            if(file != 'vec'):
+                plot_flag = re.sub('\ -mfma$','',flag)
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+ compiler+' ' +str(plot_flag))
         
     color+=1
     marker+=1
@@ -146,8 +149,8 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(16,9)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"perf.png")
-plt.show()
+plt.savefig('N-' +timestr+"-perf.png")
+#plt.show()
 plt.clf()
 
 

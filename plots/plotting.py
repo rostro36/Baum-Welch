@@ -152,7 +152,7 @@ for flag in flags.keys():
                 x.append(hiddenstate)
                 y.append(stats.median(flags[flag][dO][T][hiddenstate]))
                 
-            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= compiler + ' ' + flag+','+str(dO)+','+str(T))
+            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= compiler + ' ' + flag+', '+str(dO)+', '+str(T))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
@@ -211,7 +211,7 @@ for flag in flags.keys():
                 cycles=stats.median(flags[flag][dO][T][hiddenstate])
                 x.append(work/memory)
                 y.append(work/cycles)
-            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label=compiler + ' ' +  flag+','+str(dO)+','+str(T))
+            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label=compiler + ' ' +  flag+', '+str(dO)+', '+str(T))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
