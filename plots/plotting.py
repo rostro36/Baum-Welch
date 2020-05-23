@@ -28,6 +28,10 @@ compiler ='gcc'
 
 
 
+plt.rcParams.update({'figure.autolayout': True})
+
+plt.rcParams.update({'font.size': 14})
+
 
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -164,7 +168,7 @@ figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(file_name +'-' + timestr+ 'perf.png')
+plt.savefig(file_name +'-' + timestr+ 'perf.png',dpi=200)
 plt.clf()
 
 
@@ -225,7 +229,7 @@ for flag in flags.keys():
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(file_name +'-'+ timestr+"-roof.png")
+plt.savefig(file_name +'-'+ timestr+"-roof.png",dpi=200)
 plt.clf()
 
 

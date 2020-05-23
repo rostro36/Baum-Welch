@@ -27,9 +27,9 @@ compiler ='gcc'
 
 
 
+plt.rcParams.update({'figure.autolayout': True})
 
-
-
+plt.rcParams.update({'font.size': 14})
 
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -149,7 +149,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-cycles.png")
+plt.savefig('N-' +timestr+"-cycles.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -183,7 +183,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-perf.png")
+plt.savefig('N-' +timestr+"-perf.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -252,6 +252,6 @@ for count, file in enumerate(flags.keys()):
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-'+timestr+"-roof.png")
+plt.savefig('N-'+timestr+"-roof.png",dpi=200)
 plt.clf()
 
