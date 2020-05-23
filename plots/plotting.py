@@ -1,14 +1,3 @@
-wichtiger_param=3
-parameter_names=['flag','hiddenstate','different observables','T']
-aktuelle_version=0
-file_name="../output_measures/model_output_20_5_10_55.txt"
-#machine specs
-scalar_pi=4
-vector_pi=16
-mem_beta=25
-
-
-
 import matplotlib.pyplot as plt
 import re
 import statistics as stats
@@ -16,9 +5,34 @@ import time
 import numpy as np
 
 
+
+folder = "../output_measures/"
+file_name = "reo-time"
+full_name =folder + file_name
+
+#parameter im Performance plot auf x-achse
+wichtiger_param = 3
+#0 = flag	1 = states
+#2 = dO	3 = T
+
+#welche work und memory access fuction
+aktuelle_version = 'reo'
+
+#machine specs
+scalar_pi=4
+vector_pi=scalar_pi*4
+mem_beta=25
+#compiler
+compiler ='gcc'
+
+
+
+
+
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k']
 markers=[".","v","^","<",">","1","2","3","4","8","s","p","P","*","h","H","+","x","X","D","d","|","_"]
+
 
 def to_back(arrays, index):
     value0=arrays[0][index]
@@ -38,13 +52,18 @@ def to_order(array, index):
 def reo_work(params):
     (flag,hiddenstate,differentObservables,T)=params
     #KN^2+ 2KN+ 6N^2T−4N^2+ 7NT+ 4N+ 3T−2) [Latex]
-    return differentObservables*hiddenstate*hiddenstate+2*differentObservables*hiddenstate+6*hiddenstate*hiddenState*T-4*hiddenstate*hiddenstate+7*hiddenstate*T +4*hiddenstate+ 3*T-2
+    return differentObservables*hiddenstate*hiddenstate+2*differentObservables*hiddenstate+6*hiddenstate*hiddenstate*T-4*hiddenstate*hiddenstate+7*hiddenstate*T +4*hiddenstate+ 3*T-2
 
 def base_work(params):
     (flag,hiddenstate,differentObservables,T)=params
     #4∗N+ 7∗T∗N∗N+ 4∗T∗N+ 3∗(T−1)∗N∗N+ 3∗T+ 3+ 3∗T∗K∗N+ (T−1)∗N+ N∗N+ N∗K [Latex]
     return (4*hiddenstate+7*T*hiddenstate*hiddenstate+4*T*hiddenstate+3*(T-1)*hiddenstate*hiddenstate+3*T+3+3*T*hiddenstate*differentObservables+(T-1)*hiddenstate+hiddenstate*hiddenstate+hiddenstate*differentObservables)
-work_functions=[base_work,reo_work]
+work_functions=dict()
+work_functions['std']=base_work
+work_functions['stb']=base_work
+work_functions['cop']=base_work
+work_functions['reo']=reo_work
+work_functions['vec']=reo_work
 
 def reo_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
@@ -55,7 +74,12 @@ def base_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
     #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1)+ 2∗T∗K∗N+ N∗N+ N∗K [Latex]
     return  8*((12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables))
-memory_functions=[base_memory,reo_work]
+memory_functions=dict()
+memory_functions['std']=base_memory
+memory_functions['stb']=base_memory
+memory_functions['cop']=base_memory
+memory_functions['reo']=reo_memory
+memory_functions['vec']=reo_memory
 
 
 def base_memory_compulsory(params):
@@ -64,7 +88,9 @@ def base_memory_compulsory(params):
     #Compulsory misses only:
     return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
 
-f = open(file_name)
+
+
+f = open(full_name+".txt")
 text=f.read()
 flags=dict()
 #read the file
@@ -108,10 +134,10 @@ while(re.search('FLAG', text)):
 
 #print(flags)
 
-'''
+#PLOTTING PERFORMANCE
 plt.xlabel(order_names[-1])
 plt.ylabel('cycles/iteration')
-plt.title('Impact of '+order_names[-1])
+plt.title('Impact of '+ order_names[-1])
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 marker=0
@@ -126,7 +152,7 @@ for flag in flags.keys():
                 x.append(hiddenstate)
                 y.append(stats.median(flags[flag][dO][T][hiddenstate]))
                 
-            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
+            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= compiler + ' ' + flag+','+str(dO)+','+str(T))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
@@ -136,70 +162,12 @@ plt.legend()
 
 figure = plt.gcf()
 figure.set_size_inches(16,9)
-
-timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(timestr+".png")
-plt.clf()
-
-plt.xlabel('flops/byte')
-plt.ylabel('flops/cycle')
-plt.title('Roofline impact of '+order_names[-1])
-'''
-
-'''
-marker=0
-color=0
-style=0
-for flag in flags.keys():
-    for dO in flags[flag].keys():
-        for T in flags[flag][dO]:
-            x=[]
-            y=[]
-            for hiddenstate in flags[flag][dO][T]:
-                params=to_order([flag,dO,T,hiddenstate], wichtiger_param)
-                print(params)
-                work=work_functions[aktuelle_version](params)
-                memory=memory_functions[aktuelle_version](params)
-                cycles=stats.median(flags[flag][dO][T][hiddenstate])
-                x.append(work/memory)
-                y.append(work/cycles)
-            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
-            style=(style+1)%len(styles)
-        style=0
-        color=(color+1)%len(colors)
-    color=0
-    marker= (marker + 1) % len(markers)
-    
-xstart, xend = plt.xlim()
-
-#Vector line
-#Probably have to change in the future
-end=min(xend,vector_pi/mem_beta)
-#print(xend)
-#print(vector_pi/mem_beta)
-x=[xstart,end]
-plt.fill_between(x, vector_pi, 0, alpha=0.2, color='y')
-#Scalar line
-plt.fill_between(x, scalar_pi, 0, alpha=0.2, color='g')
-#Memory bound
-print(vector_pi/mem_beta)
-x=[xstart,end]
-#x=[xstart, xend]
-y=[xstart*mem_beta, vector_pi]
-y=[xstart*mem_beta, end*mem_beta]
-plt.fill_between(x, y, 0, alpha=0.2, color='b')
-plt.yscale('log')
-plt.xscale('log')
-figure = plt.gcf()
-figure.set_size_inches(16,9)
-#plt.show()
-
-plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(timestr+"-roof.png")
+plt.savefig(file_name +'-' + timestr+ 'perf.png')
 plt.clf()
-'''
+
+
 
 #Plot base model (empty rooflie model)
 
@@ -227,8 +195,6 @@ plt.ylabel('Performance [flops/cycle]')
 
 
 
-
-
 #plotting with operational intensity that counts every memory access (no chache model)
 marker=0
 color=0
@@ -240,13 +206,12 @@ for flag in flags.keys():
             y=[]
             for hiddenstate in flags[flag][dO][T]:
                 params=to_order([flag,dO,T,hiddenstate], wichtiger_param)
-                print(params)
                 work=work_functions[aktuelle_version](params)
                 memory=memory_functions[aktuelle_version](params)
                 cycles=stats.median(flags[flag][dO][T][hiddenstate])
                 x.append(work/memory)
                 y.append(work/cycles)
-            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
+            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label=compiler + ' ' +  flag+','+str(dO)+','+str(T))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
@@ -254,39 +219,13 @@ for flag in flags.keys():
     marker= (marker + 1) % len(markers)
 
 
-
-
-
-#plotting with operational intensity that counts only compulsory misses
-marker=0
-color=0
-style=0
-for flag in flags.keys():
-    for dO in flags[flag].keys():
-        for T in flags[flag][dO]:
-            x=[]
-            y=[]
-            for hiddenstate in flags[flag][dO][T]:
-                params=to_order([flag,dO,T,hiddenstate], wichtiger_param)
-                print(params)
-                work=work_functions[aktuelle_version](params)
-                memory=base_memory_compulsory(params)
-                cycles=stats.median(flags[flag][dO][T][hiddenstate])
-                x.append(work/memory)
-                y.append(work/cycles)
-            plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= flag+','+str(dO)+','+str(T))
-            style=(style+1)%len(styles)
-        style=0
-        color=(color+1)%len(colors)
-    color=0
-    marker= (marker + 1) % len(markers)
 
 
 
 plt.legend()
-plt.show()
+#plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(timestr+"-roof.png")
+plt.savefig(file_name +'-'+ timestr+"-roof.png")
 plt.clf()
 
 

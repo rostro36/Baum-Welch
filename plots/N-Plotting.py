@@ -2,12 +2,32 @@ import matplotlib.pyplot as plt
 import re
 import statistics as stats
 import time
+import numpy as np
 
-file_name="../output_measures/N.txt"
+folder = "../output_measures_N/"
+file_name = "05-22.20:13:08-time"
+full_name =folder + file_name
+
+#parameter im Performance plot auf x-achse
+wichtiger_param = 3
+#0 = flag	1 = states
+#2 = dO	3 = T
+
+#welche work und memory access fuction
+aktuelle_version = 'reo'
+
 #machine specs
-scalar_pi=6
-vector_pi=12
-mem_beta=5
+scalar_pi=4
+vector_pi=scalar_pi*4
+mem_beta=25
+#compiler
+compiler ='gcc'
+
+
+
+
+
+
 
 
 
@@ -15,7 +35,68 @@ styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k']
 markers=[".","v","^","<",">","1","2","3","4","8","s","p","P","*","h","H","+","x","X","D","d","|","_"]
 
-f = open(file_name)
+
+def to_back(arrays, index):
+    value0=arrays[0][index]
+    del arrays[0][index]
+    arrays[0].append(value0)
+    value1=arrays[1][index]
+    del arrays[1][index]
+    arrays[1].append(value1)
+    return (arrays[0],arrays[1])
+
+def to_order(array, index):
+    value=array[-1]
+    del array[-1]
+    array.insert(index,value)
+    return array
+
+def reo_work(params):
+    (flag,hiddenstate,differentObservables,T)=params
+    #KN^2+ 2KN+ 6N^2T−4N^2+ 7NT+ 4N+ 3T−2) [Latex]
+    return differentObservables*hiddenstate*hiddenstate+2*differentObservables*hiddenstate+6*hiddenstate*hiddenstate*T-4*hiddenstate*hiddenstate+7*hiddenstate*T +4*hiddenstate+ 3*T-2
+
+def base_work(params):
+    (flag,hiddenstate,differentObservables,T)=params
+    #4∗N+ 7∗T∗N∗N+ 4∗T∗N+ 3∗(T−1)∗N∗N+ 3∗T+ 3+ 3∗T∗K∗N+ (T−1)∗N+ N∗N+ N∗K [Latex]
+    return (4*hiddenstate+7*T*hiddenstate*hiddenstate+4*T*hiddenstate+3*(T-1)*hiddenstate*hiddenstate+3*T+3+3*T*hiddenstate*differentObservables+(T-1)*hiddenstate+hiddenstate*hiddenstate+hiddenstate*differentObservables)
+work_functions=dict()
+work_functions['std']=base_work
+work_functions['stb']=base_work
+work_functions['cop']=base_work
+work_functions['reo']=reo_work
+work_functions['vec']=reo_work
+
+def reo_memory(params):
+    (flag,hiddenstate,differentObservables,T)=params
+    #2KN^2+ 2KN+ 5N^2T+ 5NT+ 2N+ 4T−5 reads + KN^2+ 2KN+N^2T+ 3N^2+ 6NT+ 4N+T−3 writes[Latex]
+    return 3*differentObservables*hiddenstate*hiddenstate+4*differentObservables*hiddenstate+6*hiddenstate*hiddenstate*T+11*hiddenstate*T+6*hiddenstate+5*T-8+3*hiddenstate*hiddenstate
+
+def base_memory(params):
+    (flag,hiddenstate,differentObservables,T)=params
+    #12∗N+ 3 + 5N∗N∗T+ 9∗N∗T+ 4∗T+ 9∗N∗N∗(T−1)+ 3∗N∗(T−1)+ 2∗T∗K∗N+ N∗N+ N∗K [Latex]
+    return  8*((12*hiddenstate+3+5*hiddenstate*hiddenstate*T+9*hiddenstate*T+4*T+9*hiddenstate*hiddenstate*(T-1)+3*hiddenstate*(T-1)+2*T*hiddenstate*differentObservables+hiddenstate*hiddenstate+hiddenstate*differentObservables))
+memory_functions=dict()
+memory_functions['std']=base_memory
+memory_functions['stb']=base_memory
+memory_functions['cop']=base_memory
+memory_functions['reo']=reo_memory
+memory_functions['vec']=reo_memory
+
+
+def base_memory_compulsory(params):
+
+    (flag,hiddenstate,differentObservables,T)=params
+    #Compulsory misses only:
+    return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
+
+
+
+
+
+
+
+f = open(full_name+'.txt')
 text=f.read()
 flags=dict()
 #read the file
@@ -49,7 +130,7 @@ plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 marker=0
 color=0
-style=0
+style=1
 for file in flags.keys():
     for flag in flags[file].keys():
         x=[]
@@ -58,13 +139,24 @@ for file in flags.keys():
             x.append(n)
             y.append(stats.median(flags[file][flag][n]))
         plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+','+str(flag))
-        color+=1
-    color=0
+        
+    color+=1
     marker+=1
 plt.legend()
+figure = plt.gcf()
+figure.set_size_inches(16,9)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(timestr+".png")
+plt.savefig('N-' +timestr+"perf.png")
+plt.show()
 plt.clf()
+
+
+
+
+
+
+#Plot base model (empty rooflie model)
+
 
 plt.xlabel('flops/byte')
 plt.ylabel('flops/cycle')
@@ -72,43 +164,59 @@ plt.title('Roofline impact of N')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 
+ridge_point = scalar_pi/mem_beta
+#print(ridge_point)
+I = []
+flops_byte_scal = []
+flops_byte_vec = []
+for i in np.arange(0.001,10000*ridge_point,0.01):
+	I.append(i)
+	flops_byte_scal.append(min(scalar_pi, i * mem_beta))
+	flops_byte_vec.append(min(vector_pi, i * mem_beta))
+	
 
-##ROOFLINE NOCH NICHT GUT, DA NOCH MEMORY FUNKTIONEN FEHLEN
+plt.plot(I,flops_byte_scal)
+plt.plot(I,flops_byte_vec)
+plt.yscale('log')
+plt.xscale('log')
+figure = plt.gcf()
+figure.set_size_inches(16,9)
+plt.legend()
+plt.title('Roofline Model')
+plt.xlabel('Operational Intensity [flops/byte]')
+plt.ylabel('Performance [flops/cycle]')
+
+
+
 marker=0
 color=0
-style=0
-for file in flags.keys():
+style=1
+for count, file in enumerate(flags.keys()):
     for flag in flags[file].keys():
+        plot_flag = flag
         x=[]
         y=[]
         for n in flags[file][flag]:
-            params=(None,n,n,n*n)
+            cycles=stats.median(flags[file][flag][n])
+            params=(flag,n,n,n*n)
             (flag,hiddenstate,differentObservables,T)=params
             work=work_functions[file](params)
             memory=memory_functions[file](params)
-            cycles=stats.median(flags[file][flag][n])
             x.append(work/memory)
             y.append(work/cycles)
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+','+str(flag))
-        color+=1
-    color=0
-    marker+=1
+            if(file != 'vec'):
+                plot_flag = re.sub('\ -mfma$','',flag)
 
-                         
-xstart, xend = plt.xlim()
-#Memory bound
-x=[xstart,vector_pi/mem_beta]
-y=[xstart*mem_beta, vector_pi]
-plt.fill_between(x, y, 0, alpha=0.2, color='r')
-#Vector line
-x=[xstart,xend]
-plt.fill_between(x, vector_pi, 0, alpha=0.2, color='y')
-#Scalar line
-plt.fill_between(x, scalar_pi, 0, alpha=0.2, color='b')
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+compiler + ' '+str(plot_flag))
+        color+=1
+    #color=0
+    marker+=1
 
 
 
 plt.legend()
+#plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig(timestr+"-roof.png")
+plt.savefig('N-'+timestr+"-roof.png")
 plt.clf()
+
