@@ -149,11 +149,43 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(16,9)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-perf.png")
+plt.savefig('N-' +timestr+"-cycles.png")
 #plt.show()
 plt.clf()
 
 
+plt.xlabel('N')
+plt.ylabel('Performance [flops/cycle]')
+plt.title('Different implementations')
+plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+
+marker=0
+color=0
+style=1
+for file in flags.keys():
+    for flag in flags[file].keys():
+        plot_flag = flag
+        x=[]
+        y=[]
+        for n in flags[file][flag]:
+            params=(flag,n,n,n*n)
+            (flag,hiddenstate,differentObservables,T)=params
+            work=work_functions[file](params)
+            x.append(n)
+            y.append(work/stats.median(flags[file][flag][n]))
+            if(file != 'vec'):
+                plot_flag = re.sub('\ -mfma$','',flag)
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+ compiler+' ' +str(plot_flag))
+        
+    color+=1
+    marker+=1
+plt.legend()
+figure = plt.gcf()
+figure.set_size_inches(16,9)
+timestr = time.strftime("%d-%m_%H;%M")
+plt.savefig('N-' +timestr+"-perf.png")
+#plt.show()
+plt.clf()
 
 
 
