@@ -4,8 +4,8 @@ import statistics as stats
 import time
 import numpy as np
 
-folder = "../output_measures_N/"
-file_name = "05-22.20:13:08-time"
+folder = "../output_measures/"
+file_name = "05-27.10:31:17-time"
 full_name =folder + file_name
 
 #parameter im Performance plot auf x-achse
@@ -14,7 +14,7 @@ wichtiger_param = 3
 #2 = dO	3 = T
 
 #welche work und memory access fuction
-aktuelle_version = 'reo'
+#aktuelle_version = 'reo'
 
 #machine specs
 scalar_pi=4
@@ -66,6 +66,7 @@ work_functions['stb']=base_work
 work_functions['cop']=base_work
 work_functions['reo']=reo_work
 work_functions['vec']=reo_work
+work_functions['vec-op']=reo_work
 
 def reo_memory(params):
     (flag,hiddenstate,differentObservables,T)=params
@@ -82,6 +83,7 @@ memory_functions['stb']=base_memory
 memory_functions['cop']=base_memory
 memory_functions['reo']=reo_memory
 memory_functions['vec']=reo_memory
+memory_functions['vec-op']=reo_memory
 
 
 def base_memory_compulsory(params):
@@ -141,7 +143,7 @@ for file in flags.keys():
             y.append(stats.median(flags[file][flag][n]))
             if(file != 'vec'):
                 plot_flag = re.sub('\ -mfma$','',flag)
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+ compiler+' ' +str(plot_flag))
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag))
         
     color+=1
     marker+=1
@@ -175,7 +177,7 @@ for file in flags.keys():
             y.append(work/stats.median(flags[file][flag][n]))
             if(file != 'vec'):
                 plot_flag = re.sub('\ -mfma$','',flag)
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+ compiler+' ' +str(plot_flag))
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag))
         
     color+=1
     marker+=1
@@ -242,7 +244,7 @@ for count, file in enumerate(flags.keys()):
             if(file != 'vec'):
                 plot_flag = re.sub('\ -mfma$','',flag)
 
-        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:3]+': '+compiler + ' '+str(plot_flag))
+        plt.plot(x,y, marker=markers[marker], color=colors[color], linestyle=styles[style], label= file[:6]+': '+compiler + ' '+str(plot_flag))
         color+=1
     #color=0
     marker+=1

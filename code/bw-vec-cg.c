@@ -10,7 +10,7 @@
 
 #include <immintrin.h>
 
-#define EPSILON 1e-12
+#define EPSILON 1e-4
 #define DELTA 1e-2
 #define maxSteps 100
 

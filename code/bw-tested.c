@@ -6,7 +6,7 @@
 
 #include "tested.h"
 
-#define EPSILON 1e-12
+#define EPSILON 1e-4
 #define DELTA 2.0
 #define maxSteps 100
 
@@ -172,7 +172,7 @@ int tested_finished(const double* const alpha,const double* const beta, const do
 	//evidence with alpha only:
 
 	for(int time = 0; time < T; time++){
-		newLogLikelihood -= log10(ct[time]);
+		newLogLikelihood -= log2(ct[time]);
 	}
 	
 	*l=newLogLikelihood;
@@ -216,7 +216,7 @@ void tested_implementation(int hiddenStates, int differentObservables, int T, do
 
 	int steps=0;
 	do{
-		tested_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Luca
+		tested_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Lucaz
 		tested_backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
 		tested_update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
 		steps+=1;

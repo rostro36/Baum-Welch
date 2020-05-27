@@ -8,7 +8,7 @@
 #include "io.h"
 #include "tested.h"
 
-#define EPSILON 1e-12
+#define EPSILON 1e-4
 #define DELTA 2.0
 #define maxSteps 100
 
