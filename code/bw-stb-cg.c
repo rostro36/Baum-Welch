@@ -91,7 +91,7 @@ void makeMatrix(const int dim1,const int dim2, double* const matrix){
 
 
 //Luca
-void forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
+void bw_forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
 
 	/* OPTIMIZATION AND SIMD
 		SIMPLE APPROACH		
@@ -168,7 +168,7 @@ void forward(const double* const a, const double* const p, const double* const b
 }
 
 //Ang
-void backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
+void bw_backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
 	for(int s = 1; s < N+1; s++){
 		beta[s*T-1] = /* 1* */ct[T-1];
 	}
@@ -187,7 +187,7 @@ void backward(const double* const a, const double* const b, double* const beta, 
 	return;
 }
 
-void update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const int N, const int K, const int T){
+void bw_update(double* const a, double* const p, double* const b, const double* const alpha, const double* const beta, double* const gamma, double* const xi, const int* const y, const double* const ct,const int N, const int K, const int T){
 
 
 	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
@@ -365,9 +365,9 @@ myInt64 bw(double* const transitionMatrix,double* const stateProb,double* const 
 
 	
 		do{
-			forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-			backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);
-			update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);
+			bw_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
+			bw_backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);
+			bw_update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);
             steps+=1;
 		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 
@@ -383,9 +383,9 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	double* ct = (double*) malloc(T * sizeof(double));
 	
 	for(int j=0;j<10;j++){
-		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);//Ang
+		bw_forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
+		bw_backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
+		bw_update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);//Ang
 	}	
 
 	free(alpha);
@@ -436,9 +436,9 @@ void wikipedia_example(){
 	double* ct = (double*) malloc(T * sizeof(double));
 
 	for(int t = 0; t < 1000; t++){
-		forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct,  hiddenStates, differentObservables, T);//Ang
+		bw_forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
+		bw_backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
+		bw_update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct,  hiddenStates, differentObservables, T);//Ang
 	}
 
 	printf("new transition matrix from wikipedia example: \n \n");

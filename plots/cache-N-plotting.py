@@ -112,45 +112,58 @@ while(re.search('FLAG', text)):
     text=re.split('N', text,1)[1:][0]
     T=int(re.split('\n', text)[0].strip())
     text=re.split('\n', text,1)[1:][0]
-    
-    Ir=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    I1mr=int(re.split('[\s\t]', text)[0].strip())
-    text=re.split('[\s\t]', text,1)[1:][0]
-    
-    ILmr=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    Dr=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    D1mr=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    DLmr=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    Dw=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    D1mw=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    DLmw=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    Bc=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    Bcm=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    Bi=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
-    
-    Bim=int(re.split('\s', text)[0].strip())
-    text=re.split('\s', text,1)[1:][0]
+    Ir=0
+    I1mr=0
+    ILmr=0
+    Dr=0
+    D1mr=0
+    DLmr=0
+    Dw=0
+    D1mw=0
+    DLmw=0
+    Bc=0
+    Bcm=0
+    Bi=0
+    Bim=0
+    while(text.strip()!=''):
+        Ir+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        I1mr+=int(re.split('[\s\t]', text)[0].strip())
+        text=re.split('[\s\t]', text,1)[1:][0]
+        
+        ILmr+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        Dr+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        D1mr+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        DLmr+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        Dw+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        D1mw+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        DLmw+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        Bc+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        Bcm+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        Bi+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
+        Bim+=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
     
     parameters=[flag,hiddenstate,dO,T]
     parameter_names=['flag','hiddenstate','different observables','T']

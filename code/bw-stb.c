@@ -10,7 +10,6 @@
 
 #define EPSILON 1e-4
 #define DELTA 2.0
-#define maxSteps 100
 
 //for sorting at the end
 int compare_doubles (const void *a, const void *b){
@@ -442,7 +441,6 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	const int maxRuns=10;
 	const int seed = atoi(argv[1]);  
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
@@ -457,6 +455,12 @@ int main(int argc, char *argv[]){
     */
 	myInt64 cycles;
    	myInt64 start;
+    int minima=10;
+    int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
+    int maxSteps=minima < variableSteps ? variableSteps : minima;
+    minima=1;    
+    variableSteps=10-log10(hiddenStates*differentObservables*T);
+    int maxRuns=minima < variableSteps ? variableSteps : minima;
 	double runs[maxRuns]; //for medianTime
 	//set random according to seed
 	srand(seed);

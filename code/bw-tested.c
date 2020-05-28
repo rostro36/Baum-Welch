@@ -8,7 +8,6 @@
 
 #define EPSILON 1e-4
 #define DELTA 2.0
-#define maxSteps 100
 
 void tested_set_zero(double* const a, const int rows, const int cols){
 	for(int row = 0 ; row < rows; row++){
@@ -207,6 +206,10 @@ void tested_implementation(int hiddenStates, int differentObservables, int T, do
 	double* ct = (double*) malloc(T*sizeof(double));
 	    
 	double logLikelihood=-DBL_MAX;
+    int minima=10;
+    int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
+    int maxSteps=minima < variableSteps ? variableSteps : minima;
+    int maxRuns=sqrt(sqrt(hiddenStates*differentObservables*T));
 
 	tested_set_zero(alpha,hiddenStates,T);
 	tested_set_zero(beta,hiddenStates,T);
