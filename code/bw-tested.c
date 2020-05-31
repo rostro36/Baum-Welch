@@ -209,7 +209,9 @@ void tested_implementation(int hiddenStates, int differentObservables, int T, do
     int minima=10;
     int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
     int maxSteps=minima < variableSteps ? variableSteps : minima;
-    int maxRuns=sqrt(sqrt(hiddenStates*differentObservables*T));
+    minima=1;    
+    variableSteps=10-log10(hiddenStates*differentObservables*T);
+    int maxRuns=minima < variableSteps ? variableSteps : minima;
 
 	tested_set_zero(alpha,hiddenStates,T);
 	tested_set_zero(beta,hiddenStates,T);

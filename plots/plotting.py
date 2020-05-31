@@ -7,11 +7,11 @@ import numpy as np
 
 
 folder = "../output_measures/"
-file_name = "cop-time"
+file_name = "stb-time"
 full_name =folder + file_name
 
 #parameter im Performance plot auf x-achse
-wichtiger_param = 3
+wichtiger_param = 1
 #0 = flag	1 = states #2 = dO	3 = T
 
 #welche work und memory access fuction
