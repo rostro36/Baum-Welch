@@ -106,7 +106,7 @@ while(re.search('FLAG', text)):
     text=re.split('SEED', text,1)[1:][0]
     seed=int(re.split('N', text)[0].strip())
     text=re.split('N', text,1)[1:][0]
-    T=int(re.split('\n', text)[0].strip())
+    n=int(re.split('\n', text)[0].strip())
     text=re.split('\n', text,1)[1:][0]
     Ir=0
     I1mr=0
@@ -121,7 +121,10 @@ while(re.search('FLAG', text)):
     Bcm=0
     Bi=0
     Bim=0
-    while(text.strip()!=''):
+    while(text.strip()!='' and text.strip()[:3]!='DAS'):
+        junk=int(re.split('\s', text)[0].strip())
+        text=re.split('\s', text,1)[1:][0]
+        
         Ir+=int(re.split('\s', text)[0].strip())
         text=re.split('\s', text,1)[1:][0]
         
@@ -159,11 +162,13 @@ while(re.search('FLAG', text)):
         text=re.split('\s', text,1)[1:][0]
         
         Bim+=int(re.split('\s', text)[0].strip())
-        text=re.split('\s', text,1)[1:][0]
+        print(text)
+        if text.strip()!='':
+            text=re.split('\s', text,1)[1:][0]
+        
     
-    parameters=[flag,hiddenstate,dO,T]
-    parameter_names=['flag','hiddenstate','different observables','T']
-    (order_params,order_names)=to_back([parameters,parameter_names],wichtiger_param)
+    parameters=[flag,seed,n]
+    parameter_names=['flag',seed,'N']
     
     if file not in cache:
         cache[file]=dict()
