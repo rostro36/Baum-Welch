@@ -11,6 +11,16 @@
 #define EPSILON 1e-4
 #define DELTA 1e-2
 #define maxSteps 100
+#define BUFSIZE 1<<26   // ~60 MB
+
+
+inline void _flush_cache(volatile unsigned char* buf)
+{
+    for(unsigned int i = 0; i < BUFSIZE; ++i){
+        buf[i] += i;
+    }
+}
+
 
 void set_zero(double* const a, const int rows, const int cols){
 	for(int row = 0 ; row < rows; row++){
@@ -20,12 +30,12 @@ void set_zero(double* const a, const int rows, const int cols){
 	}
 }
 
-int compare_doubles (const void *a, const void *b) //for sorting at the end
-{
-  const double *da = (const double *) a;
-  const double *db = (const double *) b;
+//for sorting at the end
+int compare_doubles (const void *a, const void *b){
+	const double *da = (const double *) a;
+	const double *db = (const double *) b;
 
-  return (*da > *db) - (*da < *db);
+	return (*da > *db) - (*da < *db);
 }
 
 int chooseOf(const int choices, const double* const probArray){
@@ -56,7 +66,7 @@ void makeObservations(const int hiddenStates, const int differentObservables, co
 		//write down observation, based on occurenceMatrix of currentState
 		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
 		//choose next State, given transitionMatrix of currentState
-	    currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
+	    	currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
 
 	}
 }
@@ -91,14 +101,15 @@ void makeMatrix(const int rows,const int columns, double* const matrix){
 }
 
 myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, double* const alpha, double* beta,double* const gamma, double* const xi,   const int * const observations, double* const ct,double* const inv_ct, const int hiddenStates, const int differentObservables, const int T){
-//Luca
-        	double logLikelihood=-DBL_MAX;
-        	double disparance;
-        	int steps=0;
-		myInt64 start = start_tsc();
 
-		do{
-            //forward
+        double logLikelihood=-DBL_MAX;
+        double disparance;
+        int steps=0;
+	myInt64 start = start_tsc();
+
+	do{
+            	
+            	//forward
 	        double ct0 = 0.0;
 	        //compute alpha(0) and scaling factor for t = 0
 	        int y0 = observations[0];
@@ -157,7 +168,7 @@ myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, 
 		        }
 	        }
 
-            //Update
+            	//Update
 	        double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
 
 	        for(int t = 0; t < T; t++){
@@ -227,10 +238,10 @@ myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, 
 
 	        disparance=newLogLikelihood-oldLogLikelihood;
 
-		}while (disparance>EPSILON && steps<maxSteps);
+	}while (disparance>EPSILON && steps<maxSteps);
 
-		myInt64 cycles = stop_tsc(start);
-		cycles = cycles/steps;
+	myInt64 cycles = stop_tsc(start);
+	cycles = cycles/steps;
         return cycles;
 }
 void forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
@@ -278,7 +289,6 @@ void forward(const double* const a, const double* const p, const double* const b
 	return;
 }
 
-//Ang
 void backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
 	
 	double ctT1 = ct[T-1];	
@@ -360,8 +370,6 @@ void update(double* const a, double* const p, double* const b, const double* con
 	return;
 }
 
-
-//Jan
 int finished(const double* const alpha,const double* const beta, const double* const ct, double* const l,const int N,const int T){
 
 	//log likelihood
@@ -380,7 +388,6 @@ int finished(const double* const alpha,const double* const beta, const double* c
 	
 }
 
-//Jan
 int similar(const double * const a, const double * const b , const int N, const int M){
 	//Frobenius norm
 	double sum=0.0;
@@ -391,7 +398,7 @@ int similar(const double * const a, const double * const b , const int N, const 
 			sum+=abs*abs;
 		}
 	}
-    //DEBUG off
+    	//DEBUG off
 	//printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
 	return sqrt(sum)<DELTA; 
 }
@@ -407,8 +414,8 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	
 	for(int j=0;j<10;j++){
 		forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);//Ang
+		backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);
+		update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);
 	}	
 
 	free(alpha);
@@ -486,16 +493,20 @@ int main(int argc, char *argv[]){
     	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
 
 
-	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	    
+	volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
+    	int steps = 0;
 	
-    	int steps=0;
 	for (int run=0; run<cachegrind_runs; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
        	memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
         	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
-
+       	
+       	_flush_cache(buf); // ensure the cache is cold
+       	
        	myInt64 cycles=bw(transitionMatrix, stateProb,  emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);
 	
 		runs[run]=cycles;
@@ -515,7 +526,22 @@ int main(int argc, char *argv[]){
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
-		
+
+	/*
+	//Show results
+	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
+	print_matrix(emissionMatrix, hiddenStates,differentObservables);
+	print_vector(stateProb, hiddenStates);
+	*/
+
+       	
+	/*
+	//Show tested results
+	printf("tested \n");
+	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
+	print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
+	print_vector(stateProbTesting, hiddenStates);
+	*/
 
 	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 		printf("Something went wrong !");	
@@ -540,6 +566,7 @@ int main(int argc, char *argv[]){
 	free(transitionMatrixTesting);
 	free(emissionMatrixTesting);
 	free(stateProbTesting);
+	free((void*)buf);
 
 	return 0; 
 } 

@@ -9,8 +9,17 @@
 #include "tested.h"
 
 #define EPSILON 1e-4
-#define DELTA 2.0
+#define DELTA 1e-2
 #define maxSteps 100
+#define BUFSIZE 1<<26   // ~60 MB
+
+
+inline void _flush_cache(volatile unsigned char* buf)
+{
+    for(unsigned int i = 0; i < BUFSIZE; ++i){
+        buf[i] += i;
+    }
+}
 
 //for sorting at the end
 int compare_doubles (const void *a, const void *b){
@@ -52,7 +61,7 @@ void makeObservations(const int hiddenStates, const int differentObservables, co
 		//write down observation, based on occurenceMatrix of currentState
 		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
 		//choose next State, given transitionMatrix of currentState
-	currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
+		currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
 
 	}
 }
@@ -90,37 +99,9 @@ void makeMatrix(const int dim1,const int dim2, double* const matrix){
 }
 
 
-//Luca
+
 void bw_forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
 
-	/* OPTIMIZATION AND SIMD
-		SIMPLE APPROACH		
-		precompute a matrix for  b[s*K + y[t]] => B_expl
-		1. loop: 
-			can use _mm256_mul_pd
-		2. loop: 
-			changing the order of the outer loops should be beneficial,
-			because then alpha is accessed in row major order (except in inner most loop)
-			for SIMD we can increase the stepsize of loop iterator t to 4
-			replace alpha[s*T+t]=0 with __m256d a = _mms256_setzero_pd()
-			inner most loop:
-				perfect FMA
-				a = _mm256_fma_pd(alpha_col,a_col)
-				Here the access pattern is a problem because both arguments
-				in the fma are accessed column wise order.
-			replace alpha[s*T + t] *= b[s*K + y[t]]; with a = _mm256_mul_pd(a,b)
-			where _m256d b = _mm256_load_pd(B_expl + s*K + t)
-
-		IMPROVED APPROACH
-		Currently I'm not sure if this is safe but I think we can
-		change the loop order to j,s,t => check with Jan similar function
-		Then in the current inner most loop:
-			matrix a would be accesed in row wise order instead of colum wise order
-			both alphas would be accessed in row wise order
-		At no point in the loop hierarchy we would access in column wise order
-		The SIMD instructions remain as before.
-	
-	*/
 	ct[0]=0.0;
 	//compute alpha(0) and scaling factor for t = 0
 	for(int s = 0; s < N; s++){
@@ -167,7 +148,6 @@ void bw_forward(const double* const a, const double* const p, const double* cons
 	return;
 }
 
-//Ang
 void bw_backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
 	for(int s = 1; s < N+1; s++){
 		beta[s*T-1] = /* 1* */ct[T-1];
@@ -296,7 +276,6 @@ void evidence_testing(const double* const alpha, const double* const beta,const 
 
 }
 
-//Jan
 int finished(const double* const alpha,const double* const beta, const double* const ct, double* const l,const int N,const int T){
 
 	/* true evidence
@@ -337,8 +316,6 @@ int finished(const double* const alpha,const double* const beta, const double* c
 	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
 }
 
-
-//Jan
 int similar(const double * const a, const double * const b , const int N, const int M){
 	//Frobenius norm
 	double sum=0.0;
@@ -349,29 +326,26 @@ int similar(const double * const a, const double * const b , const int N, const 
 			sum+=abs*abs;
 		}
 	}
-    //DEBUG off
+   	 //DEBUG off
 	//printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
 	return sqrt(sum)<DELTA; 
 }
 myInt64 bw(double* const transitionMatrix,double* const stateProb,double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T, double* alpha, double* beta, double* gamma, double* xi, double* ct){
         double logLikelihood=-DBL_MAX; //Took down here.
 
-		//only needed for testing with R
-		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
-        
-		//XXX start after makeMatrix
-        	int steps=0;
-		myInt64 start = start_tsc();
+		
+	int steps=0;
+	myInt64 start = start_tsc();
 
 	
-		do{
-			bw_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-			bw_backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);
-			bw_update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);
-            steps+=1;
-		}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
+	do{
+		bw_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
+		bw_backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);
+		bw_update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);
+        	steps+=1;
+	}while (!finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
 
-		myInt64 cycles = stop_tsc(start);
+	myInt64 cycles = stop_tsc(start);
         return cycles/steps;
 }
 void heatup(double* const transitionMatrix,double* const piVector,double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
@@ -384,8 +358,8 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	
 	for(int j=0;j<10;j++){
 		bw_forward(transitionMatrix, piVector, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-		bw_backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		bw_update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);//Ang
+		bw_backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);
+		bw_update(transitionMatrix, piVector, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);
 	}	
 
 	free(alpha);
@@ -396,66 +370,8 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 	
 }
 
-void wikipedia_example(){
-
-	int hiddenStates = 2;
-	int differentObservables = 2;
-	int T = 10;
-
-	//the observations we made
-	int* observations = (int*) malloc ( T * sizeof(int));
-
-	//the matrices which should approximate the ground truth
-	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
-	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
-	double* piMatrix  = (double*) malloc(hiddenStates * sizeof(double));
-
-	char tname[100]="wikipedia_matrices/transitionMatrix.csv";
-	read_matrix_file(transitionMatrix,2,2,tname);	
-
-	char ename[100]="wikipedia_matrices/emissionMatrix.csv";
-	read_matrix_file(emissionMatrix,2,2,ename);	
-
-	char oname[100]="wikipedia_matrices/observations.csv";
-	read_vector_file_int(observations,T,oname);	
-
-	char pname[100]="wikipedia_matrices/piMatrix.csv";
-	read_vector_file(piMatrix,2,pname);	
-
-	/*
-	print_matrix(transitionMatrix,2,2);
-	print_matrix(emissionMatrix,2,2);
-	print_vector_int(observations,T);
-	print_vector(piMatrix,2);
-	*/
-
-	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
-	double* xi = (double*) malloc(hiddenStates * hiddenStates * T * sizeof(double));
-	double* ct = (double*) malloc(T * sizeof(double));
-
-	for(int t = 0; t < 1000; t++){
-		bw_forward(transitionMatrix, piMatrix, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	
-		bw_backward(transitionMatrix, emissionMatrix, beta, observations, ct, hiddenStates, differentObservables, T);	//Ang
-		bw_update(transitionMatrix, piMatrix, emissionMatrix, alpha, beta, gamma, xi, observations, ct,  hiddenStates, differentObservables, T);//Ang
-	}
-
-	printf("new transition matrix from wikipedia example: \n \n");
-	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
-	print_matrix(emissionMatrix, hiddenStates,differentObservables);
-	print_vector(piMatrix,2);
-
-	free(alpha);
-	free(beta);
-	free(gamma);
-	free(xi);
-   	free(ct);
-}
 
 int main(int argc, char *argv[]){
-
-	//wikipedia_example();
 
 	if(argc != 5){
 		printf("USAGE: ./run <seed> <hiddenStates> <observables> <T> \n");
@@ -468,14 +384,16 @@ int main(int argc, char *argv[]){
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
 	const int T = atoi(argv[4]); 
-    /*
+    	
+    	/*
 	printf("Parameters: \n");
 	printf("seed = %i \n", seed);
 	printf("hidden States = %i \n", hiddenStates);
 	printf("different Observables = %i \n", differentObservables);
 	printf("number of observations= %i \n", T);
 	printf("\n");
-    */
+    	*/
+	
 	myInt64 cycles;
    	myInt64 start;
 	double runs[maxRuns]; //for medianTime
@@ -513,7 +431,6 @@ int main(int argc, char *argv[]){
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); 
 
-
 	double* ct = (double*) malloc(T*sizeof(double));
 	
 	//Generate matrices
@@ -524,36 +441,24 @@ int main(int argc, char *argv[]){
 	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
 	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
-    memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
+    	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
 
 
-	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
+
+	volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
+    	int steps = 0;
 	
-    	int steps=0;
 	for (int run=0; run<cachegrind_runs; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
        	memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
        	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
-	
+	       
+	        _flush_cache(buf); // ensure the cache is cold
+        
         	myInt64 cycles=bw(transitionMatrix,stateProb,emissionMatrix,observations, hiddenStates,differentObservables,T, alpha, beta, gamma, xi, ct);
-	
-		/*
-		//Show results
-		print_matrix(transitionMatrix,hiddenStates,hiddenStates);
-		print_matrix(emissionMatrix, hiddenStates,differentObservables);
-		print_vector(stateProb, hiddenStates);
-		*/
-
-		/*
-		//Show tested results
-		printf("tested \n");
-		print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
-		print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
-		print_vector(stateProbTesting, hiddenStates);
-		*/
- 
 
 		runs[run]=cycles;
 
@@ -572,7 +477,22 @@ int main(int argc, char *argv[]){
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
-		
+	
+	/*
+	//Show results
+	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
+	print_matrix(emissionMatrix, hiddenStates,differentObservables);
+	print_vector(stateProb, hiddenStates);
+	*/
+
+       	
+	/*
+	//Show tested results
+	printf("tested \n");
+	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
+	print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
+	print_vector(stateProbTesting, hiddenStates);
+	*/	
 
 	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
 		printf("Something went wrong !");	
@@ -595,6 +515,7 @@ int main(int argc, char *argv[]){
 	free(transitionMatrixTesting);
 	free(emissionMatrixTesting);
 	free(stateProbTesting);
+	free((void*)buf);
 
 	return 0; 
 } 
