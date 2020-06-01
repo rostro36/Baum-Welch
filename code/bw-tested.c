@@ -7,7 +7,7 @@
 #include "tested.h"
 
 #define EPSILON 1e-4
-#define DELTA 2.0
+#define DELTA 1e-2
 
 void tested_set_zero(double* const a, const int rows, const int cols){
 	for(int row = 0 ; row < rows; row++){
@@ -211,7 +211,6 @@ void tested_implementation(int hiddenStates, int differentObservables, int T, do
     int maxSteps=minima < variableSteps ? variableSteps : minima;
     minima=1;    
     variableSteps=10-log10(hiddenStates*differentObservables*T);
-    int maxRuns=minima < variableSteps ? variableSteps : minima;
 
 	tested_set_zero(alpha,hiddenStates,T);
 	tested_set_zero(beta,hiddenStates,T);

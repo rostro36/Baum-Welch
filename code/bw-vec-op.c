@@ -860,11 +860,7 @@ int main(int argc, char *argv[]){
 		start = start_tsc();
         
               
-        	const int unroll_inc = 4;
-        
-        	const int block_size = 4;
 		for(int by = 0; by < hiddenStates; by+=4){
-			const int end = by + block_size;
 	
 			__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
 			__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
@@ -888,8 +884,8 @@ int main(int argc, char *argv[]){
 	
 				
 			//Offdiagonal blocks
-			for(int bx = end; bx < hiddenStates; bx+= block_size){
-				const int end_x = block_size + bx;					
+			for(int bx = by + 4; bx < hiddenStates; bx+= 4){
+				
 										
 				__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
 				__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);
@@ -1130,7 +1126,7 @@ int main(int argc, char *argv[]){
 			}
 			
 			
-			__m256d one1 =_mm256_setzero_pd();
+			__m256d one1 =_mm256_set1_pd(1.0);
 			__m256d perm = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
 
 			__m256d shuffle1 = _mm256_shuffle_pd(ctt_vec, perm, 0b0101);
@@ -1143,7 +1139,7 @@ int main(int argc, char *argv[]){
 
 			__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
 
-			__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
+			__m256d ctt_vec_div = _mm256_div_pd(one1,ctt_vec_tot);
 		
       			_mm256_store_pd(ct + 4*t,ctt_vec_div); 
 			
@@ -1195,7 +1191,6 @@ int main(int argc, char *argv[]){
 				__m256d alphatNs2_vec = _mm256_setzero_pd();
 				__m256d alphatNs3_vec = _mm256_setzero_pd();
 				 
-				double* values = (double*) malloc(4  * sizeof(double));
 				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 					__m256d alphaFactor=_mm256_load_pd(alpha+(T-2)*hiddenStates+j);
 					
@@ -1362,7 +1357,6 @@ int main(int argc, char *argv[]){
 
 		//Transpose transitionMatrix
 		for(int by = 0; by < hiddenStates; by+=4){
-			const int end = by + block_size;
 
 			__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
 			__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
@@ -1386,8 +1380,7 @@ int main(int argc, char *argv[]){
 	
 				
 			//Offdiagonal blocks
-			for(int bx = end; bx < hiddenStates; bx+= block_size){
-				const int end_x = block_size + bx;					
+			for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 										
 				__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
 				__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);
@@ -1697,7 +1690,6 @@ int main(int argc, char *argv[]){
 			//Transpose transitionMatrix
 			    
 			for(int by = 0; by < hiddenStates; by+=4){
-				const int end = by + block_size;
 	
 				__m256d diag0 = _mm256_load_pd(a_new + by*hiddenStates + by);
 				__m256d diag1 = _mm256_load_pd(a_new + (by+1)*hiddenStates + by);
@@ -1721,8 +1713,7 @@ int main(int argc, char *argv[]){
 	
 				
 				//Offdiagonal blocks
-				for(int bx = end; bx < hiddenStates; bx+= block_size){
-					const int end_x = block_size + bx;					
+				for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 										
 					__m256d upper0 = _mm256_load_pd(a_new + by*hiddenStates + bx);
 					__m256d upper1 = _mm256_load_pd(a_new + (by+1)*hiddenStates + bx);
@@ -2265,7 +2256,6 @@ int main(int argc, char *argv[]){
 				__m256d alphatNs2_vec = _mm256_setzero_pd();
 				__m256d alphatNs3_vec = _mm256_setzero_pd();
 				 
-				double* values = (double*) malloc(4  * sizeof(double));
 				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 					__m256d alphaFactor=_mm256_load_pd(alpha+(T-2)*hiddenStates+j);
 					
@@ -2400,7 +2390,6 @@ int main(int argc, char *argv[]){
 			
 			//Transpose transitionMatrix
 			for(int by = 0; by < hiddenStates; by+=4){
-				const int end = by + block_size;
 	
 				__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
 				__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
@@ -2424,8 +2413,7 @@ int main(int argc, char *argv[]){
 	
 				
 				//Offdiagonal blocks
-				for(int bx = end; bx < hiddenStates; bx+= block_size){
-					const int end_x = block_size + bx;					
+				for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 										
 					__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
 					__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);

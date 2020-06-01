@@ -37,7 +37,7 @@ void write_result(const double * const transitionMatrix,
 		const double * const emissionMatrix,
 		const int * const observations,
 		const double * const stateProb,
-		const int const steps,
+		const int steps,
 		const int hiddenStates,
 		const int differentObservables,
 		const int T);

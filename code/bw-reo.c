@@ -242,6 +242,13 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 }
 myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double* const stateProb, const int* const observations, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int hiddenStates, const int differentObservables, const int T,double* beta, double* beta_new, double* alpha, double* ab){
+
+
+   	int minima=10;
+    	int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
+    	int maxSteps=minima < variableSteps ? variableSteps : minima;
+
+
         double logLikelihood=-DBL_MAX;
         double disparance;
 		//only needed for testing with R
@@ -597,7 +604,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		        beta = temp;
 		        yt=yt1;	
 	        }
-            steps+=1;
+            	steps+=1;
 //Finishing
 	        //log likelihood
 	        double oldLogLikelihood=logLikelihood;
@@ -628,7 +635,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		        //if you use real gamma you have to divide by ct[t-1]
 		        double gamma_tot = gamma_Ts + gamma_sum[s] /* /ct[T-1] */;
 		        gamma_T[s] = 1./gamma_tot;
-                b_new[yt*hiddenStates+s]+=gamma_Ts;
+                	b_new[yt*hiddenStates+s]+=gamma_Ts;
 	        }
 
 	        //compute new emission matrix
@@ -638,8 +645,8 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		        }
 	        }
 		myInt64 cycles = stop_tsc(start);
-        cycles = cycles/steps;
-        return cycles;
+       	 cycles = cycles/steps;
+        	return cycles;
 }
 void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 
@@ -962,14 +969,12 @@ int main(int argc, char *argv[]){
 	const int differentObservables = atoi(argv[3]); 
 	const int T = atoi(argv[4]); 
 
-	myInt64 cycles;
-   	myInt64 start;
-    int minima=10;
-    int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
-    int maxSteps=minima < variableSteps ? variableSteps : minima;
-    minima=1;    
-    variableSteps=10-log10(hiddenStates*differentObservables*T);
-    int maxRuns=minima < variableSteps ? variableSteps : minima;
+   	int minima=10;
+    	int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
+    	int maxSteps=minima < variableSteps ? variableSteps : minima;
+    	minima=1;    
+    	variableSteps=10-log10(hiddenStates*differentObservables*T);
+    	int maxRuns=minima < variableSteps ? variableSteps : minima;
 	double runs[maxRuns]; //for medianTime
 	//set random according to seed
 	srand(seed);

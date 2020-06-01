@@ -1,8 +1,9 @@
 # Baum-Welch
 
 ## Compile + run
-- gcc $flag -o run $file io.c bw-tested.c tested.h -lm
-- ./run $seed $hiddenState $differentObservable $T
+- version $\in$ {stb, cop, reo, vec, bla}
+- make version 
+- ./version $seed $hiddenState $differentObservable $T
 
 ## Run suite of different params on same file
 - bash suite.sh (you may change some parameters by changing the first line of the file)

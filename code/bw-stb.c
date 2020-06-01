@@ -9,7 +9,7 @@
 #include "tested.h"
 
 #define EPSILON 1e-4
-#define DELTA 2.0
+#define DELTA 1e-2
 
 //for sorting at the end
 int compare_doubles (const void *a, const void *b){
