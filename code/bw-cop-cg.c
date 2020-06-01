@@ -532,10 +532,7 @@ int main(int argc, char *argv[]){
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrix, hiddenStates,differentObservables);
 	print_vector(stateProb, hiddenStates);
-	*/
-
-       	
-	/*
+	
 	//Show tested results
 	printf("tested \n");
 	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);

@@ -2694,17 +2694,18 @@ int main(int argc, char *argv[]){
 	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
 	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
 	
-	
-	printf("result \n");
-	printf("steps = %i \n", steps);
+	/*
+	//Show results
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrix, hiddenStates,differentObservables);
 	print_vector(stateProb, hiddenStates);
 
+	//Show tested results
 	printf("tested \n");
 	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
 	print_vector(stateProbTesting, hiddenStates);
+	*/
 	
 
 	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){

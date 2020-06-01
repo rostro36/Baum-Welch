@@ -206,11 +206,12 @@ void tested_implementation(int hiddenStates, int differentObservables, int T, do
 	double* ct = (double*) malloc(T*sizeof(double));
 	    
 	double logLikelihood=-DBL_MAX;
-    int minima=10;
-    int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
-    int maxSteps=minima < variableSteps ? variableSteps : minima;
-    minima=1;    
-    variableSteps=10-log10(hiddenStates*differentObservables*T);
+    
+    	int minima=10;
+    	int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
+ 	int maxSteps=minima < variableSteps ? variableSteps : minima;
+ 	minima=1;    
+    	variableSteps=10-log10(hiddenStates*differentObservables*T);
 
 	tested_set_zero(alpha,hiddenStates,T);
 	tested_set_zero(beta,hiddenStates,T);

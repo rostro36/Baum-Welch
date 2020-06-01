@@ -10,8 +10,18 @@
 #include "mkl.h"
 
 
-#define EPSILON 1e-12
+#define EPSILON 1e-4
 #define DELTA 1e-2
+#define BUFSIZE 1<<26   // ~60 MB
+
+
+inline void _flush_cache(volatile unsigned char* buf)
+{
+    for(unsigned int i = 0; i < BUFSIZE; ++i){
+        buf[i] += i;
+    }
+}
+
 
 void transpose(double* a, const int rows, const int cols){
 	double* transpose = (double*)calloc(cols*rows, sizeof(double));
@@ -64,7 +74,7 @@ void makeObservations(const int hiddenStates, const int differentObservables, co
 		//write down observation, based on occurenceMatrix of currentState
 		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
 		//choose next State, given transitionMatrix of currentState
-	currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
+		currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
 
 	}
 }
@@ -122,7 +132,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	
 	ct0 = 1.0 / ct0;
     
-    cblas_dscal(N,ct0,alpha,1);
+    	cblas_dscal(N,ct0,alpha,1);
 	ct[0] = ct0;
 
 	for(int t = 1; t < T-1; t++){
@@ -130,7 +140,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 		const int yt = y[t];	
 		for(int s = 0; s<N; s++){// s=new_state
 			double alphatNs = cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
-            //double alphatNs=0;
+            		//double alphatNs=0;
 			//for(int j = 0; j < N; j++){//j=old_states
 			//	alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
 			//}
@@ -142,7 +152,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 		ctt = 1.0 / ctt;
 		
 		//scale alpha(t)
-        cblas_dscal(N,ctt,alpha+t*N,1);
+        	cblas_dscal(N,ctt,alpha+t*N,1);
 		//for(int s = 0; s<N; s++){// s=new_state
 		//	alpha[t*N+s] *= ctt;
 		//}
@@ -155,9 +165,9 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	for(int s = 0; s<N; s++){// s=new_state
 		double alphatNs = 0;
 		//alpha[s*T + t] = 0;
-        alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);		
-        //for(int j = 0; j < N; j++){//j=old_states
-		//	alphatNs += alpha[(T-2)*N + j] * a[j*N + s];	
+       	alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);		
+        	//for(int j = 0; j < N; j++){//j=old_states
+			//	alphatNs += alpha[(T-2)*N + j] * a[j*N + s];	
 		//}
 
 		alphatNs *= b[yt*N + s];
@@ -173,9 +183,9 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	//	//XXX Last iteration explicit because of this line
 	//	gamma_T[s] = alpha[(T-1)*N + s] /* *ct[T-1]*/;
 	//}
-    cblas_dscal(N,ctt,alpha+(T-1)*N,1);
-    cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
-    ct[T-1] = ctt;
+    	cblas_dscal(N,ctt,alpha+(T-1)*N,1);
+    	cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
+    	ct[T-1] = ctt;
 
 	//FUSED BACKWARD and UPDATE STEP
 
@@ -233,14 +243,16 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 
 	//add remaining parts of the sum of gamma 
-	//for(int s = 0; s < N; s++){
-	//	//if you use real gamma you have to divide by ct[t-1]
-	//	double gamma_Ts = gamma_T[s];
-	//	gamma_T[s] += gamma_sum[s] /* /ct[T-1] */;
-    //    b_new[y[T-1]*N+s]+=gamma_Ts;
-	//}
-    cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
-    cblas_daxpy(N,1,gamma_sum,1,gamma_T,1);
+	/*
+	for(int s = 0; s < N; s++){
+		//if you use real gamma you have to divide by ct[t-1]
+		double gamma_Ts = gamma_T[s];
+		gamma_T[s] += gamma_sum[s];// /ct[T-1] 
+    		b_new[y[T-1]*N+s]+=gamma_Ts;
+	}
+	*/
+    	cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
+    	cblas_daxpy(N,1,gamma_sum,1,gamma_T,1);
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
 		for(int s = 0; s < N; s++){
@@ -260,14 +272,14 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	
 	ctt = 1.0 / ctt;
 	//scale alpha(0)
-    cblas_dscal(N,ctt,alpha,1);
+    	cblas_dscal(N,ctt,alpha,1);
 	//for(int s = 0; s < N; s++){
 		//alpha[s] *= ctt;
 		//printf("%lf %lf %lf \n", alpha[s*T], p[s], b[s*K+y[0]]);
 	//}
 	//print_matrix(alpha,N,T);
 	
-    ct[0] = ctt;
+    	ct[0] = ctt;
 
 	//a[i*N+j] = a_new[i*N+j]/gamma_sum_1[i];
 	//Compute alpha(1) and scale transitionMatrix
@@ -292,7 +304,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 	//for(int s = 0; s<N; s++){// s=new_state
 	//	alpha[1*N+s] *= ctt;
 	//}
-    cblas_dscal(N,ctt,alpha+N,1);
+    	cblas_dscal(N,ctt,alpha+N,1);
 	ct[1] = ctt;
 
 	for(int t = 2; t < T-1; t++){
@@ -303,7 +315,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 			//for(int j = 0; j < N; j++){//j=old_states
 			//	alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
 			//}
-            double alphatNs=cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
+            		double alphatNs=cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
 			alphatNs *= b[yt*N + s];
 			ctt += alphatNs;
 			alpha[t*N + s] = alphatNs;
@@ -326,7 +338,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 		//for(int j = 0; j < N; j++){//j=old_states
 		//	alphatNs += alpha[(T-2)*N + j] * a[j*N + s];		
 		//}
-        double alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);
+        	double alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);
 		alphatNs *= b[yt*N + s];
 		ctt += alphatNs;
 		alpha[(T-1)*N + s] = alphatNs;
@@ -341,9 +353,10 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 //	}
 //	ct[T-1] = ctt;
 
-    cblas_dscal(N,ctt,alpha+(T-1)*N,1);
-    cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
-    ct[T-1] = ctt;
+    	cblas_dscal(N,ctt,alpha+(T-1)*N,1);
+    	cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
+    	ct[T-1] = ctt;
+    	
 	//FUSED BACKWARD and UPDATE STEP
 
 	for(int s = 0; s < N; s++){
@@ -375,7 +388,7 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 
 			//if you use real gamma you have to divide with ct[t-1]
 			gamma_sum[s]+= p[s] /* /ct[t-1] */ ;
-            b_new[y[t-1]*N+s]+=p[s];
+            		b_new[y[t-1]*N+s]+=p[s];
 //			for(int v = 0; v < K; v++){
 //				int indicator = (int)(y[t-1] == v);
 //				//if you use real gamma you have to divide by ct[t-1]
@@ -383,10 +396,14 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 //			}
 		}
 		
+		
+		//print_vector(beta,N);
 		double * temp = beta_new;
 		beta_new = beta;
 		beta = temp;	
 	}
+
+	//print_matrix(alpha,T,N);
 
 	free(alpha);
 	free(beta);
@@ -398,12 +415,13 @@ void baum_welch(double* const a, double* const b, double* const p, const int* co
 void final_scaling(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 	//compute new transition matrix
 	for(int s = 0; s < N; s++){
-        double denom=1/gamma_sum[s];
-        cblas_dscal(N,denom,a_new,1);
+        	double denom=1/gamma_sum[s];
+        	cblas_dscal(N,denom,a_new+s*N,1);
 		//for(int j = 0; j < N; j++){
 		//	a[s*N+j] = a_new[s*N+j]/gamma_sum[s];
 		//}
 	}
+	cblas_dcopy(N*N,a_new,1,a,1);
 
 	//add remaining parts of the sum of gamma 
 	//for(int s = 0; s < N; s++){
@@ -418,8 +436,8 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 		}
         */
 	//}
-    cblas_daxpy(N,1,gamma_T,1,gamma_sum,1);
-    cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
+    	cblas_daxpy(N,1,gamma_T,1,gamma_sum,1);
+    	cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
 	//compute new emission matrix
 	for(int v = 0; v < K; v++){
 		for(int s = 0; s < N; s++){
@@ -427,7 +445,7 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 		}
 	}
 }
-//Jan
+
 int finished(const double* const ct, double* const l,const int N,const int T){
 
 	//log likelihood
@@ -446,8 +464,6 @@ int finished(const double* const ct, double* const l,const int N,const int T){
 	
 }
 
-
-//Jan
 int similar(const double * const a, const double * const b , const int N, const int M){
 	//Frobenius norm
 	double sum=0.0;
@@ -493,15 +509,18 @@ int main(int argc, char *argv[]){
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
 	const int T = atoi(argv[4]);
+	
 	myInt64 cycles;
    	myInt64 start;
-    int minima=10;
-    int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
-    int maxSteps=minima < variableSteps ? variableSteps : minima;
-    minima=1;    
-    variableSteps=10-log10(hiddenStates*differentObservables*T);
-    int maxRuns=minima < variableSteps ? variableSteps : minima;
+   	
+	int minima=10;
+	int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
+	int maxSteps=minima < variableSteps ? variableSteps : minima;
+	minima=1;    
+	variableSteps=10-log10(hiddenStates*differentObservables*T);
+	int maxRuns=minima < variableSteps ? variableSteps : minima;
 	double runs[maxRuns]; //for medianTime
+	
 	//set random according to seed
 	srand(seed);
 
@@ -549,89 +568,84 @@ int main(int argc, char *argv[]){
 	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
 	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
-    memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
+	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
 
 	//heat up cache
 	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
-    int steps=0;
+	volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
+	
+	int steps = 0;
 	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
 		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
    		memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-      	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));
+      		memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));
 		
-		memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
-   		memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
-      	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
-
-        double logLikelihood=-DBL_MAX; //Took down here.
+        	double logLikelihood=-DBL_MAX; //Took down here.
 
 		//only needed for testing with R
 		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
         
-        steps=1;
+        	steps=1;
+       	_flush_cache(buf); // ensure the cache is cold
 		start = start_tsc();
 
 		initial_step(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
 
-		//for(int i = 0; i < 1; i++){
 		do{
-
 			baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
-            steps+=1;
+
+            		steps+=1;
+            		
 		}while (!finished(ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
-		
+				
 		final_scaling(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
 
 		cycles = stop_tsc(start);
-        cycles = cycles/steps;
+        	cycles = cycles/steps;
 
-		transpose(emissionMatrix,differentObservables,hiddenStates);
-
-		//emissionMatrix is not in state major order
-		transpose(emissionMatrixTesting, differentObservables,hiddenStates);
-       	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
-
-
-		if (similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
-			runs[run]=cycles;
-            //DEBUG OFF
-			//printf("run %i: \t %llu cycles \n",run, cycles);
-		}else{	
-			
-		  	free(groundTransitionMatrix);
-			free(groundEmissionMatrix);
-			free(observations);
-			free(transitionMatrix);
-			free(emissionMatrix);
-			free(stateProb);
-   			free(ct);
-			free(gamma_T);
-			free(gamma_sum);
-			free(a_new);
-			free(b_new);
-  			free(transitionMatrixSafe);
-			free(emissionMatrixSafe);
-   			free(stateProbSafe);
-			free(transitionMatrixTesting);
-			free(emissionMatrixTesting);
-			free(stateProbTesting);
-
-			printf("Something went wrong! \n");
-			return -1;//error Jan
-		}	
+		runs[run]=cycles;
 
 	}
 
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
 	printf("Median Time: \t %lf cycles \n", medianTime); 
+	
+	//used for testing
+	memcpy(transitionMatrixTesting, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+	memcpy(emissionMatrixTesting, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
+	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
 
-	write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
+	
+	transpose(emissionMatrix,differentObservables,hiddenStates);
+	//emissionMatrix is not in state major order
+	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
+	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+
+	/*
+	//Show results
+	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
+	print_matrix(emissionMatrix, hiddenStates,differentObservables);
+	print_vector(stateProb, hiddenStates);
+	
+	//Show tested results
+	printf("tested \n");
+	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
+	print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
+	print_vector(stateProbTesting, hiddenStates);
+	*/
+	
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+		printf("Something went wrong !");	
+		
+	}
+
+	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
-    free(groundTransitionMatrix);
+    	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -648,6 +662,7 @@ int main(int argc, char *argv[]){
 	free(transitionMatrixTesting);
 	free(emissionMatrixTesting);
 	free(stateProbTesting);
+	free((void*)buf);
 
 	return 0; 
 } 
