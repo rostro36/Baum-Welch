@@ -1,7 +1,7 @@
 # Baum-Welch
 
 ## Compile + run
-- version $\in$ {stb, cop, reo, vec, bla}
+- version <a href="https://www.codecogs.com/eqnedit.php?latex=\in" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\in" title="\in" /></a> {stb, cop, reo, vec, bla}
 - make version 
 - ./version $seed $hiddenState $differentObservable $T
 
