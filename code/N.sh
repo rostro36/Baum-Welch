@@ -1,10 +1,10 @@
 #!/bin/bash
 
-files=( "stb" "cop" "reo" )
-compilers=( "g" "i" )
+files=( "stb" "cop" "reo" "vec" "alt" )
+compilers=( "i" "g" )
 flags=( "-O2" )
 seeds=( 36 )
-Ns=( 4 16 64 256 512 1028 )
+Ns=( 4 16 32 64 128 192 256 320 )
 now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
 do
@@ -19,6 +19,8 @@ do
                 do
                     echo "DAS SEI UESI PARAMETER" "FILE" "$file" "FLAG" "$compiler$flag" "SEED" $seed "N" $N >> "../output_measures/$now-time.txt"
                     ./timing $seed $N $N $(( N * N )) >> "../output_measures/$now-time.txt"
+                    echo `date +%m-%d.%H:%M:%S`
+                    echo "$file $compiler$flag $seed $N"
                 done
             done
         done

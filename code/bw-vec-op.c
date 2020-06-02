@@ -792,6 +792,39 @@ int main(int argc, char *argv[]){
 	//heat up cache
 	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 	
+	
+	
+	//only needed for testing with umdhmm
+	FILE *f;
+	f=fopen("../umdhmm/sequence.seq","w");
+	fprintf(f,"T= %d \n",T);
+	for(int i=0;i<T;i++){
+		fprintf(f,"%d ", observations[i]+1);
+	}
+	fclose(f);
+	f=fopen("../umdhmm/model.hmm","w");
+	fprintf(f,"M= %d\n", differentObservables);
+	fprintf(f,"N= %d\n", hiddenStates);
+	fprintf(f,"A:\n");
+	for(int i=0;i<hiddenStates;i++){
+		for(int j=0;j<hiddenStates;j++){
+			fprintf(f,"%f ",transitionMatrix[i*hiddenStates+j]);
+		}
+		fprintf(f,"\n");
+	}
+	fprintf(f,"B:\n");
+	for(int i=0;i<hiddenStates;i++){
+		for(int j=0;j<differentObservables;j++){
+			fprintf(f,"%f ",emissionMatrix[i*differentObservables+j]);
+		}
+		fprintf(f,"\n");
+	}
+	fprintf(f,"pi:\n");
+	for(int i=0;i<hiddenStates;i++){
+		fprintf(f,"%f ", stateProb[i]);
+	}
+	fclose(f);
+	
 	volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
 	
    	double disparance;
