@@ -54,6 +54,14 @@ bla: bw-bla.o $(OBJ)
 	$(CC) $(CFLAGS) $(BLASFLAGS) -o $@ $^ $(BLASLIBS) $(LIBS)
 
 
+#COMPILATION OF VEC (NEEDS ADDITIONAL FLAG)
+bw-vec-op%.o: bw-vec-op%.c $(DEPS)
+	$(CC) $(CFLAGS) $(VECFLAGS) -c -o $@ $< 
+
+#LINKING ALL TOGETHER
+vec%: bw-vec-op%.o $(OBJ) 
+	$(CC) $(CFLAGS) $(VECFLAGS) -o $@ $^ $(LIBS)
+
 #CLEANING UP
 clean:
 	rm -f bw-stb.o
@@ -62,8 +70,8 @@ clean:
 	rm -f cop
 	rm -f bw-reo.o
 	rm -f reo
-	rm -f bw-vec-op.o
-	rm -f vec
+	rm -f bw-vec-op*.o
+	rm -f vec*
 	rm -f bw-bla.o
 	rm -f bla
 	
