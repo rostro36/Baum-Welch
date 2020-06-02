@@ -114,162 +114,190 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
         	int steps=1;
 		myInt64 start = start_tsc();
         
-              
-        	const int unroll_inc = 4;
-        
-        	const int block_size = 4;
-        
-		for(int by = 0; by < hiddenStates; by+=4){
-				const int end = by + block_size;
+                      	
+                __m256d one = _mm256_set1_pd(1.0);
+   		
+   		for(int by = 0; by < hiddenStates; by+=4){
 	
-				__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
-				__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
-				__m256d diag2 = _mm256_load_pd(transitionMatrix + (by+2)*hiddenStates + by);
-				__m256d diag3 = _mm256_load_pd(transitionMatrix + (by+3)*hiddenStates + by);
+			__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
+			__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
+			__m256d diag2 = _mm256_load_pd(transitionMatrix + (by+2)*hiddenStates + by);
+			__m256d diag3 = _mm256_load_pd(transitionMatrix + (by+3)*hiddenStates + by);
 		
-				__m256d tmp0 = _mm256_shuffle_pd(diag0,diag1, 0x0);
-				__m256d tmp1 = _mm256_shuffle_pd(diag2,diag3, 0x0);
-				__m256d tmp2 = _mm256_shuffle_pd(diag0,diag1, 0xF);
-				__m256d tmp3 = _mm256_shuffle_pd(diag2,diag3, 0xF);
+			__m256d tmp0 = _mm256_shuffle_pd(diag0,diag1, 0x0);
+			__m256d tmp1 = _mm256_shuffle_pd(diag2,diag3, 0x0);
+			__m256d tmp2 = _mm256_shuffle_pd(diag0,diag1, 0xF);
+			__m256d tmp3 = _mm256_shuffle_pd(diag2,diag3, 0xF);
                     	
-				__m256d row0 = _mm256_permute2f128_pd(tmp0, tmp1, 0x20);
-				__m256d row1 = _mm256_permute2f128_pd(tmp2, tmp3, 0x20);
-				__m256d row2 = _mm256_permute2f128_pd(tmp0, tmp1, 0x31);
-				__m256d row3 = _mm256_permute2f128_pd(tmp2, tmp3, 0x31);
+			__m256d row0 = _mm256_permute2f128_pd(tmp0, tmp1, 0x20);
+			__m256d row1 = _mm256_permute2f128_pd(tmp2, tmp3, 0x20);
+			__m256d row2 = _mm256_permute2f128_pd(tmp0, tmp1, 0x31);
+			__m256d row3 = _mm256_permute2f128_pd(tmp2, tmp3, 0x31);
 			
-				_mm256_store_pd(transitionMatrix + by*hiddenStates + by,row0);
-				_mm256_store_pd(transitionMatrix + (by+1)*hiddenStates + by,row1);
-				_mm256_store_pd(transitionMatrix + (by+2)*hiddenStates + by,row2);
-				_mm256_store_pd(transitionMatrix + (by+3)*hiddenStates + by,row3);
+			_mm256_store_pd(transitionMatrix + by*hiddenStates + by,row0);
+			_mm256_store_pd(transitionMatrix + (by+1)*hiddenStates + by,row1);
+			_mm256_store_pd(transitionMatrix + (by+2)*hiddenStates + by,row2);
+			_mm256_store_pd(transitionMatrix + (by+3)*hiddenStates + by,row3);
 	
 				
-				//Offdiagonal blocks
-				for(int bx = end; bx < hiddenStates; bx+= block_size){
-					const int end_x = block_size + bx;					
-										
-					__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
-					__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);
-					__m256d upper2 = _mm256_load_pd(transitionMatrix + (by+2)*hiddenStates + bx);
-					__m256d upper3 = _mm256_load_pd(transitionMatrix + (by+3)*hiddenStates + bx);
-										
-					__m256d lower0 = _mm256_load_pd(transitionMatrix + bx * hiddenStates + by);
-					__m256d lower1 = _mm256_load_pd(transitionMatrix + (bx+1)*hiddenStates + by);
-					__m256d lower2 = _mm256_load_pd(transitionMatrix + (bx+2)*hiddenStates + by);
-					__m256d lower3 = _mm256_load_pd(transitionMatrix + (bx+3)*hiddenStates + by);
+			//Offdiagonal blocks
+			for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 				
-					__m256d utmp0 = _mm256_shuffle_pd(upper0,upper1, 0x0);
-					__m256d utmp1 = _mm256_shuffle_pd(upper2,upper3, 0x0);
-					__m256d utmp2 = _mm256_shuffle_pd(upper0,upper1, 0xF);
-					__m256d utmp3 = _mm256_shuffle_pd(upper2,upper3, 0xF);
+										
+				__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
+				__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);
+				__m256d upper2 = _mm256_load_pd(transitionMatrix + (by+2)*hiddenStates + bx);
+				__m256d upper3 = _mm256_load_pd(transitionMatrix + (by+3)*hiddenStates + bx);
+									
+				__m256d lower0 = _mm256_load_pd(transitionMatrix + bx * hiddenStates + by);
+				__m256d lower1 = _mm256_load_pd(transitionMatrix + (bx+1)*hiddenStates + by);
+				__m256d lower2 = _mm256_load_pd(transitionMatrix + (bx+2)*hiddenStates + by);
+				__m256d lower3 = _mm256_load_pd(transitionMatrix + (bx+3)*hiddenStates + by);
+				
+				__m256d utmp0 = _mm256_shuffle_pd(upper0,upper1, 0x0);
+				__m256d utmp1 = _mm256_shuffle_pd(upper2,upper3, 0x0);
+				__m256d utmp2 = _mm256_shuffle_pd(upper0,upper1, 0xF);
+				__m256d utmp3 = _mm256_shuffle_pd(upper2,upper3, 0xF);
 					
-					__m256d ltmp0 = _mm256_shuffle_pd(lower0,lower1, 0x0);
-					__m256d ltmp1 = _mm256_shuffle_pd(lower2,lower3, 0x0);
-					__m256d ltmp2 = _mm256_shuffle_pd(lower0,lower1, 0xF);
-					__m256d ltmp3 = _mm256_shuffle_pd(lower2,lower3, 0xF);
+				__m256d ltmp0 = _mm256_shuffle_pd(lower0,lower1, 0x0);
+				__m256d ltmp1 = _mm256_shuffle_pd(lower2,lower3, 0x0);
+				__m256d ltmp2 = _mm256_shuffle_pd(lower0,lower1, 0xF);
+				__m256d ltmp3 = _mm256_shuffle_pd(lower2,lower3, 0xF);
         				            
-					__m256d urow0 = _mm256_permute2f128_pd(utmp0, utmp1, 0x20);
-					__m256d urow1 = _mm256_permute2f128_pd(utmp2, utmp3, 0x20);
-					__m256d urow2 = _mm256_permute2f128_pd(utmp0, utmp1, 0x31);
-					__m256d urow3 = _mm256_permute2f128_pd(utmp2, utmp3, 0x31);
+				__m256d urow0 = _mm256_permute2f128_pd(utmp0, utmp1, 0x20);
+				__m256d urow1 = _mm256_permute2f128_pd(utmp2, utmp3, 0x20);
+				__m256d urow2 = _mm256_permute2f128_pd(utmp0, utmp1, 0x31);
+				__m256d urow3 = _mm256_permute2f128_pd(utmp2, utmp3, 0x31);
 	        			            
-					__m256d lrow0 = _mm256_permute2f128_pd(ltmp0, ltmp1, 0x20);
-					__m256d lrow1 = _mm256_permute2f128_pd(ltmp2, ltmp3, 0x20);
-					__m256d lrow2 = _mm256_permute2f128_pd(ltmp0, ltmp1, 0x31);
-					__m256d lrow3 = _mm256_permute2f128_pd(ltmp2, ltmp3, 0x31);
+				__m256d lrow0 = _mm256_permute2f128_pd(ltmp0, ltmp1, 0x20);
+				__m256d lrow1 = _mm256_permute2f128_pd(ltmp2, ltmp3, 0x20);
+				__m256d lrow2 = _mm256_permute2f128_pd(ltmp0, ltmp1, 0x31);
+				__m256d lrow3 = _mm256_permute2f128_pd(ltmp2, ltmp3, 0x31);
 						
-					_mm256_store_pd(transitionMatrix + by*hiddenStates + bx,lrow0);
-					_mm256_store_pd(transitionMatrix + (by+1)*hiddenStates + bx,lrow1);
-					_mm256_store_pd(transitionMatrix + (by+2)*hiddenStates + bx,lrow2);
-					_mm256_store_pd(transitionMatrix + (by+3)*hiddenStates + bx,lrow3);
-						
-					_mm256_store_pd(transitionMatrix + bx*hiddenStates + by,urow0);
-					_mm256_store_pd(transitionMatrix + (bx+1)*hiddenStates + by,urow1);
-					_mm256_store_pd(transitionMatrix + (bx+2)*hiddenStates + by,urow2);
-					_mm256_store_pd(transitionMatrix + (bx+3)*hiddenStates + by,urow3);	
+				_mm256_store_pd(transitionMatrix + by*hiddenStates + bx,lrow0);
+				_mm256_store_pd(transitionMatrix + (by+1)*hiddenStates + bx,lrow1);
+				_mm256_store_pd(transitionMatrix + (by+2)*hiddenStates + bx,lrow2);
+				_mm256_store_pd(transitionMatrix + (by+3)*hiddenStates + bx,lrow3);
+					
+				_mm256_store_pd(transitionMatrix + bx*hiddenStates + by,urow0);
+				_mm256_store_pd(transitionMatrix + (bx+1)*hiddenStates + by,urow1);
+				_mm256_store_pd(transitionMatrix + (bx+2)*hiddenStates + by,urow2);
+				_mm256_store_pd(transitionMatrix + (bx+3)*hiddenStates + by,urow3);	
 			
-				}	
-			}
+			}	
+		}
 	
 	
 
-		double ct0 = 0.0;
 		
 		//compute alpha(0) and scaling factor for t = 0
 		int y0 = observations[0];
 		__m256d ct0_vec = _mm256_setzero_pd();
 		for(int s = 0; s < hiddenStates; s+=4){
-			//s
+					
 			/*
-			double alphas = stateProb[s] * emissionMatrix[y0*hiddenStates + s];
-			ct0 += alphas;
-			alpha[s] = alphas;
-			//s+1
-			alphas = stateProb[s+1] * emissionMatrix[y0*hiddenStates + s+1];
-			ct0 += alphas;
-			alpha[s+1] = alphas;
-			//s+2
-			alphas = stateProb[s+2] * emissionMatrix[y0*hiddenStates + s+2];
-			ct0 += alphas;
-			alpha[s+2] = alphas;
-			//s+3
-			alphas = stateProb[s+3] * emissionMatrix[y0*hiddenStates + s+3];
-			ct0 += alphas;
-			alpha[s+3] = alphas;
+			__m256d alphas=_mm256_load_pd(stateProb+s);
+			__m256d emissionMatr=_mm256_load_pd(emissionMatrix+y0*hiddenStates+s);
+			alphas=_mm256_mul_pd(alphas,emissionMatr);
+			_mm256_store_pd(alpha+s,alphas);
+			ctt+=alpha[s]+alpha[s+1]+alpha[s+2]+alpha[s+3];
+				
 			*/
-			
 			__m256d stateProb_vec = _mm256_load_pd(stateProb +s);
 			__m256d emission_vec = _mm256_load_pd(emissionMatrix +y0*hiddenStates +s);
 			__m256d alphas_vec = _mm256_mul_pd(stateProb_vec, emission_vec);
-			ct0_vec = _mm256_add_pd(ct0_vec, alphas_vec);
+			
+			//ct0_vec = _mm256_add_pd(ct0_vec, alphas_vec);
+			
+			ct0_vec = _mm256_fmadd_pd(stateProb_vec,emission_vec, ct0_vec);
 			_mm256_store_pd(alpha+s,alphas_vec);
+					
+			/* 	
+			//s
+		  	 double alphas0 = stateProb[s] * emissionMatrix[y0*hiddenStates + s];
+		  	     ctt += alphas0;
+		  	      alpha[s] = alphas0;
+					//s+1
+		  	      double alphas1 = stateProb[s+1] * emissionMatrix[y0*hiddenStates + s+1];
+		  	      ctt += alphas1;
+		  	      alpha[s+1] = alphas1;
+				//s+2
+		  	      double alphas2 = stateProb[s+2] * emissionMatrix[y0*hiddenStates + s+2];
+		  	      ctt += alphas2;
+		  	      alpha[s+2] = alphas2;
+					//s+3
+		  	      double alphas3 = stateProb[s+3] * emissionMatrix[y0*hiddenStates + s+3];
+		  	      ctt += alphas3;
+		  	      alpha[s+3] = alphas3; */
+	        	}	
+	        	
+	        //Reduction of ct_vec
+	        __m256d perm = _mm256_permute2f128_pd(ct0_vec,ct0_vec,0b00000011);
+	
+		__m256d shuffle1 = _mm256_shuffle_pd(ct0_vec, perm, 0b0101);
+
+		__m256d shuffle2 = _mm256_shuffle_pd(perm, ct0_vec, 0b0101);
+		
+		__m256d ct0_vec_add = _mm256_add_pd(ct0_vec, perm);
+		
+		__m256d ct0_temp = _mm256_add_pd(shuffle1, shuffle2);
+		__m256d ct0_vec_tot = _mm256_add_pd(ct0_vec_add, ct0_temp);
+				
+		__m256d ct0_vec_div = _mm256_div_pd(one ,ct0_vec_tot);
 			
-			
-		}
-		
-		double * ct0_temp =(double*) _mm_malloc(4*sizeof(double),32);
-		_mm256_store_pd(ct0_temp, ct0_vec);
-		
-		ct0 = 1.0 / (ct0_temp[0]+ct0_temp[1]+ct0_temp[2]+ct0_temp[3]);
-		__m256d scalingFactor=_mm256_set1_pd(ct0);
-		//scale alpha(0)
-		for(int s = 0; s < hiddenStates; s+=4){
-			__m256d alpha0=_mm256_load_pd(alpha+s);
-			alpha0=_mm256_mul_pd(alpha0,scalingFactor);
-			_mm256_store_pd(alpha+s,alpha0);
-			/* //s
-			alpha[s] *= ct0;
-			//s+1
-			alpha[s+1] *= ct0;
-			//s+2
-			alpha[s+2] *= ct0;
-			//s+3
-			alpha[s+3] *= ct0; */
-		}
-		
-		ct[0] = ct0;
+	      	_mm256_storeu_pd(ct,ct0_vec_div);
+	        
+	        
+	        //ctt = 1.0 / ctt;
+		//__m256d scalingFactor= _mm256_set1_pd(ctt);
+	        //scale alpha(0)
+	        for(int s = 0; s < hiddenStates; s+=4){
+			__m256d alphas=_mm256_load_pd(alpha+s);
+			__m256d alphas_mul=_mm256_mul_pd(alphas,ct0_vec_div);
+			_mm256_store_pd(alpha+s,alphas_mul);
+		      	/* alpha[s] *= ctt;
+		      	alpha[s+1] *= ctt;
+		      	alpha[s+2] *= ctt;
+		      	alpha[s+3] *= ctt; */
+	        }
+	        
+	        
+	
+	
 
 		for(int t = 1; t < T-1; t++){
-			double ctt = 0.0;	
+			//double ctt = 0.0;	
+			__m256d ctt_vec = _mm256_setzero_pd();
 			const int yt = observations[t];	
 			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+				/*
 				double alphatNs0 = 0;
 				double alphatNs1 = 0;
 				double alphatNs2 = 0;
 				double alphatNs3 = 0;
+				*/
 				
+				__m256d alphatNs0 = _mm256_setzero_pd();
+				__m256d alphatNs1 = _mm256_setzero_pd();
+				__m256d alphatNs2 = _mm256_setzero_pd();
+				__m256d alphatNs3 = _mm256_setzero_pd();
+			
+			
 				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 					__m256d alphaFactor=_mm256_load_pd(alpha+(t-1)*hiddenStates+j);
-					
+				
 					__m256d transition0=_mm256_load_pd(transitionMatrix+(s)*hiddenStates+j);
 					__m256d transition1=_mm256_load_pd(transitionMatrix+(s+1)*hiddenStates+j);
 					__m256d transition2=_mm256_load_pd(transitionMatrix+(s+2)*hiddenStates+j);
 					__m256d transition3=_mm256_load_pd(transitionMatrix+(s+3)*hiddenStates+j);
-					
+				
+				
+					/*
 					__m256d alphat0=_mm256_mul_pd(alphaFactor,transition0);
 					__m256d alphat1=_mm256_mul_pd(alphaFactor,transition1);
 					__m256d alphat2=_mm256_mul_pd(alphaFactor,transition2);
 					__m256d alphat3=_mm256_mul_pd(alphaFactor,transition3);
-					
+											
 					alphat0=_mm256_hadd_pd(alphat0,alphat0);
 					alphat1=_mm256_hadd_pd(alphat1,alphat1);
 					alphat2=_mm256_hadd_pd(alphat2,alphat2);
@@ -279,6 +307,8 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat1,1))+_mm256_cvtsd_f64(alphat1);
 					alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat2,1))+_mm256_cvtsd_f64(alphat2);
 					alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat3,1))+_mm256_cvtsd_f64(alphat3);
+					*/
+					
 					/* double alphaFactor0 = alpha[(t-1)*hiddenStates + j];
 					double alphaFactor1 = alpha[(t-1)*hiddenStates + j+1];
 					double alphaFactor2 = alpha[(t-1)*hiddenStates + j+2]; 
@@ -303,7 +333,34 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					alphatNs3 += alphaFactor1 * transitionMatrix[(s+3)*hiddenStates + j+1];
 					alphatNs3 += alphaFactor2 * transitionMatrix[(s+3)*hiddenStates + j+2];
 					alphatNs3 += alphaFactor3 * transitionMatrix[(s+3)*hiddenStates + j+3]; */
+					alphatNs0 =_mm256_fmadd_pd(alphaFactor,transition0,alphatNs0);
+					alphatNs1 =_mm256_fmadd_pd(alphaFactor,transition1,alphatNs1);
+					alphatNs2 =_mm256_fmadd_pd(alphaFactor,transition2,alphatNs2);
+					alphatNs3 =_mm256_fmadd_pd(alphaFactor,transition3,alphatNs3);
+
+
 				}
+					
+					
+							
+				__m256d emission = _mm256_load_pd(emissionMatrix + yt*hiddenStates + s);
+			
+				__m256d alpha01 = _mm256_hadd_pd(alphatNs0, alphatNs1);
+				__m256d alpha23 = _mm256_hadd_pd(alphatNs2, alphatNs3);
+								
+				__m256d permute01 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00110000);
+				__m256d permute23 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00100001);
+								
+				__m256d alpha_tot = _mm256_add_pd(permute01, permute23);
+
+				__m256d alpha_tot_mul = _mm256_mul_pd(alpha_tot,emission);
+
+				ctt_vec = _mm256_add_pd(alpha_tot_mul,ctt_vec);
+					
+
+				_mm256_store_pd(alpha + t*hiddenStates + s,alpha_tot_mul);
+				
+				/*
 				alphatNs0 *= emissionMatrix[yt*hiddenStates + s];
 				ctt += alphatNs0;
 				alpha[t*hiddenStates + s] = alphatNs0;
@@ -315,151 +372,224 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 				alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
 				ctt += alphatNs2;
 				alpha[t*hiddenStates + s+2] = alphatNs2;
-				
+					
 				alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
 				ctt += alphatNs3;
 				alpha[t*hiddenStates + s+3] = alphatNs3;
+				*/
 			}
 			
+			
+			__m256d perm = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
+
+			__m256d shuffle1 = _mm256_shuffle_pd(ctt_vec, perm, 0b0101);
+
+			__m256d shuffle2 = _mm256_shuffle_pd(perm, ctt_vec, 0b0101);
+		
+			__m256d ctt_vec_add = _mm256_add_pd(ctt_vec, perm);
+
+			__m256d ctt_temp = _mm256_add_pd(shuffle1, shuffle2);
+
+			__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
+
+			__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
+		
+      			_mm256_storeu_pd(ct + t,ctt_vec_div); 
+			
+			
+			
 			//scaling factor for t 
-			ctt = 1.0 / ctt;
-			__m256d scalingFactor=_mm256_set1_pd(ctt);
+			//ctt = 1.0 / ctt;
+			//scalingFactor=_mm256_set1_pd(ctt);
 			//scale alpha(t)
 			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
-				__m256d alpha0=_mm256_load_pd(alpha+t*hiddenStates+s);
-				alpha0=_mm256_mul_pd(alpha0,scalingFactor);
-				_mm256_store_pd(alpha+t*hiddenStates+s,alpha0);
+				__m256d alphas=_mm256_load_pd(alpha+t*hiddenStates+s);
+				__m256d alphas_mul=_mm256_mul_pd(alphas,ctt_vec_div);
+				_mm256_store_pd(alpha+t*hiddenStates+s,alphas_mul);
 				/* alpha[t*hiddenStates+s] *= ctt;
 				alpha[t*hiddenStates+s+1] *= ctt;
 				alpha[t*hiddenStates+s+2] *= ctt;
 				alpha[t*hiddenStates+s+3] *= ctt; */
 			}
-			ct[t] = ctt;
+			//ct[t] = ctt;
 		}
-		
-	
-		double ctt = 0.0;	
-		int yt = observations[T-1];	
+
+
 
 		
-		for(int s = 0; s<hiddenStates; s+=4){// s=new_state
-			double alphatNs0 = 0;
-			double alphatNs1 = 0;
-			double alphatNs2 = 0;
-			double alphatNs3 = 0;
-			for(int j = 0; j < hiddenStates; j+=4){//j=old_states
-				__m256d alphaFactor=_mm256_load_pd(alpha+(T-2)*hiddenStates+j);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+			//compute alpha(T-1)
+
+			int yt = observations[T-1];	
+			__m256d ctt_vec = _mm256_setzero_pd();
+			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+				/*
+				double alphatNs0 = 0;
+				double alphatNs1 = 0;
+				double alphatNs2 = 0;
+				double alphatNs3 = 0;
+				*/
+				__m256d alphatNs0_vec = _mm256_setzero_pd();
+				__m256d alphatNs1_vec = _mm256_setzero_pd();
+				__m256d alphatNs2_vec = _mm256_setzero_pd();
+				__m256d alphatNs3_vec = _mm256_setzero_pd();
+				 
+				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
+					__m256d alphaFactor=_mm256_load_pd(alpha+(T-2)*hiddenStates+j);
 					
-				__m256d transition0=_mm256_load_pd(transitionMatrix+(s)*hiddenStates+j);
-				__m256d transition1=_mm256_load_pd(transitionMatrix+(s+1)*hiddenStates+j);
-				__m256d transition2=_mm256_load_pd(transitionMatrix+(s+2)*hiddenStates+j);
-				__m256d transition3=_mm256_load_pd(transitionMatrix+(s+3)*hiddenStates+j);
-									
-				__m256d alphat0=_mm256_mul_pd(alphaFactor,transition0);
-				__m256d alphat1=_mm256_mul_pd(alphaFactor,transition1);
-				__m256d alphat2=_mm256_mul_pd(alphaFactor,transition2);
-				__m256d alphat3=_mm256_mul_pd(alphaFactor,transition3);
+					__m256d transition0=_mm256_load_pd(transitionMatrix+(s)*hiddenStates+j);
+					__m256d transition1=_mm256_load_pd(transitionMatrix+(s+1)*hiddenStates+j);
+					__m256d transition2=_mm256_load_pd(transitionMatrix+(s+2)*hiddenStates+j);
+					__m256d transition3=_mm256_load_pd(transitionMatrix+(s+3)*hiddenStates+j);
 					
-				alphat0=_mm256_hadd_pd(alphat0,alphat0);
-				alphat1=_mm256_hadd_pd(alphat1,alphat1);
-				alphat2=_mm256_hadd_pd(alphat2,alphat2);
-				alphat3=_mm256_hadd_pd(alphat3,alphat3);
+					/*
+					__m256d alphat0=_mm256_mul_pd(alphaFactor,transition0);
+					__m256d alphat1=_mm256_mul_pd(alphaFactor,transition1);
+					__m256d alphat2=_mm256_mul_pd(alphaFactor,transition2);
+					__m256d alphat3=_mm256_mul_pd(alphaFactor,transition3);
 					
-				alphatNs0+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat0,1))+_mm256_cvtsd_f64(alphat0);
-				alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat1,1))+_mm256_cvtsd_f64(alphat1);
-				alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat2,1))+_mm256_cvtsd_f64(alphat2);
-				alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat3,1))+_mm256_cvtsd_f64(alphat3);
+					alphat0=_mm256_hadd_pd(alphat0,alphat0);
+					alphat1=_mm256_hadd_pd(alphat1,alphat1);
+					alphat2=_mm256_hadd_pd(alphat2,alphat2);
+					alphat3=_mm256_hadd_pd(alphat3,alphat3);
+					
+					alphatNs0+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat0,1))+_mm256_cvtsd_f64(alphat0);
+					alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat1,1))+_mm256_cvtsd_f64(alphat1);
+					alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat2,1))+_mm256_cvtsd_f64(alphat2);
+					alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat3,1))+_mm256_cvtsd_f64(alphat3);
+					*/
+
+					alphatNs0_vec =_mm256_fmadd_pd(alphaFactor,transition0,alphatNs0_vec);
+					alphatNs1_vec =_mm256_fmadd_pd(alphaFactor,transition1,alphatNs1_vec);
+					alphatNs2_vec =_mm256_fmadd_pd(alphaFactor,transition2,alphatNs2_vec);
+					alphatNs3_vec =_mm256_fmadd_pd(alphaFactor,transition3,alphatNs3_vec);
+
+					
+					
+
+
+				}
 				
 				
-				/* 
-				double alphaFactor0 = alpha[(T-2)*hiddenStates + j];
-				double alphaFactor1 = alpha[(T-2)*hiddenStates + j+1];
-				double alphaFactor2 = alpha[(T-2)*hiddenStates + j+2]; 
-				double alphaFactor3 = alpha[(T-2)*hiddenStates + j+3]; 
+				__m256d emission = _mm256_load_pd(emissionMatrix + yt*hiddenStates + s);
+				
+				__m256d alpha01 = _mm256_hadd_pd(alphatNs0_vec, alphatNs1_vec);
+				__m256d alpha23 = _mm256_hadd_pd(alphatNs2_vec, alphatNs3_vec);
+							
+				__m256d permute01 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00110000);
+				__m256d permute23 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00100001);
+								
+				__m256d alpha_tot = _mm256_add_pd(permute01, permute23);
+
+				__m256d alpha_tot_mul = _mm256_mul_pd(alpha_tot,emission);
+
+				ctt_vec = _mm256_add_pd(alpha_tot_mul,ctt_vec);
+					
+
+				_mm256_store_pd(alpha + (T-1)*hiddenStates + s,alpha_tot_mul);
+				
 			
-				alphatNs0 += alphaFactor0 * transitionMatrix[s*hiddenStates + j];
-				alphatNs0 += alphaFactor1 * transitionMatrix[s*hiddenStates + j+1];
-				alphatNs0 += alphaFactor2 * transitionMatrix[s*hiddenStates + j+2];
-				alphatNs0 += alphaFactor3 * transitionMatrix[s*hiddenStates + j+3];
+				/*
+				alphatNs0 *= emissionMatrix[yt*hiddenStates + s];
+				ctt += alphatNs0;
+				alpha[(T-1)*hiddenStates + s] = alphatNs0;
 				
-				alphatNs1 += alphaFactor0 * transitionMatrix[(s+1)*hiddenStates + j];
-				alphatNs1 += alphaFactor1 * transitionMatrix[(s+1)*hiddenStates + j+1];
-				alphatNs1 += alphaFactor2 * transitionMatrix[(s+1)*hiddenStates + j+2];
-				alphatNs1 += alphaFactor3 * transitionMatrix[(s+1)*hiddenStates + j+3];
+				alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
+				ctt += alphatNs1;
+				alpha[(T-1)*hiddenStates + s+1] = alphatNs1;
 				
-				alphatNs2 += alphaFactor0 * transitionMatrix[(s+2)*hiddenStates + j];
-				alphatNs2 += alphaFactor1 * transitionMatrix[(s+2)*hiddenStates + j+1];
-				alphatNs2 += alphaFactor2 * transitionMatrix[(s+2)*hiddenStates + j+2];
-				alphatNs2 += alphaFactor3 * transitionMatrix[(s+2)*hiddenStates + j+3];
-					
-				alphatNs3 += alphaFactor0 * transitionMatrix[(s+3)*hiddenStates + j];
-				alphatNs3 += alphaFactor1 * transitionMatrix[(s+3)*hiddenStates + j+1];
-				alphatNs3 += alphaFactor2 * transitionMatrix[(s+3)*hiddenStates + j+2];
-				alphatNs3 += alphaFactor3 * transitionMatrix[(s+3)*hiddenStates + j+3];*/
+				alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
+				ctt += alphatNs2;
+				alpha[(T-1)*hiddenStates + s+2] = alphatNs2;
+				
+				alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
+				ctt += alphatNs3;
+				alpha[(T-1)*hiddenStates + s+3] = alphatNs3;
+				*/
 			}
-			alphatNs0 *= emissionMatrix[yt*hiddenStates + s];
-			ctt += alphatNs0;
-			alpha[(T-1)*hiddenStates + s] = alphatNs0;
 			
-			alphatNs1 *= emissionMatrix[yt*hiddenStates + s+1];
-			ctt += alphatNs1;
-			alpha[(T-1)*hiddenStates + s+1] = alphatNs1;
+						
+			//scaling factor for T-1
 			
-			alphatNs2 *= emissionMatrix[yt*hiddenStates + s+2];
-			ctt += alphatNs2;
-			alpha[(T-1)*hiddenStates + s+2] = alphatNs2;
-			
-			alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
-			ctt += alphatNs3;
-			alpha[(T-1)*hiddenStates + s+3] = alphatNs3; 
-		}
+			__m256d perm1 = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
+	
+			__m256d shuffle11 = _mm256_shuffle_pd(ctt_vec, perm1, 0b0101);
+
+			__m256d shuffle21 = _mm256_shuffle_pd(perm1, ctt_vec, 0b0101);
 		
+			__m256d ctt_vec_add = _mm256_add_pd(ctt_vec, perm1);
+
+			__m256d ctt_temp = _mm256_add_pd(shuffle11, shuffle21);
+
+			__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
+
+			__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
 		
-		//scaling factor for T-1
-		ctt = 1.0 / ctt;
-		scalingFactor=_mm256_set1_pd(ctt);
-		
-		//scale alpha(t)
-		for(int s = 0; s<hiddenStates; s+=4){// s=new_state
-			__m256d alphaT1Ns=_mm256_load_pd(alpha+(T-1)*hiddenStates+s);
-			alphaT1Ns=_mm256_mul_pd(alphaT1Ns,scalingFactor);
-			_mm256_store_pd(alpha+(T-1)*hiddenStates+s,alphaT1Ns);
-			_mm256_store_pd(gamma_T+s,alphaT1Ns);
+	      		_mm256_storeu_pd(ct + (T-1),ctt_vec_div); 
+	      			
+	      			
 			
-			/* //s
-			double alphaT1Ns0 = alpha[(T-1) * hiddenStates + s]*ctt;
-			alpha[(T-1)*hiddenStates + s] = alphaT1Ns0;
-			gamma_T[s] = alphaT1Ns0;
-			//s+1
-			double alphaT1Ns1 = alpha[(T-1) * hiddenStates + s+1]*ctt;
-			alpha[(T-1)*hiddenStates + s+1] = alphaT1Ns1;
-			gamma_T[s+1] = alphaT1Ns1;
-			//s+2
-			double alphaT1Ns2 = alpha[(T-1) * hiddenStates + s+2]*ctt;
-			alpha[(T-1)*hiddenStates + s+2] = alphaT1Ns2;
-			gamma_T[s+2] = alphaT1Ns2;
-			//s+3
-			double alphaT1Ns3 = alpha[(T-1) * hiddenStates + s+3]*ctt;
-			alpha[(T-1)*hiddenStates + s+3] = alphaT1Ns3;
-			gamma_T[s+3] = alphaT1Ns3; 
-			 */
-		}
-		ct[T-1] = ctt;
+			//scale alpha(t)
+			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+				__m256d alphaT1Ns=_mm256_load_pd(alpha+(T-1)*hiddenStates+s);
+				__m256d alphaT1Ns_mul=_mm256_mul_pd(alphaT1Ns,ctt_vec_div);
+				_mm256_store_pd(alpha+(T-1)*hiddenStates+s,alphaT1Ns_mul);
+				_mm256_store_pd(gamma_T+s,alphaT1Ns_mul);
+				
+				/* //s
+				double alphaT1Ns0 = alpha[(T-1) * hiddenStates + s]*ctt;
+				alpha[(T-1)*hiddenStates + s] = alphaT1Ns0;
+				gamma_T[s] = alphaT1Ns0;
+				//s+1
+				double alphaT1Ns1 = alpha[(T-1) * hiddenStates + s+1]*ctt;
+				alpha[(T-1)*hiddenStates + s+1] = alphaT1Ns1;
+				gamma_T[s+1] = alphaT1Ns1;
+				//s+2
+				double alphaT1Ns2 = alpha[(T-1) * hiddenStates + s+2]*ctt;
+				alpha[(T-1)*hiddenStates + s+2] = alphaT1Ns2;
+				gamma_T[s+2] = alphaT1Ns2;
+				//s+3
+				double alphaT1Ns3 = alpha[(T-1) * hiddenStates + s+3]*ctt;
+				alpha[(T-1)*hiddenStates + s+3] = alphaT1Ns3;
+				gamma_T[s+3] = alphaT1Ns3; 
+				 */
+			}
+			//ct[T-1] = ctt;
+
+			
+			
 		
 
 		//FUSED BACKWARD and UPDATE STEP
 
+		__m256d zero = _mm256_setzero_pd();
 		for(int s = 0; s < hiddenStates; s+=4){
 
-			_mm256_store_pd(beta + s, _mm256_set1_pd(ctt));
-			_mm256_store_pd(gamma_sum+ s, _mm256_setzero_pd());
+			_mm256_store_pd(beta + s, ctt_vec_div);
+		}
+		
+		for(int s = 0; s < hiddenStates; s+=4){
+
+			_mm256_store_pd(gamma_sum+ s, zero);
+		}
 				
+		for(int s = 0; s < hiddenStates; s+=4){
 			for(int j = 0; j < hiddenStates; j+=4){
 			
-				_mm256_store_pd(a_new + s * hiddenStates + j, _mm256_setzero_pd());
-				_mm256_store_pd(a_new + (s + 1)* hiddenStates + j, _mm256_setzero_pd());
-				_mm256_store_pd(a_new + (s + 2)*hiddenStates + j, _mm256_setzero_pd());
-				_mm256_store_pd(a_new + (s + 3)* hiddenStates + j, _mm256_setzero_pd());
+				_mm256_store_pd(a_new + s * hiddenStates + j, zero);
+				_mm256_store_pd(a_new + (s + 1)* hiddenStates + j, zero);
+				_mm256_store_pd(a_new + (s + 2)*hiddenStates + j, zero);
+				_mm256_store_pd(a_new + (s + 3)* hiddenStates + j, zero);
 			
 			}
 		}
@@ -468,10 +598,10 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		for(int v = 0;  v < differentObservables; v+=4){
 			for(int s = 0; s < hiddenStates; s+=4){
 			
-				_mm256_store_pd(b_new + v * hiddenStates + s, _mm256_setzero_pd());
-				_mm256_store_pd(b_new + (v + 1)* hiddenStates + s, _mm256_setzero_pd());
-				_mm256_store_pd(b_new + (v + 2)*hiddenStates + s, _mm256_setzero_pd());
-				_mm256_store_pd(b_new + (v + 3)* hiddenStates + s, _mm256_setzero_pd());
+				_mm256_store_pd(b_new + v * hiddenStates + s, zero);
+				_mm256_store_pd(b_new + (v + 1)* hiddenStates + s, zero);
+				_mm256_store_pd(b_new + (v + 2)*hiddenStates + s, zero);
+				_mm256_store_pd(b_new + (v + 3)* hiddenStates + s, zero);
 				
 	
 			}
@@ -480,7 +610,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 
 		//Transpose transitionMatrix
 		for(int by = 0; by < hiddenStates; by+=4){
-			const int end = by + block_size;
 
 			__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
 			__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
@@ -504,8 +633,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	
 				
 			//Offdiagonal blocks
-			for(int bx = end; bx < hiddenStates; bx+= block_size){
-				const int end_x = block_size + bx;					
+			for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 										
 				__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
 				__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);
@@ -581,19 +709,21 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		
 		for(int t = T-1; t > 0; t--){
 	
-			const double ctt = ct[t-1];
-			__m256d ctt_vec = _mm256_set_pd(ctt,ctt,ctt,ctt);
+			//const double ctt = ct[t-1];
+			__m256d ctt_vec = _mm256_set1_pd(ct[t-1]);//_mm256_set_pd(ctt,ctt,ctt,ctt);
 			const int yt1 = observations[t-1];
 			for(int s = 0; s < hiddenStates ; s+=4){
+			
+				/*
 				double alphat1Ns0 = alpha[(t-1)*hiddenStates + s];
 				double alphat1Ns1 = alpha[(t-1)*hiddenStates + s+1];
 				double alphat1Ns2 = alpha[(t-1)*hiddenStates + s+2];
 				double alphat1Ns3 = alpha[(t-1)*hiddenStates + s+3];
-				
-				__m256d alphat1Ns0_vec = _mm256_set1_pd(alphat1Ns0);
-				__m256d alphat1Ns1_vec = _mm256_set1_pd(alphat1Ns1);
-				__m256d alphat1Ns2_vec = _mm256_set1_pd(alphat1Ns2);
-				__m256d alphat1Ns3_vec = _mm256_set1_pd(alphat1Ns3);
+				*/
+				__m256d alphat1Ns0_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s]);
+				__m256d alphat1Ns1_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s+1]);
+				__m256d alphat1Ns2_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s+2]);
+				__m256d alphat1Ns3_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s+3]);
 											
 				__m256d beta_news0 = _mm256_setzero_pd();
 				__m256d beta_news1 = _mm256_setzero_pd();
@@ -622,15 +752,15 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					__m256d a_new_vec3 = _mm256_load_pd(a_new + (s+3)*hiddenStates+j);
 					
 					
-					a_new_vec = _mm256_fmadd_pd(alphat1Ns0_vec, temp,a_new_vec);
-					a_new_vec1 = _mm256_fmadd_pd(alphat1Ns1_vec, temp1,a_new_vec1);
-					a_new_vec2 = _mm256_fmadd_pd(alphat1Ns2_vec, temp2,a_new_vec2);
-					a_new_vec3 = _mm256_fmadd_pd(alphat1Ns3_vec, temp3,a_new_vec3);
+					__m256d a_new_vec_fma = _mm256_fmadd_pd(alphat1Ns0_vec, temp,a_new_vec);
+					__m256d a_new_vec1_fma = _mm256_fmadd_pd(alphat1Ns1_vec, temp1,a_new_vec1);
+					__m256d a_new_vec2_fma = _mm256_fmadd_pd(alphat1Ns2_vec, temp2,a_new_vec2);
+					__m256d a_new_vec3_fma = _mm256_fmadd_pd(alphat1Ns3_vec, temp3,a_new_vec3);
 					
-					_mm256_store_pd(a_new + s*hiddenStates+j,a_new_vec);
-					_mm256_store_pd(a_new + (s+1)*hiddenStates+j, a_new_vec1);
-					_mm256_store_pd(a_new + (s+2)*hiddenStates+j,a_new_vec2);
-					_mm256_store_pd(a_new + (s+3)*hiddenStates+j,a_new_vec3);
+					_mm256_store_pd(a_new + s*hiddenStates+j,a_new_vec_fma);
+					_mm256_store_pd(a_new + (s+1)*hiddenStates+j, a_new_vec1_fma);
+					_mm256_store_pd(a_new + (s+2)*hiddenStates+j,a_new_vec2_fma);
+					_mm256_store_pd(a_new + (s+3)*hiddenStates+j,a_new_vec3_fma);
 					
 					beta_news0 = _mm256_add_pd(beta_news0,temp);
 					beta_news1 = _mm256_add_pd(beta_news1,temp1);
@@ -638,34 +768,30 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					beta_news3 = _mm256_add_pd(beta_news3,temp3);
 				}
 				
-				//XXX PROBABLY BETTER REDUCTION
-				_mm256_store_pd(reduction,beta_news0);
-				beta_workingset[0] = reduction[0] + reduction[1] + reduction[2] + reduction[3] ;
-				
-				_mm256_store_pd(reduction,beta_news1);
-				beta_workingset[1] = reduction[0] + reduction[1] + reduction[2] + reduction[3] ;
-				
-				_mm256_store_pd(reduction,beta_news2);
-				beta_workingset[2] = reduction[0] + reduction[1] + reduction[2] + reduction[3] ;
-				
-				_mm256_store_pd(reduction,beta_news3);
-				beta_workingset[3] = reduction[0] + reduction[1] + reduction[2] + reduction[3] ;
-				
-				__m256d beta_news = _mm256_load_pd(beta_workingset);
-				
-				__m256d ps = _mm256_mul_pd(alphatNs, beta_news);
-				_mm256_store_pd(stateProb + s, ps);
-				
-				beta_news = _mm256_mul_pd(beta_news, ctt_vec);
-				_mm256_store_pd(beta_new + s, beta_news);
-				
+						
 				__m256d gamma_sum_vec = _mm256_load_pd(gamma_sum + s);
-				gamma_sum_vec = _mm256_add_pd(gamma_sum_vec, ps);
-				_mm256_store_pd(gamma_sum+s, gamma_sum_vec);
-				
 				__m256d b_new_vec = _mm256_load_pd(b_new +yt1*hiddenStates+ s);
-				b_new_vec = _mm256_add_pd(b_new_vec, ps);
-				_mm256_store_pd(b_new +yt1*hiddenStates+ s, b_new_vec);
+					
+				//XXX Better Reduction
+				__m256d beta01 = _mm256_hadd_pd(beta_news0, beta_news1);
+				__m256d beta23 = _mm256_hadd_pd(beta_news2, beta_news3);
+							
+				__m256d permute01 = _mm256_permute2f128_pd(beta01, beta23, 0b00110000);
+				__m256d permute23 = _mm256_permute2f128_pd(beta01, beta23, 0b00100001);
+								
+				__m256d beta_news = _mm256_add_pd(permute01, permute23);
+					
+				__m256d gamma_sum_vec_fma = _mm256_fmadd_pd(alphatNs, beta_news, gamma_sum_vec);
+				__m256d b_new_vec_fma = _mm256_fmadd_pd(alphatNs, beta_news,b_new_vec);
+				__m256d ps = _mm256_mul_pd(alphatNs, beta_news);
+				__m256d beta_news_mul = _mm256_mul_pd(beta_news, ctt_vec);
+					
+					
+				_mm256_store_pd(stateProb + s, ps);
+				_mm256_store_pd(beta_new + s, beta_news_mul);
+				_mm256_store_pd(gamma_sum+s, gamma_sum_vec_fma);
+				_mm256_store_pd(b_new +yt1*hiddenStates+ s, b_new_vec_fma);
+						
 						
 		
 			}
@@ -681,29 +807,25 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 
 	
 
-		//for(int i = 0; i < 1; i++){
+		//for(int i = 0; i < 10; i++){
 		do{
-		
-		
-		
-		
 			yt = observations[T-1];
 			//add remaining parts of the sum of gamma 
+			
 			for(int s = 0; s < hiddenStates; s+=4){
 				__m256d gamma_Ts=_mm256_load_pd(gamma_T+s);
 				__m256d gamma_sums=_mm256_load_pd(gamma_sum+s);
-				__m256d gamma_tot=_mm256_add_pd(gamma_Ts,gamma_sums);
-				__m256d ones=_mm256_set1_pd(1.0);
-				
-				gamma_tot=_mm256_div_pd(ones,gamma_tot);
-				_mm256_store_pd(gamma_T+s,gamma_tot);
-				
-				gamma_sums=_mm256_div_pd(ones,gamma_sums);
-				_mm256_store_pd(gamma_sum+s,gamma_sums);
-				
 				__m256d b=_mm256_load_pd(b_new+yt*hiddenStates+s);
-				b=_mm256_add_pd(b,gamma_Ts);
-				_mm256_store_pd(b_new+yt*hiddenStates+s,b);
+				
+				__m256d gamma_tot=_mm256_add_pd(gamma_Ts,gamma_sums);
+				__m256d b_add=_mm256_add_pd(b,gamma_Ts);
+				__m256d gamma_tot_div=_mm256_div_pd(one,gamma_tot);
+				__m256d gamma_sums_div=_mm256_div_pd(one,gamma_sums);
+				
+				
+				_mm256_store_pd(gamma_T+s,gamma_tot_div);
+				_mm256_store_pd(gamma_sum+s,gamma_sums_div);
+				_mm256_store_pd(b_new+yt*hiddenStates+s,b_add);
 				/* double gamma_Ts0 = gamma_T[s];
 				//if you use real gamma you have to divide by ct[t-1]
 				double gamma_sums0 = gamma_sum[s];
@@ -739,21 +861,32 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 			}
 
 			//compute new emission matrix
-			for(int v = 0; v < differentObservables; v++/*=4*/){
+			__m256d zero = _mm256_setzero_pd();
+			
+			for(int v = 0; v < differentObservables; v+=4){
 				for(int s = 0; s < hiddenStates; s+=4){
-					__m256d gammaT=_mm256_load_pd(gamma_T+s);
-					/* 
-					double gamma_T0 = gamma_T[s];
-					double gamma_T1 = gamma_T[s+1];
-					double gamma_T2 = gamma_T[s+2];
-					double gamma_T3 = gamma_T[s+3]; */
 				
+					__m256d gamma_Tv = _mm256_load_pd(gamma_T + s);
 				
-					__m256d b=_mm256_load_pd(b_new+v*hiddenStates+s);
-					b=_mm256_mul_pd(b,gammaT);
-					__m256d zeroes=_mm256_setzero_pd();
-					_mm256_store_pd(emissionMatrix+v*hiddenStates+s,b);
-					_mm256_store_pd(b_new+v*hiddenStates+s,zeroes);
+					__m256d b_newv0 = _mm256_load_pd(b_new + v * hiddenStates + s);
+					__m256d b_newv1 = _mm256_load_pd(b_new + (v+1) * hiddenStates + s);
+					__m256d b_newv2 = _mm256_load_pd(b_new + (v+2) * hiddenStates + s);
+					__m256d b_newv3 = _mm256_load_pd(b_new + (v+3) * hiddenStates + s);
+				
+					__m256d b_temp0 = _mm256_mul_pd(b_newv0,gamma_Tv);
+					__m256d b_temp1 = _mm256_mul_pd(b_newv1,gamma_Tv);
+					__m256d b_temp2 = _mm256_mul_pd(b_newv2,gamma_Tv);
+					__m256d b_temp3 = _mm256_mul_pd(b_newv3,gamma_Tv);
+				
+					_mm256_store_pd(emissionMatrix + v *hiddenStates + s, b_temp0);
+					_mm256_store_pd(emissionMatrix + (v+1) *hiddenStates + s, b_temp1);
+					_mm256_store_pd(emissionMatrix + (v+2) *hiddenStates + s, b_temp2);
+					_mm256_store_pd(emissionMatrix + (v+3) *hiddenStates + s, b_temp3);
+		
+					_mm256_store_pd(b_new+v*hiddenStates+s,zero);
+					_mm256_store_pd(b_new+(v+1)*hiddenStates+s,zero);
+					_mm256_store_pd(b_new+(v+2)*hiddenStates+s,zero);
+					_mm256_store_pd(b_new+(v+3)*hiddenStates+s,zero);
 					/* emissionMatrix[v*hiddenStates + s] = b_new[v*hiddenStates + s] * gamma_T0;
 					b_new[v*hiddenStates + s] = 0.0;
 					
@@ -820,7 +953,6 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 			//Transpose transitionMatrix
 			    
 			for(int by = 0; by < hiddenStates; by+=4){
-				const int end = by + block_size;
 	
 				__m256d diag0 = _mm256_load_pd(a_new + by*hiddenStates + by);
 				__m256d diag1 = _mm256_load_pd(a_new + (by+1)*hiddenStates + by);
@@ -844,8 +976,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	
 				
 				//Offdiagonal blocks
-				for(int bx = end; bx < hiddenStates; bx+= block_size){
-					const int end_x = block_size + bx;					
+				for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 										
 					__m256d upper0 = _mm256_load_pd(a_new + by*hiddenStates + bx);
 					__m256d upper1 = _mm256_load_pd(a_new + (by+1)*hiddenStates + bx);
@@ -889,18 +1020,42 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 			
 				}	
 			}
-
-			double ctt = 0.0;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			//double ctt = 0.0;
 
 			//compute alpha(0) and scaling factor for t = 0
 			int y0 = observations[0];
-		  
+		  	__m256d ct0_vec = _mm256_setzero_pd();
 		        for(int s = 0; s < hiddenStates; s+=4){
+					
+					/*
 					__m256d alphas=_mm256_load_pd(stateProb+s);
 					__m256d emissionMatr=_mm256_load_pd(emissionMatrix+y0*hiddenStates+s);
 					alphas=_mm256_mul_pd(alphas,emissionMatr);
 					_mm256_store_pd(alpha+s,alphas);
 					ctt+=alpha[s]+alpha[s+1]+alpha[s+2]+alpha[s+3];
+					
+					*/
+					__m256d stateProb_vec = _mm256_load_pd(stateProb +s);
+					__m256d emission_vec = _mm256_load_pd(emissionMatrix +y0*hiddenStates +s);
+					__m256d alphas_vec = _mm256_mul_pd(stateProb_vec, emission_vec);
+			
+					//ct0_vec = _mm256_add_pd(ct0_vec, alphas_vec);
+			
+					ct0_vec = _mm256_fmadd_pd(stateProb_vec,emission_vec, ct0_vec);
+					_mm256_store_pd(alpha+s,alphas_vec);
 					
 				/* 	
 				//s
@@ -920,31 +1075,54 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		  	      ctt += alphas3;
 		  	      alpha[s+3] = alphas3; */
 	        	}	
+	        	
+	        		        	
+	        	__m256d perm = _mm256_permute2f128_pd(ct0_vec,ct0_vec,0b00000011);
+	
+			__m256d shuffle1 = _mm256_shuffle_pd(ct0_vec, perm, 0b0101);
+
+			__m256d shuffle2 = _mm256_shuffle_pd(perm, ct0_vec, 0b0101);
+		
+			__m256d ct0_vec_add = _mm256_add_pd(ct0_vec, perm);
+			__m256d ct0_temp = _mm256_add_pd(shuffle1, shuffle2);
+			__m256d ct0_vec_tot = _mm256_add_pd(ct0_vec_add, ct0_temp);
+			__m256d ct0_vec_div = _mm256_div_pd(one,ct0_vec_tot);
+			
+	      		_mm256_storeu_pd(ct,ct0_vec_div);
 	        
-	        	ctt = 1.0 / ctt;
-				__m256d scalingFactor=_mm256_set1_pd(ctt);
+	        
+	        	//ctt = 1.0 / ctt;
+			//__m256d scalingFactor= _mm256_set1_pd(ctt);
 	        	//scale alpha(0)
 	        	for(int s = 0; s < hiddenStates; s+=4){
 					__m256d alphas=_mm256_load_pd(alpha+s);
-					alphas=_mm256_mul_pd(alphas,scalingFactor);
-					_mm256_store_pd(alpha+s,alphas);
+					__m256d alphas_mul=_mm256_mul_pd(alphas,ct0_vec_div);
+					_mm256_store_pd(alpha+s,alphas_mul);
 		        	/* alpha[s] *= ctt;
 		        	alpha[s+1] *= ctt;
 		        	alpha[s+2] *= ctt;
 		        	alpha[s+3] *= ctt; */
 	        	}
 	
-			ct[0] = ctt;
-
-			//Compute alpha(1) and scale transitionMatrix
-			ctt = 0.0;	
-			yt = observations[1];	
+			//ct[0] = ctt;
 			
+			//Compute alpha(1) and scale transitionMatrix
+			//ctt = 0.0;	
+			yt = observations[1];	
+			__m256d ctt_vec = _mm256_setzero_pd();
 			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+				
+				/*
 				double alphatNs0 = 0;
 				double alphatNs1 = 0;
 				double alphatNs2 = 0;
 				double alphatNs3 = 0;
+				*/	
+				__m256d alphatNs0 = _mm256_setzero_pd();
+				__m256d alphatNs1 = _mm256_setzero_pd();
+				__m256d alphatNs2 = _mm256_setzero_pd();
+				__m256d alphatNs3 = _mm256_setzero_pd();
+				
 			
 				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 					__m256d gammaSum=_mm256_load_pd(gamma_sum+j);
@@ -986,8 +1164,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					double as3Nj1 = a_new[(s+3)*hiddenStates+j+1] * gamma_sum1; 
 					double as3Nj2 = a_new[(s+3)*hiddenStates+j+2] * gamma_sum2; 
 					double as3Nj3 = a_new[(s+3)*hiddenStates+j+3] * gamma_sum3;  */
-				
-					__m256d zeroes=_mm256_setzero_pd();
+					__m256d zeroes = _mm256_setzero_pd();
 					_mm256_store_pd(a_new+s*hiddenStates+j,zeroes);
 					_mm256_store_pd(a_new+(s+1)*hiddenStates+j,zeroes);
 					_mm256_store_pd(a_new+(s+2)*hiddenStates+j,zeroes);
@@ -1038,7 +1215,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					transitionMatrix[(s+3)*hiddenStates + j+2] = as3Nj2;
 					transitionMatrix[(s+3)*hiddenStates + j+3] = as3Nj3; */
 					
-					
+					/*
 					as0=_mm256_hadd_pd(as0,as0);
 					as1=_mm256_hadd_pd(as1,as1);
 					as2=_mm256_hadd_pd(as2,as2);
@@ -1048,6 +1225,20 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(as1,1))+_mm256_cvtsd_f64(as1);
 					alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(as2,1))+_mm256_cvtsd_f64(as2);
 					alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(as3,1))+_mm256_cvtsd_f64(as3);
+					
+					*/
+
+					
+					
+					
+					__m256d alphaFactor = _mm256_load_pd(alpha + j);
+					
+					alphatNs0 =_mm256_fmadd_pd(alphaFactor,as0,alphatNs0);
+					alphatNs1 =_mm256_fmadd_pd(alphaFactor,as1,alphatNs1);
+					alphatNs2 =_mm256_fmadd_pd(alphaFactor,as2,alphatNs2);
+					alphatNs3 =_mm256_fmadd_pd(alphaFactor,as3,alphatNs3);
+
+					
 					/* alphatNs0 += alphaFactor0 * as0Nj0;
 					alphatNs0 += alphaFactor1 * as0Nj1;
 					alphatNs0 += alphaFactor2 * as0Nj2;
@@ -1068,6 +1259,27 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					alphatNs3 += alphaFactor2 * as3Nj2;
 					alphatNs3 += alphaFactor3 * as3Nj3; */
 				}
+				
+			
+				__m256d emission = _mm256_load_pd(emissionMatrix + yt*hiddenStates + s);
+				
+				__m256d alpha01 = _mm256_hadd_pd(alphatNs0, alphatNs1);
+				__m256d alpha23 = _mm256_hadd_pd(alphatNs2, alphatNs3);
+								
+				__m256d permute01 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00110000);
+				__m256d permute23 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00100001);
+								
+				__m256d alpha_tot = _mm256_add_pd(permute01, permute23);
+
+				__m256d alpha_tot_mul = _mm256_mul_pd(alpha_tot,emission);
+
+				ctt_vec = _mm256_add_pd(alpha_tot_mul,ctt_vec);
+				
+
+				_mm256_store_pd(alpha + hiddenStates + s,alpha_tot_mul);
+				
+				
+				/*
 				alphatNs0 *= emissionMatrix[yt*hiddenStates + s];
 				ctt += alphatNs0;
 				alpha[1*hiddenStates + s] = alphatNs0;
@@ -1083,60 +1295,106 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 				alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
 				ctt += alphatNs3;
 				alpha[1*hiddenStates + s+3] = alphatNs3;
+				*/
+				
 			}
 			
-		
-			//scaling factor for t 
-			ctt = 1.0 / ctt;
+
 			
-			scalingFactor=_mm256_set1_pd(ctt);
+					
+			__m256d perm1 = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
+	
+			__m256d shuffle11 = _mm256_shuffle_pd(ctt_vec, perm1, 0b0101);
+
+			__m256d shuffle21 = _mm256_shuffle_pd(perm1, ctt_vec, 0b0101);
+		
+			__m256d ctt_vec_add = _mm256_add_pd(ctt_vec, perm1);
+
+			__m256d ctt_temp = _mm256_add_pd(shuffle11, shuffle21);
+
+			__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
+
+			__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
+		
+	      		_mm256_storeu_pd(ct + 1,ctt_vec_div);  
+	      		
+	        
+	      		
+			//scaling factor for t 
+			//ctt = 1.0 / ctt;
+
+
 			//scale alpha(t)
 		        for(int s = 0; s<hiddenStates; s+=4){// s=new_state
-					__m256d alphas=_mm256_load_pd(alpha+hiddenStates+s);
-					_mm256_store_pd(alpha+hiddenStates+s,_mm256_mul_pd(alphas,scalingFactor));
+				__m256d alphas=_mm256_load_pd(alpha+hiddenStates+s);
+				__m256d alphas_mul = _mm256_mul_pd(alphas,ctt_vec_div);
+				_mm256_store_pd(alpha+hiddenStates+s,alphas_mul);
 		    	    /* alpha[1*hiddenStates + s] *= ctt;
 		    	    alpha[1*hiddenStates + s+1] *= ctt;
 		    	    alpha[1*hiddenStates + s+2] *= ctt;
 		    	    alpha[1*hiddenStates + s+3] *= ctt; */
 	        	}
-			ct[1] = ctt;
+			//ct[1] = ctt;
 
 
 
 
 
-			for(int t = 1; t < T-1; t++){
-				double ctt = 0.0;	
+
+
+
+
+
+
+
+
+
+
+			for(int t = 2; t < T-1; t++){
+				//double ctt = 0.0;	
+				__m256d ctt_vec = _mm256_setzero_pd();
 				const int yt = observations[t];	
 				for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+					/*
 					double alphatNs0 = 0;
 					double alphatNs1 = 0;
 					double alphatNs2 = 0;
 					double alphatNs3 = 0;
+					*/
+					
+					__m256d alphatNs0 = _mm256_setzero_pd();
+					__m256d alphatNs1 = _mm256_setzero_pd();
+					__m256d alphatNs2 = _mm256_setzero_pd();
+					__m256d alphatNs3 = _mm256_setzero_pd();
+				
 				
 					for(int j = 0; j < hiddenStates; j+=4){//j=old_states
-					__m256d alphaFactor=_mm256_load_pd(alpha+(t-1)*hiddenStates+j);
+						__m256d alphaFactor=_mm256_load_pd(alpha+(t-1)*hiddenStates+j);
 					
-					__m256d transition0=_mm256_load_pd(transitionMatrix+(s)*hiddenStates+j);
-					__m256d transition1=_mm256_load_pd(transitionMatrix+(s+1)*hiddenStates+j);
-					__m256d transition2=_mm256_load_pd(transitionMatrix+(s+2)*hiddenStates+j);
-					__m256d transition3=_mm256_load_pd(transitionMatrix+(s+3)*hiddenStates+j);
+						__m256d transition0=_mm256_load_pd(transitionMatrix+(s)*hiddenStates+j);
+						__m256d transition1=_mm256_load_pd(transitionMatrix+(s+1)*hiddenStates+j);
+						__m256d transition2=_mm256_load_pd(transitionMatrix+(s+2)*hiddenStates+j);
+						__m256d transition3=_mm256_load_pd(transitionMatrix+(s+3)*hiddenStates+j);
 					
-					__m256d alphat0=_mm256_mul_pd(alphaFactor,transition0);
-					__m256d alphat1=_mm256_mul_pd(alphaFactor,transition1);
-					__m256d alphat2=_mm256_mul_pd(alphaFactor,transition2);
-					__m256d alphat3=_mm256_mul_pd(alphaFactor,transition3);
 					
-					alphat0=_mm256_hadd_pd(alphat0,alphat0);
-					alphat1=_mm256_hadd_pd(alphat1,alphat1);
-					alphat2=_mm256_hadd_pd(alphat2,alphat2);
-					alphat3=_mm256_hadd_pd(alphat3,alphat3);
-					
-					alphatNs0+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat0,1))+_mm256_cvtsd_f64(alphat0);
-					alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat1,1))+_mm256_cvtsd_f64(alphat1);
-					alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat2,1))+_mm256_cvtsd_f64(alphat2);
-					alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat3,1))+_mm256_cvtsd_f64(alphat3);
-					
+						/*
+						__m256d alphat0=_mm256_mul_pd(alphaFactor,transition0);
+						__m256d alphat1=_mm256_mul_pd(alphaFactor,transition1);
+						__m256d alphat2=_mm256_mul_pd(alphaFactor,transition2);
+						__m256d alphat3=_mm256_mul_pd(alphaFactor,transition3);
+	
+										
+						alphat0=_mm256_hadd_pd(alphat0,alphat0);
+						alphat1=_mm256_hadd_pd(alphat1,alphat1);
+						alphat2=_mm256_hadd_pd(alphat2,alphat2);
+						alphat3=_mm256_hadd_pd(alphat3,alphat3);
+						
+						alphatNs0+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat0,1))+_mm256_cvtsd_f64(alphat0);
+						alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat1,1))+_mm256_cvtsd_f64(alphat1);
+						alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat2,1))+_mm256_cvtsd_f64(alphat2);
+						alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat3,1))+_mm256_cvtsd_f64(alphat3);
+						*/
+						
 						/* double alphaFactor0 = alpha[(t-1)*hiddenStates + j];
 						double alphaFactor1 = alpha[(t-1)*hiddenStates + j+1];
 						double alphaFactor2 = alpha[(t-1)*hiddenStates + j+2]; 
@@ -1161,7 +1419,35 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 						alphatNs3 += alphaFactor1 * transitionMatrix[(s+3)*hiddenStates + j+1];
 						alphatNs3 += alphaFactor2 * transitionMatrix[(s+3)*hiddenStates + j+2];
 						alphatNs3 += alphaFactor3 * transitionMatrix[(s+3)*hiddenStates + j+3]; */
+
+						alphatNs0 =_mm256_fmadd_pd(alphaFactor,transition0,alphatNs0);
+						alphatNs1 =_mm256_fmadd_pd(alphaFactor,transition1,alphatNs1);
+						alphatNs2 =_mm256_fmadd_pd(alphaFactor,transition2,alphatNs2);
+						alphatNs3 =_mm256_fmadd_pd(alphaFactor,transition3,alphatNs3);
+
+
 					}
+					
+					
+							
+					__m256d emission = _mm256_load_pd(emissionMatrix + yt*hiddenStates + s);
+				
+					__m256d alpha01 = _mm256_hadd_pd(alphatNs0, alphatNs1);
+					__m256d alpha23 = _mm256_hadd_pd(alphatNs2, alphatNs3);
+								
+					__m256d permute01 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00110000);
+					__m256d permute23 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00100001);
+								
+					__m256d alpha_tot = _mm256_add_pd(permute01, permute23);
+
+					__m256d alpha_tot_mul = _mm256_mul_pd(alpha_tot,emission);
+
+					ctt_vec = _mm256_add_pd(alpha_tot_mul,ctt_vec);
+					
+
+					_mm256_store_pd(alpha + t*hiddenStates + s,alpha_tot_mul);
+				
+					/*
 					alphatNs0 *= emissionMatrix[yt*hiddenStates + s];
 					ctt += alphatNs0;
 						alpha[t*hiddenStates + s] = alphatNs0;
@@ -1177,35 +1463,60 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
 					ctt += alphatNs3;
 					alpha[t*hiddenStates + s+3] = alphatNs3;
+					*/
 				}
 			
+			
+				__m256d perm = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
+	
+				__m256d shuffle1 = _mm256_shuffle_pd(ctt_vec, perm, 0b0101);
+
+				__m256d shuffle2 = _mm256_shuffle_pd(perm, ctt_vec, 0b0101);
+		
+				__m256d ctt_vec_add = _mm256_add_pd(ctt_vec, perm);
+
+				__m256d ctt_temp = _mm256_add_pd(shuffle1, shuffle2);
+
+				__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
+
+				__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
+		
+	      			_mm256_storeu_pd(ct + t,ctt_vec_div);        
+			
+			
 				//scaling factor for t 
-				ctt = 1.0 / ctt;
-				scalingFactor=_mm256_set1_pd(ctt);
+				//ctt = 1.0 / ctt;
+				//scalingFactor=_mm256_set1_pd(ctt);
 				//scale alpha(t)
 				for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 					__m256d alphas=_mm256_load_pd(alpha+t*hiddenStates+s);
-					alphas=_mm256_mul_pd(alphas,scalingFactor);
-					_mm256_store_pd(alpha+t*hiddenStates+s,alphas);
+					__m256d alphas_mul=_mm256_mul_pd(alphas,ctt_vec_div);
+					_mm256_store_pd(alpha+t*hiddenStates+s,alphas_mul);
 					/* alpha[t*hiddenStates+s] *= ctt;
 					alpha[t*hiddenStates+s+1] *= ctt;
 					alpha[t*hiddenStates+s+2] *= ctt;
 					alpha[t*hiddenStates+s+3] *= ctt; */
 				}
-				ct[t] = ctt;
+				//ct[t] = ctt;
+
 			}
 			
 			//compute alpha(T-1)
-			ctt = 0.0;	
+
 			yt = observations[T-1];	
-			
+			__m256d ctT_vec = _mm256_setzero_pd();
 			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
+				/*
 				double alphatNs0 = 0;
 				double alphatNs1 = 0;
 				double alphatNs2 = 0;
 				double alphatNs3 = 0;
+				*/
+				__m256d alphatNs0_vec = _mm256_setzero_pd();
+				__m256d alphatNs1_vec = _mm256_setzero_pd();
+				__m256d alphatNs2_vec = _mm256_setzero_pd();
+				__m256d alphatNs3_vec = _mm256_setzero_pd();
 				 
-				double* values = (double*) malloc(4  * sizeof(double));
 				for(int j = 0; j < hiddenStates; j+=4){//j=old_states
 					__m256d alphaFactor=_mm256_load_pd(alpha+(T-2)*hiddenStates+j);
 					
@@ -1214,6 +1525,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					__m256d transition2=_mm256_load_pd(transitionMatrix+(s+2)*hiddenStates+j);
 					__m256d transition3=_mm256_load_pd(transitionMatrix+(s+3)*hiddenStates+j);
 					
+					/*
 					__m256d alphat0=_mm256_mul_pd(alphaFactor,transition0);
 					__m256d alphat1=_mm256_mul_pd(alphaFactor,transition1);
 					__m256d alphat2=_mm256_mul_pd(alphaFactor,transition2);
@@ -1228,31 +1540,39 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					alphatNs1+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat1,1))+_mm256_cvtsd_f64(alphat1);
 					alphatNs2+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat2,1))+_mm256_cvtsd_f64(alphat2);
 					alphatNs3+=_mm_cvtsd_f64(_mm256_extractf128_pd(alphat3,1))+_mm256_cvtsd_f64(alphat3);
-					/* double alphaFactor0 = alpha[(T-2)*hiddenStates + j];
-					double alphaFactor1 = alpha[(T-2)*hiddenStates + j+1];
-					double alphaFactor2 = alpha[(T-2)*hiddenStates + j+2]; 
-					double alphaFactor3 = alpha[(T-2)*hiddenStates + j+3]; 
-			
-					alphatNs0 += alphaFactor0 * transitionMatrix[s*hiddenStates + j];
-					alphatNs0 += alphaFactor1 * transitionMatrix[s*hiddenStates + j+1];
-					alphatNs0 += alphaFactor2 * transitionMatrix[s*hiddenStates + j+2];
-					alphatNs0 += alphaFactor3 * transitionMatrix[s*hiddenStates + j+3];
-				
-					alphatNs1 += alphaFactor0 * transitionMatrix[(s+1)*hiddenStates + j];
-					alphatNs1 += alphaFactor1 * transitionMatrix[(s+1)*hiddenStates + j+1];
-					alphatNs1 += alphaFactor2 * transitionMatrix[(s+1)*hiddenStates + j+2];
-					alphatNs1 += alphaFactor3 * transitionMatrix[(s+1)*hiddenStates + j+3];
-				
-					alphatNs2 += alphaFactor0 * transitionMatrix[(s+2)*hiddenStates + j];
-					alphatNs2 += alphaFactor1 * transitionMatrix[(s+2)*hiddenStates + j+1];
-					alphatNs2 += alphaFactor2 * transitionMatrix[(s+2)*hiddenStates + j+2];
-					alphatNs2 += alphaFactor3 * transitionMatrix[(s+2)*hiddenStates + j+3];
-						
-					alphatNs3 += alphaFactor0 * transitionMatrix[(s+3)*hiddenStates + j];
-					alphatNs3 += alphaFactor1 * transitionMatrix[(s+3)*hiddenStates + j+1];
-					alphatNs3 += alphaFactor2 * transitionMatrix[(s+3)*hiddenStates + j+2];
-					alphatNs3 += alphaFactor3 * transitionMatrix[(s+3)*hiddenStates + j+3]; */
+					*/
+
+					alphatNs0_vec =_mm256_fmadd_pd(alphaFactor,transition0,alphatNs0_vec);
+					alphatNs1_vec =_mm256_fmadd_pd(alphaFactor,transition1,alphatNs1_vec);
+					alphatNs2_vec =_mm256_fmadd_pd(alphaFactor,transition2,alphatNs2_vec);
+					alphatNs3_vec =_mm256_fmadd_pd(alphaFactor,transition3,alphatNs3_vec);
+
+					
+					
+
+
 				}
+				
+				
+				__m256d emission = _mm256_load_pd(emissionMatrix + yt*hiddenStates + s);
+				
+				__m256d alpha01 = _mm256_hadd_pd(alphatNs0_vec, alphatNs1_vec);
+				__m256d alpha23 = _mm256_hadd_pd(alphatNs2_vec, alphatNs3_vec);
+							
+				__m256d permute01 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00110000);
+				__m256d permute23 = _mm256_permute2f128_pd(alpha01, alpha23, 0b00100001);
+								
+				__m256d alpha_tot = _mm256_add_pd(permute01, permute23);
+
+				__m256d alpha_tot_mul = _mm256_mul_pd(alpha_tot,emission);
+
+				ctT_vec = _mm256_add_pd(alpha_tot_mul,ctT_vec);
+					
+
+				_mm256_store_pd(alpha + (T-1)*hiddenStates + s,alpha_tot_mul);
+				
+				
+				/*
 				alphatNs0 *= emissionMatrix[yt*hiddenStates + s];
 				ctt += alphatNs0;
 				alpha[(T-1)*hiddenStates + s] = alphatNs0;
@@ -1268,17 +1588,35 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 				alphatNs3 *= emissionMatrix[yt*hiddenStates + s+3];
 				ctt += alphatNs3;
 				alpha[(T-1)*hiddenStates + s+3] = alphatNs3;
+				*/
 			}
+			
+						
 			//scaling factor for T-1
-			ctt = 1.0 / ctt;
-			scalingFactor=_mm256_set1_pd(ctt);
+			
+			__m256d perm2 = _mm256_permute2f128_pd(ctT_vec,ctT_vec,0b00000011);
+	
+			__m256d shuffle12 = _mm256_shuffle_pd(ctT_vec, perm2, 0b0101);
+
+			__m256d shuffle22 = _mm256_shuffle_pd(perm2, ctT_vec, 0b0101);
+		
+			__m256d ctT_vec_add = _mm256_add_pd(ctT_vec, perm2);
+
+			__m256d ctT_temp = _mm256_add_pd(shuffle12, shuffle22);
+
+			__m256d ctT_vec_tot = _mm256_add_pd(ctT_vec_add, ctT_temp);
+
+			__m256d ctT_vec_div = _mm256_div_pd(one,ctT_vec_tot);
+		
+	      		_mm256_storeu_pd(ct + (T-1),ctT_vec_div); 
+	      			        	    
 			
 			//scale alpha(t)
 			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 				__m256d alphaT1Ns=_mm256_load_pd(alpha+(T-1)*hiddenStates+s);
-				alphaT1Ns=_mm256_mul_pd(alphaT1Ns,scalingFactor);
-				_mm256_store_pd(alpha+(T-1)*hiddenStates+s,alphaT1Ns);
-				_mm256_store_pd(gamma_T+s,alphaT1Ns);
+				__m256d alphaT1Ns_mul=_mm256_mul_pd(alphaT1Ns,ctT_vec_div);
+				_mm256_store_pd(alpha+(T-1)*hiddenStates+s,alphaT1Ns_mul);
+				_mm256_store_pd(gamma_T+s,alphaT1Ns_mul);
 				
 				/* //s
 				double alphaT1Ns0 = alpha[(T-1) * hiddenStates + s]*ctt;
@@ -1298,14 +1636,20 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 				gamma_T[s+3] = alphaT1Ns3; 
 				 */
 			}
-			ct[T-1] = ctt;
-	
-			//FUSED BACKWARD and UPDATE STEP
+			//ct[T-1] = ctt;
 
-	
+			
+			
+			
+			
+			
+			
+			
+						
+			
+			
 			//Transpose transitionMatrix
 			for(int by = 0; by < hiddenStates; by+=4){
-				const int end = by + block_size;
 	
 				__m256d diag0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + by);
 				__m256d diag1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + by);
@@ -1329,8 +1673,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	
 				
 				//Offdiagonal blocks
-				for(int bx = end; bx < hiddenStates; bx+= block_size){
-					const int end_x = block_size + bx;					
+				for(int bx = by + 4; bx < hiddenStates; bx+= 4){
 										
 					__m256d upper0 = _mm256_load_pd(transitionMatrix + by*hiddenStates + bx);
 					__m256d upper1 = _mm256_load_pd(transitionMatrix + (by+1)*hiddenStates + bx);
@@ -1376,7 +1719,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 			}
 			
 			for(int s = 0; s < hiddenStates; s+=4){			        
-			        _mm256_store_pd(beta+s, _mm256_set1_pd(ctt));
+			        _mm256_store_pd(beta+s, ctT_vec_div);
 	       	 }
 	        
 	       	for(int s = 0; s < hiddenStates; s+=4){
@@ -1406,20 +1749,23 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
    			yt = observations[T-1];
 			for(int t = T-1; t > 0; t--){
 		
-				const double ctt = ct[t-1];
-				__m256d ctt_vec = _mm256_set_pd(ctt,ctt,ctt,ctt);
+				//const double ctt = ct[t-1];
+				__m256d ctt_vec = _mm256_set1_pd(ct[t-1]);//_mm256_set_pd(ctt,ctt,ctt,ctt);
 				const int yt1 = observations[t-1];
 				for(int s = 0; s < hiddenStates ; s+=4){
 
+					/*
 					double alphat1Ns0 = alpha[(t-1)*hiddenStates + s];
 					double alphat1Ns1 = alpha[(t-1)*hiddenStates + s+1];
 					double alphat1Ns2 = alpha[(t-1)*hiddenStates + s+2];
 					double alphat1Ns3 = alpha[(t-1)*hiddenStates + s+3];
+					*/
 					
-					__m256d alphat1Ns0_vec = _mm256_set1_pd(alphat1Ns0);
-					__m256d alphat1Ns1_vec = _mm256_set1_pd(alphat1Ns1);
-					__m256d alphat1Ns2_vec = _mm256_set1_pd(alphat1Ns2);
-					__m256d alphat1Ns3_vec = _mm256_set1_pd(alphat1Ns3);
+					
+					__m256d alphat1Ns0_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s]);
+					__m256d alphat1Ns1_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s+1]);
+					__m256d alphat1Ns2_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s+2]);
+					__m256d alphat1Ns3_vec = _mm256_set1_pd(alpha[(t-1)*hiddenStates + s+3]);
 												
 					__m256d beta_news0 = _mm256_setzero_pd();
 					__m256d beta_news1 = _mm256_setzero_pd();
@@ -1448,15 +1794,15 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 						__m256d a_new_vec3 = _mm256_load_pd(a_new + (s+3)*hiddenStates+j);
 						
 						
-						a_new_vec = _mm256_fmadd_pd(alphat1Ns0_vec, temp,a_new_vec);
-						a_new_vec1 = _mm256_fmadd_pd(alphat1Ns1_vec, temp1,a_new_vec1);
-						a_new_vec2 = _mm256_fmadd_pd(alphat1Ns2_vec, temp2,a_new_vec2);
-						a_new_vec3 = _mm256_fmadd_pd(alphat1Ns3_vec, temp3,a_new_vec3);
+						__m256d a_new_vec_fma = _mm256_fmadd_pd(alphat1Ns0_vec, temp,a_new_vec);
+						__m256d a_new_vec1_fma = _mm256_fmadd_pd(alphat1Ns1_vec, temp1,a_new_vec1);
+						__m256d a_new_vec2_fma = _mm256_fmadd_pd(alphat1Ns2_vec, temp2,a_new_vec2);
+						__m256d a_new_vec3_fma = _mm256_fmadd_pd(alphat1Ns3_vec, temp3,a_new_vec3);
 						
-						_mm256_store_pd(a_new + s*hiddenStates+j,a_new_vec);
-						_mm256_store_pd(a_new + (s+1)*hiddenStates+j, a_new_vec1);
-						_mm256_store_pd(a_new + (s+2)*hiddenStates+j,a_new_vec2);
-						_mm256_store_pd(a_new + (s+3)*hiddenStates+j,a_new_vec3);
+						_mm256_store_pd(a_new + s*hiddenStates+j,a_new_vec_fma);
+						_mm256_store_pd(a_new + (s+1)*hiddenStates+j, a_new_vec1_fma);
+						_mm256_store_pd(a_new + (s+2)*hiddenStates+j,a_new_vec2_fma);
+						_mm256_store_pd(a_new + (s+3)*hiddenStates+j,a_new_vec3_fma);
 						
 						beta_news0 = _mm256_add_pd(beta_news0,temp);
 						beta_news1 = _mm256_add_pd(beta_news1,temp1);
@@ -1464,6 +1810,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 						beta_news3 = _mm256_add_pd(beta_news3,temp3);
 					}
 					
+					/*
 					//XXX PROBABLY BETTER REDUCTION
 					_mm256_store_pd(reduction,beta_news0);
 					beta_workingset[0] = reduction[0] + reduction[1] + reduction[2] + reduction[3] ;
@@ -1476,23 +1823,33 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 					
 					_mm256_store_pd(reduction,beta_news3);
 					beta_workingset[3] = reduction[0] + reduction[1] + reduction[2] + reduction[3] ;
+					*/
 					
-					__m256d beta_news = _mm256_load_pd(beta_workingset);
+					//__m256d beta_news = _mm256_load_pd(beta_workingset);
 					
-		
-					__m256d ps = _mm256_mul_pd(alphatNs, beta_news);
-					_mm256_store_pd(stateProb + s, ps);
-					
-					beta_news = _mm256_mul_pd(beta_news, ctt_vec);
-					_mm256_store_pd(beta_new + s, beta_news);
-					
+						
 					__m256d gamma_sum_vec = _mm256_load_pd(gamma_sum + s);
-					gamma_sum_vec = _mm256_add_pd(gamma_sum_vec, ps);
-					_mm256_store_pd(gamma_sum+s, gamma_sum_vec);
-					
 					__m256d b_new_vec = _mm256_load_pd(b_new +yt1*hiddenStates+ s);
-					b_new_vec = _mm256_add_pd(b_new_vec, ps);
-					_mm256_store_pd(b_new +yt1*hiddenStates+ s, b_new_vec);
+					
+					//XXX Better Reduction
+					__m256d beta01 = _mm256_hadd_pd(beta_news0, beta_news1);
+					__m256d beta23 = _mm256_hadd_pd(beta_news2, beta_news3);
+							
+					__m256d permute01 = _mm256_permute2f128_pd(beta01, beta23, 0b00110000);
+					__m256d permute23 = _mm256_permute2f128_pd(beta01, beta23, 0b00100001);
+								
+					__m256d beta_news = _mm256_add_pd(permute01, permute23);
+					
+					__m256d gamma_sum_vec_fma = _mm256_fmadd_pd(alphatNs, beta_news, gamma_sum_vec);
+					__m256d b_new_vec_fma = _mm256_fmadd_pd(alphatNs, beta_news,b_new_vec);
+					__m256d ps = _mm256_mul_pd(alphatNs, beta_news);
+					__m256d beta_news_mul = _mm256_mul_pd(beta_news, ctt_vec);
+					
+					
+					_mm256_store_pd(stateProb + s, ps);
+					_mm256_store_pd(beta_new + s, beta_news_mul);
+					_mm256_store_pd(gamma_sum+s, gamma_sum_vec_fma);
+					_mm256_store_pd(b_new +yt1*hiddenStates+ s, b_new_vec_fma);
 						
 		
 				}
@@ -1506,20 +1863,14 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
         
         		steps+=1;
         		
-        		
         	        //log likelihood
 		        double oldLogLikelihood=logLikelihood;
 	
 		        double newLogLikelihood = 0.0;
 		        //evidence with alpha only:
-	
-			#ifdef __GNUC__
-		        for(int time = 0; time < T; time++){
-			        newLogLikelihood -= log2(ct[time]);
-			 }
 			
-			#elif __INTEL_COMPILER__
-			
+			#ifdef __INTEL_COMPILER
+
 			__m256d logLikelihood_vec = _mm256_setzero_pd();
 			
 		        for(int time = 0; time < T; time+=4){
@@ -1531,7 +1882,17 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 		        _mm256_store_pd(reduction,logLikelihood_vec);
 		       
 			newLogLikelihood = reduction[0] +reduction[1] +reduction[2] +reduction[3];
+			
+			#elif __GNUC__
+			
+		        for(int time = 0; time < T; time++){
+			        newLogLikelihood -= log2(ct[time]);
+			 }
 			#endif
+			
+
+			
+			
 			
 		        logLikelihood=newLogLikelihood;
 		        
@@ -1539,20 +1900,33 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 	
 		}while (disparance>EPSILON && steps<maxSteps);
     
+		yt = observations[T-1];
+		//add remaining parts of the sum of gamma 
+		for(int s = 0; s < hiddenStates; s+=4){
+	        	
+	        	__m256d gamma_Ts = _mm256_load_pd(gamma_T + s);
+	        	__m256d gamma_sums = _mm256_load_pd(gamma_sum + s);
+	        	__m256d b_new_vec = _mm256_load_pd(b_new + yt*hiddenStates + s);
+	        	
+	        	
+	        	__m256d gamma_tot = _mm256_add_pd(gamma_Ts, gamma_sums);
+	        	__m256d gamma_T_inv =  _mm256_div_pd(one,gamma_tot);
+			__m256d gamma_sums_inv = _mm256_div_pd(one,gamma_sums);
+			
+			_mm256_store_pd(gamma_T+s,gamma_T_inv);
+			_mm256_store_pd(gamma_sum + s,gamma_sums_inv);
+	        	_mm256_store_pd(b_new + yt*hiddenStates + s, _mm256_add_pd(b_new_vec, gamma_Ts));
+	        	
+   
+		}
 		
 		
-		
-		__m256d one = _mm256_set1_pd(1.0);
 		for(int s = 0; s < hiddenStates; s+=4){
 			
-			__m256d gamma_sums = _mm256_load_pd(gamma_sum+s);
-			__m256d gamma_sums_inv = _mm256_div_pd(one,gamma_sums);
-			_mm256_store_pd(reduction,gamma_sums_inv);
-			
-			__m256d gamma_inv0 = _mm256_set1_pd(reduction[0]);
-			__m256d gamma_inv1 = _mm256_set1_pd(reduction[1]);		
-			__m256d gamma_inv2 = _mm256_set1_pd(reduction[2]);		
-			__m256d gamma_inv3 = _mm256_set1_pd(reduction[3]);
+			__m256d gamma_inv0 = _mm256_set1_pd(gamma_sum[s]);
+			__m256d gamma_inv1 = _mm256_set1_pd(gamma_sum[s+1]);		
+			__m256d gamma_inv2 = _mm256_set1_pd(gamma_sum[s+2]);		
+			__m256d gamma_inv3 = _mm256_set1_pd(gamma_sum[s+3]);
 					
 			for(int j = 0; j < hiddenStates; j+=4){
 			
@@ -1576,19 +1950,7 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 
 
 		
-		yt = observations[T-1];
-		//add remaining parts of the sum of gamma 
-		for(int s = 0; s < hiddenStates; s+=4){
-	        	
-	        	__m256d gamma_Ts = _mm256_load_pd(gamma_T + s);
-	        	__m256d gamma_sums = _mm256_load_pd(gamma_sum + s);
-	        	__m256d gamma_tot = _mm256_add_pd(gamma_Ts, gamma_sums);
-	        	_mm256_store_pd(gamma_T+s, _mm256_div_pd(one,gamma_tot));
-	        	__m256d b_new_vec = _mm256_load_pd(b_new + yt*hiddenStates + s);
-	        	_mm256_store_pd(b_new + yt*hiddenStates + s, _mm256_add_pd(b_new_vec, gamma_Ts));
-	        	
-   
-		}
+
 		
 		//compute new emission matrix
 		for(int v = 0; v < differentObservables; v+=4){
@@ -1602,19 +1964,24 @@ myInt64 bw(double* const transitionMatrix, double* const emissionMatrix, double*
 				__m256d b_newv2 = _mm256_load_pd(b_new + (v+2) * hiddenStates + s);
 				__m256d b_newv3 = _mm256_load_pd(b_new + (v+3) * hiddenStates + s);
 				
-				_mm256_store_pd(emissionMatrix + v *hiddenStates + s, _mm256_mul_pd(b_newv0,gamma_Tv));
-				_mm256_store_pd(emissionMatrix + (v+1) *hiddenStates + s, _mm256_mul_pd(b_newv1,gamma_Tv));
-				_mm256_store_pd(emissionMatrix + (v+2) *hiddenStates + s, _mm256_mul_pd(b_newv2,gamma_Tv));
-				_mm256_store_pd(emissionMatrix + (v+3) *hiddenStates + s, _mm256_mul_pd(b_newv3,gamma_Tv));
+				__m256d b_temp0 = _mm256_mul_pd(b_newv0,gamma_Tv);
+				__m256d b_temp1 = _mm256_mul_pd(b_newv1,gamma_Tv);
+				__m256d b_temp2 = _mm256_mul_pd(b_newv2,gamma_Tv);
+				__m256d b_temp3 = _mm256_mul_pd(b_newv3,gamma_Tv);
+				
+				_mm256_store_pd(emissionMatrix + v *hiddenStates + s, b_temp0);
+				_mm256_store_pd(emissionMatrix + (v+1) *hiddenStates + s, b_temp1);
+				_mm256_store_pd(emissionMatrix + (v+2) *hiddenStates + s, b_temp2);
+				_mm256_store_pd(emissionMatrix + (v+3) *hiddenStates + s, b_temp3);
 		
 			}
 		}
-
+		
 
 	myInt64 cycles = stop_tsc(start);
         cycles = cycles/steps;
         return cycles;
-
+	
 
 
 
@@ -2330,7 +2697,7 @@ int main(int argc, char *argv[]){
 	double* a_new = (double*) _mm_malloc(hiddenStates * hiddenStates * sizeof(double),32);
 	double* b_new = (double*) _mm_malloc(differentObservables*hiddenStates * sizeof(double),32);
 	
-	double* ct = (double*) _mm_malloc(T*sizeof(double),32);
+	double* ct = (double*) _mm_malloc((T+4)*sizeof(double),32);
 
 	double* beta = (double*) _mm_malloc(hiddenStates  * sizeof(double),32);
 	double* beta_new = (double*) _mm_malloc(hiddenStates * sizeof(double),32);
