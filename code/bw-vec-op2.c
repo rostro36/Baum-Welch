@@ -815,7 +815,6 @@ int main(int argc, char *argv[]){
 		
 		start = start_tsc();
         
-        	__m256d one = _mm256_set1_pd(1.0);
               
 		for(int by = 0; by < hiddenStates; by+=4){
 	
@@ -932,6 +931,7 @@ int main(int argc, char *argv[]){
 	        	}	
 	        	
 	        //Reduction of ct_vec
+	        __m256d one1 = _mm256_set1_pd(1.0);
 	        __m256d perm = _mm256_permute2f128_pd(ct0_vec,ct0_vec,0b00000011);
 	
 		__m256d shuffle1 = _mm256_shuffle_pd(ct0_vec, perm, 0b0101);
@@ -943,7 +943,7 @@ int main(int argc, char *argv[]){
 		__m256d ct0_temp = _mm256_add_pd(shuffle1, shuffle2);
 		__m256d ct0_vec_tot = _mm256_add_pd(ct0_vec_add, ct0_temp);
 				
-		__m256d ct0_vec_div = _mm256_div_pd(one ,ct0_vec_tot);
+		__m256d ct0_vec_div = _mm256_div_pd(one1 ,ct0_vec_tot);
 			
 	      	_mm256_storeu_pd(ct,ct0_vec_div);
 	        
@@ -1080,6 +1080,7 @@ int main(int argc, char *argv[]){
 			}
 			
 			
+			__m256d one1 =_mm256_set1_pd(1.0);
 			__m256d perm = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
 
 			__m256d shuffle1 = _mm256_shuffle_pd(ctt_vec, perm, 0b0101);
@@ -1092,7 +1093,7 @@ int main(int argc, char *argv[]){
 
 			__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
 
-			__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
+			__m256d ctt_vec_div = _mm256_div_pd(one1,ctt_vec_tot);
 		
       			_mm256_storeu_pd(ct + t,ctt_vec_div); 
 			
@@ -1220,7 +1221,7 @@ int main(int argc, char *argv[]){
 			
 						
 			//scaling factor for T-1
-			
+			__m256d one2 = _mm256_set1_pd(1.0);
 			__m256d perm1 = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
 	
 			__m256d shuffle11 = _mm256_shuffle_pd(ctt_vec, perm1, 0b0101);
@@ -1233,7 +1234,7 @@ int main(int argc, char *argv[]){
 
 			__m256d ctt_vec_tot = _mm256_add_pd(ctt_vec_add, ctt_temp);
 
-			__m256d ctt_vec_div = _mm256_div_pd(one,ctt_vec_tot);
+			__m256d ctt_vec_div = _mm256_div_pd(one2,ctt_vec_tot);
 		
 	      		_mm256_storeu_pd(ct + (T-1),ctt_vec_div); 
 	      			
@@ -1512,6 +1513,7 @@ int main(int argc, char *argv[]){
 			yt = observations[T-1];
 			//add remaining parts of the sum of gamma 
 			
+			__m256d ones=_mm256_set1_pd(1.0);
 			for(int s = 0; s < hiddenStates; s+=4){
 				__m256d gamma_Ts=_mm256_load_pd(gamma_T+s);
 				__m256d gamma_sums=_mm256_load_pd(gamma_sum+s);
@@ -1519,8 +1521,8 @@ int main(int argc, char *argv[]){
 				
 				__m256d gamma_tot=_mm256_add_pd(gamma_Ts,gamma_sums);
 				__m256d b_add=_mm256_add_pd(b,gamma_Ts);
-				__m256d gamma_tot_div=_mm256_div_pd(one,gamma_tot);
-				__m256d gamma_sums_div=_mm256_div_pd(one,gamma_sums);
+				__m256d gamma_tot_div=_mm256_div_pd(ones,gamma_tot);
+				__m256d gamma_sums_div=_mm256_div_pd(ones,gamma_sums);
 				
 				
 				_mm256_store_pd(gamma_T+s,gamma_tot_div);
@@ -1560,9 +1562,8 @@ int main(int argc, char *argv[]){
 	   
 			}
 
-			//compute new emission matrix
+						//compute new emission matrix
 			__m256d zero = _mm256_setzero_pd();
-			
 			for(int v = 0; v < differentObservables; v+=4){
 				for(int s = 0; s < hiddenStates; s+=4){
 				
@@ -1776,7 +1777,8 @@ int main(int argc, char *argv[]){
 		  	      alpha[s+3] = alphas3; */
 	        	}	
 	        	
-	        		        	
+			__m256d one = _mm256_set1_pd(1.0);
+	        	
 	        	__m256d perm = _mm256_permute2f128_pd(ct0_vec,ct0_vec,0b00000011);
 	
 			__m256d shuffle1 = _mm256_shuffle_pd(ct0_vec, perm, 0b0101);
@@ -2167,6 +2169,7 @@ int main(int argc, char *argv[]){
 				}
 			
 			
+				__m256d one = _mm256_set1_pd(1.0);
 				__m256d perm = _mm256_permute2f128_pd(ctt_vec,ctt_vec,0b00000011);
 	
 				__m256d shuffle1 = _mm256_shuffle_pd(ctt_vec, perm, 0b0101);
@@ -2293,6 +2296,7 @@ int main(int argc, char *argv[]){
 			
 						
 			//scaling factor for T-1
+			__m256d one1 = _mm256_set1_pd(1.0);
 			
 			__m256d perm2 = _mm256_permute2f128_pd(ctT_vec,ctT_vec,0b00000011);
 	
@@ -2306,7 +2310,7 @@ int main(int argc, char *argv[]){
 
 			__m256d ctT_vec_tot = _mm256_add_pd(ctT_vec_add, ctT_temp);
 
-			__m256d ctT_vec_div = _mm256_div_pd(one,ctT_vec_tot);
+			__m256d ctT_vec_div = _mm256_div_pd(one1,ctT_vec_tot);
 		
 	      		_mm256_storeu_pd(ct + (T-1),ctT_vec_div); 
 	      			        	    
@@ -2602,6 +2606,7 @@ int main(int argc, char *argv[]){
     
 		yt = observations[T-1];
 		//add remaining parts of the sum of gamma 
+		__m256d one = _mm256_set1_pd(1.0);
 		for(int s = 0; s < hiddenStates; s+=4){
 	        	
 	        	__m256d gamma_Ts = _mm256_load_pd(gamma_T + s);
