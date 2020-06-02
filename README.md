@@ -41,8 +41,9 @@ From inside code folder:
 ## Comparison with umdhmm
 Inside the umdhmm folder:
 - make
+
 Inside the code folder:
-- check that the printing of the models is uncommented
+- check that the printing of the models is uncommented in bw-$version.c
 - gcc -o run bw-$version.c io.c bw.tested.c tested.h
 - ./run $seed $hiddenStates $differentObservables $T
 - ../umdhmm/esthmm -I model.hmm sequence.seq
