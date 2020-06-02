@@ -38,11 +38,11 @@ reo: bw-reo.o $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 #COMPILATION OF VEC (NEEDS ADDITIONAL FLAG)
-bw-vec-op.o: bw-vec-op.c $(DEPS)
+bw-vec.o: bw-vec.c $(DEPS)
 	$(CC) $(CFLAGS) $(VECFLAGS) -c -o $@ $< 
 
 #LINKING ALL TOGETHER
-vec: bw-vec-op.o $(OBJ) 
+vec: bw-vec.o $(OBJ) 
 	$(CC) $(CFLAGS) $(VECFLAGS) -o $@ $^ $(LIBS)
 
 #COMPILATION OF BLAS (NEEDS ADDITIONAL FLAG)
