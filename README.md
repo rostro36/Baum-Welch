@@ -106,19 +106,19 @@ All other files with numbers are listed in the history below for archive reasons
 - vec1.2:
 	* like url1.2 but with vectorized update step, final scaling and finishing criteria. To use vectorized finishing criteria you have to compile with icc and the number of observations (T) has to be divisible by 4.
 - vec-simple:
-	* like vec1.2 but with vectorized intial step and forward step (e.g. fully vectorized)
+	* like vec1.2 but with vectorized intial step and forward step (e.g. fully vectorized).
 - vec-op:
-	* like vec-simple but better usage of vectorization. Especially for reductions and transpose
+	* like vec-simple but better usage of vectorization. Especially for reductions and transpose.
 - vec-op2:
-	* like vec-op but ct vector 4 times smaller
+	* like vec-op but ct vector 4 times smaller.
 - vec:
-	* final vectorized version. Like vec-op2 but with globas one vector
+	* final vectorized version. Like vec-op2 but with global one vector.
 - vec-op4x8
-	* like vec but the inner loops are unrolled to stepsize 8
+	* like vec but the inner loops are unrolled to stepsize 8.
 - vec-op8x4
-	* like vec but the outer loops are unrolled to stepsize 8
--vec-op8x8
-	* like vec but the inner and outer loops are unrolled to stepsize 8
+	* like vec but the outer loops are unrolled to stepsize 8.
+- vec-op8x8
+	* like vec but the inner and outer loops are unrolled to stepsize 8.
 
 ## Usage baum-welch.r
 - open with RStudio
