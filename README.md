@@ -38,6 +38,16 @@ From inside code folder:
 - get linking part from [here](https://software.intel.com/content/www/us/en/develop/articles/intel-mkl-link-line-advisor.html)
     - add this to other files e.g. ~~~gcc -o blas bw-bla.c io.c bw-tested.c -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl~~~
 
+## Comparison with umdhmm
+Inside the umdhmm folder:
+- make
+Inside the code folder:
+- check that the printing of the models is uncommented
+- gcc -o run bw-$version.c io.c bw.tested.c tested.h
+- ./run $seed $hiddenStates $differentObservables $T
+- ../umdhmm/esthmm -I model.hmm sequence.seq
+    
+
 ## Naming schema
 There are different milestones of our program. The final version of that milestone is indicated with bw-$name.c. (url has no final version.)
 To each milestone version is next to the implementation also a bw-$name-cg.c file, which is used to read out cachegrind.
