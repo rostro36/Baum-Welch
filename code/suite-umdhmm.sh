@@ -8,7 +8,7 @@ hiddenStates=( 32 )
 Ts=( 32 64 128 )
 for flag in "${flags[@]}"
 do
-	gcc $flag -mfma -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
+    gcc $flag -mfma -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
     for seed in "${seeds[@]}"
     do
         for hiddenState in "${hiddenStates[@]}"
