@@ -963,9 +963,6 @@ int main(int argc, char *argv[]){
 	        
 	        
 	
-	
-
-        	__m256d one = _mm256_set1_pd(1.0);
 
 		for(int t = 1; t < T-1; t++){
 			//double ctt = 0.0;	
@@ -1245,9 +1242,9 @@ int main(int argc, char *argv[]){
 			//scale alpha(t)
 			for(int s = 0; s<hiddenStates; s+=4){// s=new_state
 				__m256d alphaT1Ns=_mm256_load_pd(alpha+(T-1)*hiddenStates+s);
-				alphaT1Ns=_mm256_mul_pd(alphaT1Ns,ctt_vec_div);
-				_mm256_store_pd(alpha+(T-1)*hiddenStates+s,alphaT1Ns);
-				_mm256_store_pd(gamma_T+s,alphaT1Ns);
+				__m256d alphaT1Ns_mul=_mm256_mul_pd(alphaT1Ns,ctt_vec_div);
+				_mm256_store_pd(alpha+(T-1)*hiddenStates+s,alphaT1Ns_mul);
+				_mm256_store_pd(gamma_T+s,alphaT1Ns_mul);
 				
 				/* //s
 				double alphaT1Ns0 = alpha[(T-1) * hiddenStates + s]*ctt;
@@ -1564,22 +1561,32 @@ int main(int argc, char *argv[]){
 	   
 			}
 
-			//compute new emission matrix
+						//compute new emission matrix
 			__m256d zero = _mm256_setzero_pd();
-			for(int v = 0; v < differentObservables; v++/*=4*/){
+			for(int v = 0; v < differentObservables; v+=4){
 				for(int s = 0; s < hiddenStates; s+=4){
-					__m256d gammaT=_mm256_load_pd(gamma_T+s);
-					/* 
-					double gamma_T0 = gamma_T[s];
-					double gamma_T1 = gamma_T[s+1];
-					double gamma_T2 = gamma_T[s+2];
-					double gamma_T3 = gamma_T[s+3]; */
 				
+					__m256d gamma_Tv = _mm256_load_pd(gamma_T + s);
 				
-					__m256d b=_mm256_load_pd(b_new+v*hiddenStates+s);
-					__m256d b_mul=_mm256_mul_pd(b,gammaT);
-					_mm256_store_pd(emissionMatrix+v*hiddenStates+s,b_mul);
+					__m256d b_newv0 = _mm256_load_pd(b_new + v * hiddenStates + s);
+					__m256d b_newv1 = _mm256_load_pd(b_new + (v+1) * hiddenStates + s);
+					__m256d b_newv2 = _mm256_load_pd(b_new + (v+2) * hiddenStates + s);
+					__m256d b_newv3 = _mm256_load_pd(b_new + (v+3) * hiddenStates + s);
+				
+					__m256d b_temp0 = _mm256_mul_pd(b_newv0,gamma_Tv);
+					__m256d b_temp1 = _mm256_mul_pd(b_newv1,gamma_Tv);
+					__m256d b_temp2 = _mm256_mul_pd(b_newv2,gamma_Tv);
+					__m256d b_temp3 = _mm256_mul_pd(b_newv3,gamma_Tv);
+				
+					_mm256_store_pd(emissionMatrix + v *hiddenStates + s, b_temp0);
+					_mm256_store_pd(emissionMatrix + (v+1) *hiddenStates + s, b_temp1);
+					_mm256_store_pd(emissionMatrix + (v+2) *hiddenStates + s, b_temp2);
+					_mm256_store_pd(emissionMatrix + (v+3) *hiddenStates + s, b_temp3);
+		
 					_mm256_store_pd(b_new+v*hiddenStates+s,zero);
+					_mm256_store_pd(b_new+(v+1)*hiddenStates+s,zero);
+					_mm256_store_pd(b_new+(v+2)*hiddenStates+s,zero);
+					_mm256_store_pd(b_new+(v+3)*hiddenStates+s,zero);
 					/* emissionMatrix[v*hiddenStates + s] = b_new[v*hiddenStates + s] * gamma_T0;
 					b_new[v*hiddenStates + s] = 0.0;
 					
@@ -2593,7 +2600,9 @@ int main(int argc, char *argv[]){
 		}while (disparance>EPSILON && steps<maxSteps);
     
 		yt = observations[T-1];
+		
 		//add remaining parts of the sum of gamma 
+		__m256d one = _mm256_set1_pd(1.0);
 		for(int s = 0; s < hiddenStates; s+=4){
 	        	
 	        	__m256d gamma_Ts = _mm256_load_pd(gamma_T + s);
