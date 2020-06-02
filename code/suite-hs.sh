@@ -1,30 +1,33 @@
 #!/bin/bash
 
-file=( "stb" "cop" "reo" "vec" "alt" )
+files=( "stb" "cop" "reo" "vec" "alt" )
 compilers=( "g" "i" )
 flags=( "-O2" )
 seeds=( 36 )
 hiddenStates=( 8 16 32 64 128 256 512 1024)
 differentObservables=( 8 64 128 )
 Ts=( 32 512 1028 )
-for compiler in "${compilers[@]}"
-do
-    for flag in "${flags[@]}"
+for file in "${files[@]}"
     do
-	    "$compiler"cc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
-        for seed in "${seeds[@]}"
+    for compiler in "${compilers[@]}"
+    do
+        for flag in "${flags[@]}"
         do
-            arraylength=${#hiddenStates[@]}
-            for ((place=0; place<${arraylength}; place++));
+	        "$compiler"cc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
+            for seed in "${seeds[@]}"
             do
-                T=${Ts[place]}
-                differentObservable=${differentObservables[place]}
-                for hiddenState in "${hiddenStates[@]}"
+                arraylength=${#hiddenStates[@]}
+                for ((place=0; place<${arraylength}; place++));
                 do
-                    echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-time-hs.txt"
-                    ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-time-hs.txt"
-                    echo `date +%m-%d.%H:%M:%S`
-                    echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
+                    T=${Ts[place]}
+                    differentObservable=${differentObservables[place]}
+                    for hiddenState in "${hiddenStates[@]}"
+                    do
+                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-time-hs.txt"
+                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-time-hs.txt"
+                        echo `date +%m-%d.%H:%M:%S`
+                        echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
+                    done
                 done
             done
         done
