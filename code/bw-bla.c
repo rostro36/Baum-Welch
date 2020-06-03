@@ -139,7 +139,253 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	return;
 
 }
+myInt64 bw(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T, double* beta, double* beta_new ,double* alpha, char* buf, int maxSteps){
+     double logLikelihood=-DBL_MAX;
+     double disparance;
+     int steps=1;
+       	_flush_cache(buf,BUFSIZE); // ensure the cache is cold
+		myInt64 start = start_tsc();
 
+	double ct0 = 0.0;
+	//compute alpha(0) and scaling factor for t = 0
+    
+	int y0 = y[0];
+	for(int s = 0; s < N; s++){
+		double alphas = p[s] * b[y0*N + s];
+		ct0 += alphas;
+		alpha[s] = alphas;
+	}
+	
+	ct0 = 1.0 / ct0;
+    
+    cblas_dscal(N,ct0,alpha,1);
+	ct[0] = ct0;
+
+	for(int t = 1; t < T-1; t++){
+		double ctt = 0.0;	
+		const int yt = y[t];	
+		for(int s = 0; s<N; s++){// s=new_state
+			double alphatNs = cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
+			alphatNs *= b[yt*N + s];
+			ctt += alphatNs;
+			alpha[t*N + s] = alphatNs;
+		}
+		//scaling factor for t 
+		ctt = 1.0 / ctt;
+		
+		//scale alpha(t)
+        cblas_dscal(N,ctt,alpha+t*N,1);
+		ct[t] = ctt;
+	}
+		
+	
+	double ctt = 0.0;	
+	const int yt = y[T-1];	
+	for(int s = 0; s<N; s++){// s=new_state
+		double alphatNs = 0;
+       	alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);
+		alphatNs *= b[yt*N + s];
+		ctt += alphatNs;
+		alpha[(T-1)*N + s] = alphatNs;
+	}
+	//scaling factor for T-1
+	    ctt = 1.0 / ctt;
+    	cblas_dscal(N,ctt,alpha+(T-1)*N,1);
+    	cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
+    	ct[T-1] = ctt;
+
+	//FUSED BACKWARD and UPDATE STEP
+
+	for(int s = 0; s < N; s++){
+		beta[s] = /* 1* */ct[T-1];
+		gamma_sum[s] = 0.0;
+		for(int j = 0; j < N; j++){
+			a_new[s*N + j] =0.0;
+		}
+		for(int v = 0;  v < K; v++){
+			b_new[v*N + s] = 0.0;
+		}
+	}
+    
+	//compute sum of xi and gamma from t= 0...T-2
+	for(int t = T-1; t > 0; t--){
+		for(int s = 0; s < N ; s++){
+			p[s] = 0.0;
+			beta_new[s]=0.0;
+			for(int j = 0; j < N; j++){
+				double temp = a[s*N +j] * beta[j] * b[y[t]*N + j];
+				double xi_sjt = alpha[(t-1)*N + s] * temp;
+				a_new[s*N+j] +=xi_sjt;
+				beta_new[s] += temp;
+				
+			}
+			p[s] = alpha[(t-1)*N+s]*beta_new[s]/* *ct[t-1]*/;
+			beta_new[s] *= ct[t-1];
+			gamma_sum[s]+= p[s] /* /ct[t-1] */ ;
+
+			for(int v = 0; v < K; v++){
+				int indicator = (int)(y[t-1] == v);
+				b_new[v*N + s] += (double)(indicator)*p[s];
+			}
+		}
+		double * temp = beta_new;
+		beta_new = beta;
+		beta = temp;	
+	}
+
+
+		do{
+    	cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
+    	cblas_daxpy(N,1,gamma_sum,1,gamma_T,1);
+	//compute new emission matrix
+	for(int v = 0; v < K; v++){
+		for(int s = 0; s < N; s++){
+			b[v*N + s] = b_new[v*N + s] / gamma_T[s];
+		}
+	}
+	//FORWARD
+
+	double ctt = 0.0;
+	//compute alpha(0) and scaling factor for t = 0
+	int y0 = y[0];
+	for(int s = 0; s < N; s++){
+		double alphas = p[s] * b[y0*N + s];
+		ctt += alphas;
+		alpha[s] = alphas;
+	}
+	
+	ctt = 1.0 / ctt;
+	//scale alpha(0)
+    cblas_dscal(N,ctt,alpha,1);
+	
+    	ct[0] = ctt;
+	//Compute alpha(1) and scale transitionMatrix
+	ctt = 0.0;	
+	int yt = y[1];	
+	for(int s = 0; s<N; s++){// s=new_state
+		double alphatNs = 0;
+		//alpha[s*T + t] = 0;
+		for(int j = 0; j < N; j++){//j=old_states
+			double ajNs =  a_new[j*N + s] / gamma_sum[j];
+			a[j*N + s] = ajNs;
+			alphatNs += alpha[0*N + j] * ajNs;
+		}
+		alphatNs *= b[yt*N + s];
+		ctt += alphatNs;
+		alpha[1*N + s] = alphatNs;
+	}
+	//scaling factor for t 
+	ctt = 1.0 / ctt;
+
+    cblas_dscal(N,ctt,alpha+N,1);
+	ct[1] = ctt;
+
+	for(int t = 2; t < T-1; t++){
+		ctt = 0.0;	
+		yt = y[t];	
+		for(int s = 0; s<N; s++){// s=new_state
+            double alphatNs=cblas_ddot(N,alpha+(t-1)*N,1,a+s,N);
+			alphatNs *= b[yt*N + s];
+			ctt += alphatNs;
+			alpha[t*N + s] = alphatNs;
+		}
+		//scaling factor for t 
+		ctt = 1.0 / ctt;
+		cblas_dscal(N,ctt,alpha+t*N,1);
+		ct[t] = ctt;
+	}
+		
+	//compute alpha(T-1)
+	ctt = 0.0;	
+	yt = y[T-1];	
+	for(int s = 0; s<N; s++){// s=new_state
+        	double alphatNs=cblas_ddot(N,alpha+(T-2)*N,1,a+s,N);
+		alphatNs *= b[yt*N + s];
+		ctt += alphatNs;
+		alpha[(T-1)*N + s] = alphatNs;
+	}
+	//scaling factor for T-1
+	ctt = 1.0 / ctt;
+
+    cblas_dscal(N,ctt,alpha+(T-1)*N,1);
+    cblas_dcopy(N,alpha+(T-1)*N,1,gamma_T,1);
+    ct[T-1] = ctt;
+    	
+	//FUSED BACKWARD and UPDATE STEP
+
+	for(int s = 0; s < N; s++){
+		beta[s] = /* 1* */ct[T-1];
+		gamma_sum[s] = 0.0;
+		for(int j = 0; j < N; j++){
+			a_new[s*N + j] =0.0;
+		}
+		for(int v = 0;  v < K; v++){
+			b_new[v*N + s] = 0.0;
+		}
+	}
+	//compute sum of xi and gamma from t= 0...T-2
+	for(int t = T-1; t > 0; t--){
+		for(int s = 0; s < N ; s++){
+			p[s] = 0.0;
+			beta_new[s]=0.0;
+			for(int j = 0; j < N; j++){
+
+				double temp = a[s*N +j] * beta[j] * b[y[t]*N + j];
+				double xi_sjt = alpha[(t-1)*N + s] * temp;
+				a_new[s*N+j] +=xi_sjt;
+				beta_new[s] += temp;
+				
+			}
+			p[s] = alpha[(t-1)*N+s]*beta_new[s]/* *ct[t-1]*/;
+			beta_new[s] *= ct[t-1];
+
+			//if you use real gamma you have to divide with ct[t-1]
+			gamma_sum[s]+= p[s] /* /ct[t-1] */ ;
+            b_new[y[t-1]*N+s]+=p[s];
+        }
+		double * temp = beta_new;
+		beta_new = beta;
+		beta = temp;	
+	}
+        steps+=1;
+            		
+		//log likelihood
+		        double oldLogLikelihood=logLikelihood;
+	
+		        double newLogLikelihood = 0.0;
+		        //evidence with alpha only:
+	
+	        	for(int time = 0; time < T; time++){
+			        newLogLikelihood -= log2(ct[time]);
+	        	}
+	        
+	        	logLikelihood=newLogLikelihood;
+	
+	     disparance=newLogLikelihood-oldLogLikelihood;
+
+		}while (disparance>EPSILON && steps<maxSteps);
+
+
+		//compute new transition matrix
+	for(int s = 0; s < N; s++){
+        	double denom=1/gamma_sum[s];
+        	cblas_dscal(N,denom,a_new+s*N,1);
+	}
+	cblas_dcopy(N*N,a_new,1,a,1);
+
+    cblas_daxpy(N,1,gamma_T,1,gamma_sum,1);
+    cblas_daxpy(N,1,gamma_T,1,b_new+y[T-1]*N,1);
+	//compute new emission matrix
+	for(int v = 0; v < K; v++){
+		for(int s = 0; s < N; s++){
+			b[v*N + s] = b_new[v*N + s] / gamma_sum[s];
+		}
+	}
+
+		myInt64 cycles = stop_tsc(start);
+        return cycles/steps;
+
+}
 
 void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 
@@ -440,6 +686,10 @@ int main(int argc, char *argv[]){
 	double* b_new = (double*) malloc(differentObservables*hiddenStates * sizeof(double));
 	
 	double* ct = (double*) malloc(T*sizeof(double));
+
+    double* beta = (double*) malloc(hiddenStates  * sizeof(double));
+	double* beta_new = (double*) malloc(hiddenStates * sizeof(double));
+	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	
 	//random init transition matrix, emission matrix and state probabilities.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
@@ -465,31 +715,8 @@ int main(int argc, char *argv[]){
 		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
    		memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
       		memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));
-		
-        	double logLikelihood=-DBL_MAX; //Took down here.
 
-		//only needed for testing with R
-		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
-        
-        	steps=1;
-       	_flush_cache(buf,BUFSIZE); // ensure the cache is cold
-		start = start_tsc();
-
-		initial_step(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
-
-		do{
-			baum_welch(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
-
-            		steps+=1;
-            		
-		}while (!finished(ct, &logLikelihood, hiddenStates, T,EPSILON) && steps<maxSteps);
-				
-		final_scaling(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
-
-		cycles = stop_tsc(start);
-        	cycles = cycles/steps;
-
-		runs[run]=cycles;
+		runs[run]=bw(transitionMatrix,emissionMatrix,stateProb,observations, gamma_sum, gamma_T, a_new, b_new, ct,hiddenStates,differentObservables, T, beta, beta_new ,alpha, buf, maxSteps);
 
 	}
 
@@ -528,7 +755,7 @@ int main(int argc, char *argv[]){
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
-    	free(groundTransitionMatrix);
+    free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -546,6 +773,8 @@ int main(int argc, char *argv[]){
 	free(emissionMatrixTesting);
 	free(stateProbTesting);
 	free((void*)buf);
-
+    free(beta);
+	free(beta_new);
+	free(alpha);
 	return 0; 
 } 
