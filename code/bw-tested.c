@@ -6,8 +6,6 @@
 
 #include "tested.h"
 
-#define EPSILON 1e-4
-#define DELTA 1e-2
 
 void tested_set_zero(double* const a, const int rows, const int cols){
 	for(int row = 0 ; row < rows; row++){
@@ -17,7 +15,6 @@ void tested_set_zero(double* const a, const int rows, const int cols){
 	}
 }
 
-//Luca
 void tested_forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
 
 	ct[0]=0.0;
@@ -60,7 +57,7 @@ void tested_forward(const double* const a, const double* const p, const double* 
 	return;
 }
 
-//Ang
+
 void tested_backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
 	for(int s = 1; s < N+1; s++){
 		beta[s*T-1] = /* 1* */ct[T-1];
@@ -160,8 +157,8 @@ void tested_evidence_testing(const double* const alpha, const double* const beta
 	}
 }
 
-//Jan
-int tested_finished(const double* const alpha,const double* const beta, const double* const ct, double* const l,const int N,const int T){
+
+int tested_finished(const double* const alpha,const double* const beta, const double* const ct, double* const l,const int N,const int T,double EPSILON){
 
 	
 	//log likelihood
@@ -181,8 +178,8 @@ int tested_finished(const double* const alpha,const double* const beta, const do
 }
 
 
-//Jan
-int tested_similar(const double * const a, const double * const b , const int N, const int M){
+
+int tested_similar(const double * const a, const double * const b , const int N, const int M, const double DELTA){
 	//Frobenius norm
 	double sum=0.0;
 	double abs=0.0;
@@ -197,7 +194,7 @@ int tested_similar(const double * const a, const double * const b , const int N,
 }
 
 
-void tested_implementation(int hiddenStates, int differentObservables, int T, double* transitionMatrix, double* emissionMatrix, double* stateProb, int* observations){
+void tested_implementation(int hiddenStates, int differentObservables, int T, double* transitionMatrix, double* emissionMatrix, double* stateProb, int* observations,const double EPSILON,const double DELTA){
 	
 	double* alpha = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
@@ -221,12 +218,12 @@ void tested_implementation(int hiddenStates, int differentObservables, int T, do
 
 	int steps=0;
 	do{
-		tested_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);	//Lucaz
-		tested_backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);	//Ang
-		tested_update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);  //Ang
+		tested_forward(transitionMatrix, stateProb, emissionMatrix, alpha, observations, ct, hiddenStates, differentObservables, T);
+		tested_backward(transitionMatrix, emissionMatrix, beta,observations, ct, hiddenStates, differentObservables, T);
+		tested_update(transitionMatrix, stateProb, emissionMatrix, alpha, beta, gamma, xi, observations, ct, hiddenStates, differentObservables, T);
 		steps+=1;
 
-	}while (!tested_finished(alpha, beta, ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
+	}while (!tested_finished(alpha, beta, ct, &logLikelihood, hiddenStates, T, EPSILON) && steps<maxSteps);
 	free(alpha);
 	free(beta);
 	free(gamma);

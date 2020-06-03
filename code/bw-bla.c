@@ -7,115 +7,21 @@
 
 #include "io.h"
 #include "tested.h"
+#include "util.h"
+
 #include "mkl.h"
 
 
-#define EPSILON 1e-4
+double EPSILON = 1e-4;
 #define DELTA 1e-2
 #define BUFSIZE 1<<26   // ~60 MB
 
 
-inline void _flush_cache(volatile unsigned char* buf)
-{
-    for(unsigned int i = 0; i < BUFSIZE; ++i){
-        buf[i] += i;
-    }
-}
-
-
-void transpose(double* a, const int rows, const int cols){
-	double* transpose = (double*)calloc(cols*rows, sizeof(double));
-	memcpy(transpose, a, rows*cols*sizeof(double));
-	for(int row = 0 ; row < rows; row++){
-		for(int col =0; col < cols; col++){
-			a[col * rows + row]  = transpose[row * cols + col];
-			//printf(" %lf %lf \n ", 	transpose[col * rows + row] , a[row * cols + col]);
-		}
-	}
-	free(transpose);
-}
-//for sorting at the end
-int compare_doubles (const void *a, const void *b){
-	const double *da = (const double *) a;
-	const double *db = (const double *) b;
-
-	return (*da > *db) - (*da < *db);
-}
-
-//generate a random number [0,1] and return the index...
-//where the sum of the probabilities up to this index of the vector...
-//is bigger than the random number
-//argument choices is the lenght of the vector
-int chooseOf(const int choices, const double* const probArray){
-	//decide at which proba to stop
-	double decider= (double)rand()/(double)RAND_MAX;
-	//printf("%lf \n",decider);
-	double probSum=0;
-	for(int i=0; i<choices;i++){
-		//if decider in range(probSum[t-1],probSum[t])->return t
-		probSum+=probArray[i];
-		if (decider<=probSum)
-		{
-			return i;
-		}
-	}
-	//some rounding error
-	printf("%f",probSum);
-	printf("The probabilites were not enough...");
-	exit(-1);
-}
-
-//Generate random observations 
-void makeObservations(const int hiddenStates, const int differentObservables, const int groundInitialState, const double* const groundTransitionMatrix, const double* const groundEmissionMatrix, const int T, int* const observations){
-
-	int currentState=groundInitialState;
-	for(int i=0; i<T;i++){
-		//this ordering of observations and current state, because first state is not necessarily affected by transitionMatrix
-		//write down observation, based on occurenceMatrix of currentState
-		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
-		//choose next State, given transitionMatrix of currentState
-		currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
-
-	}
-}
-
-//make a vector with random probabilities such that all probabilities sum up to 1
-//options is the lenght of the vector
-void makeProbabilities(double* const probabilities, const int options){
-	
-	//ratio between smallest and highest probability
-	const double ratio = 100;
-
-	double totalProbabilites=0;
-	for (int i=0; i<options;i++){
-
-		double currentValue= (double)rand()/(double)(RAND_MAX) * ratio;
-		probabilities[i]=currentValue;
-		totalProbabilites+=currentValue;
-	}
-
-	for (int i=0; i<options;i++){
-		probabilities[i]=probabilities[i]/totalProbabilites;
-	}
-
-}
-
-//make a Matrix with random entries such that each row sums up to 1
-//dim1 is number of rows
-//dim2 is number of columns
-void makeMatrix(const int dim1,const int dim2, double* const matrix){
-
-	for (int row=0;row<dim1;row++){
-		//make probabilites for one row
-		makeProbabilities(matrix + row*dim2,dim2);
-	}
-}
-
 
 void initial_step(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 	
-	double* beta = (double*) malloc(T  * sizeof(double));
-	double* beta_new = (double*) malloc(T * sizeof(double));
+	double* beta = (double*) malloc(N  * sizeof(double));
+	double* beta_new = (double*) malloc(N * sizeof(double));
 	double* alpha = (double*) malloc(N * T * sizeof(double));
 
 	//FORWARD
@@ -237,8 +143,8 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 
 void baum_welch(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T){
 
-	double* beta = (double*) malloc(T  * sizeof(double));
-	double* beta_new = (double*) malloc(T * sizeof(double));
+	double* beta = (double*) malloc(N  * sizeof(double));
+	double* beta_new = (double*) malloc(N * sizeof(double));
 	double* alpha = (double*) malloc(N * T * sizeof(double));
 
 
@@ -446,36 +352,7 @@ void final_scaling(double* const a, double* const b, double* const p, const int*
 	}
 }
 
-int finished(const double* const ct, double* const l,const int N,const int T){
 
-	//log likelihood
-	double oldLogLikelihood=*l;
-
-	double newLogLikelihood = 0.0;
-	//evidence with alpha only:
-
-	for(int time = 0; time < T; time++){
-		newLogLikelihood -= log2(ct[time]);
-	}
-	
-	*l=newLogLikelihood;
-
-	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
-	
-}
-
-int similar(const double * const a, const double * const b , const int N, const int M){
-	//Frobenius norm
-	double sum=0.0;
-	double abs=0.0;
-	for(int i=0;i<N;i++){
-		for(int j=0;j<M;j++){
-			abs=a[i*M+j]-b[i*M+j];
-			sum+=abs*abs;
-		}
-	}
-	return sqrt(sum)<DELTA; 
-}
 
 void heatup(double* const transitionMatrix,double* const stateProb,double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
 
@@ -500,7 +377,8 @@ void heatup(double* const transitionMatrix,double* const stateProb,double* const
 
 int main(int argc, char *argv[]){
 
-	if(argc != 5){
+
+	if(argc < 5){
 		printf("USAGE: ./run <seed> <hiddenStates> <observables> <T> \n");
 		return -1;
 	}
@@ -509,6 +387,11 @@ int main(int argc, char *argv[]){
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
 	const int T = atoi(argv[4]);
+	
+	if(argc ==6){
+		int exp = atoi(argv[5]);
+		EPSILON  = pow(10,-exp);
+	}
 	
 	myInt64 cycles;
    	myInt64 start;
@@ -589,7 +472,7 @@ int main(int argc, char *argv[]){
 		//write_init(transitionMatrix, emissionMatrix, observations, stateProb, hiddenStates, differentObservables, T);
         
         	steps=1;
-       	_flush_cache(buf); // ensure the cache is cold
+       	_flush_cache(buf,BUFSIZE); // ensure the cache is cold
 		start = start_tsc();
 
 		initial_step(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
@@ -599,7 +482,7 @@ int main(int argc, char *argv[]){
 
             		steps+=1;
             		
-		}while (!finished(ct, &logLikelihood, hiddenStates, T) && steps<maxSteps);
+		}while (!finished(ct, &logLikelihood, hiddenStates, T,EPSILON) && steps<maxSteps);
 				
 		final_scaling(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new,ct, hiddenStates, differentObservables, T);
 
@@ -623,7 +506,7 @@ int main(int argc, char *argv[]){
 	transpose(emissionMatrix,differentObservables,hiddenStates);
 	//emissionMatrix is not in state major order
 	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
-	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations,EPSILON, DELTA);
 
 	/*
 	//Show results
@@ -638,7 +521,7 @@ int main(int argc, char *argv[]){
 	print_vector(stateProbTesting, hiddenStates);
 	*/
 	
-	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates,DELTA) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates,DELTA)){
 		printf("Something went wrong !");	
 		
 	}

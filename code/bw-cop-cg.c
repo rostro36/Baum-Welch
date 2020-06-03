@@ -7,98 +7,14 @@
 
 #include "io.h"
 #include "tested.h"
+#include "util.h"
 
-#define EPSILON 1e-4
+
+double EPSILON = 1e-4;
 #define DELTA 1e-2
-#define maxSteps 100
 #define BUFSIZE 1<<26   // ~60 MB
+#define maxSteps 100
 
-
-inline void _flush_cache(volatile unsigned char* buf)
-{
-    for(unsigned int i = 0; i < BUFSIZE; ++i){
-        buf[i] += i;
-    }
-}
-
-
-void set_zero(double* const a, const int rows, const int cols){
-	for(int row = 0 ; row < rows; row++){
-		for(int col = 0; col < cols; col++){
-			a[row * cols + col] = 0.0;
-		}
-	}
-}
-
-//for sorting at the end
-int compare_doubles (const void *a, const void *b){
-	const double *da = (const double *) a;
-	const double *db = (const double *) b;
-
-	return (*da > *db) - (*da < *db);
-}
-
-int chooseOf(const int choices, const double* const probArray){
-	//decide at which proba to stop
-	double decider= (double)rand()/(double)RAND_MAX;
-	//printf("%lf \n",decider);
-	double probSum=0;
-	for(int i=0; i<choices;i++){
-		//if decider in range(probSum[t-1],probSum[t])->return t
-		probSum+=probArray[i];
-		if (decider<=probSum)
-		{
-			return i;
-		}
-	}
-	//some rounding error
-	printf("%f",probSum);
-	printf("The probabilites were not enough...");
-	exit(-1);
-}
-
-//Generate random observations 
-void makeObservations(const int hiddenStates, const int differentObservables, const int groundInitialState, const double* const groundTransitionMatrix, const double* const groundEmissionMatrix, const int T, int* const observations){
-
-	int currentState=groundInitialState;
-	for(int i=0; i<T;i++){
-		//this ordering of observations and current state, because first state is not necessarily affected by transitionMatrix
-		//write down observation, based on occurenceMatrix of currentState
-		observations[i]=chooseOf(differentObservables,groundEmissionMatrix+currentState*differentObservables);
-		//choose next State, given transitionMatrix of currentState
-	    	currentState=chooseOf(hiddenStates,groundTransitionMatrix+currentState*hiddenStates);
-
-	}
-}
-
-//make a vector with random probabilities such that all probabilities sum up to 1
-//options is the lenght of the vector
-void makeProbabilities(double* const probabilities, const int options){
-	
-	//ratio between smallest and highest probability
-	const double ratio = 100;
-
-	double totalProbabilites=0;
-	for (int i=0; i<options;i++){
-
-		double currentValue= (double)rand()/(double)(RAND_MAX) * ratio;
-		probabilities[i]=currentValue;
-		totalProbabilites+=currentValue;
-	}
-
-	for (int i=0; i<options;i++){
-		probabilities[i]=probabilities[i]/totalProbabilites;
-	}
-
-}
-
-void makeMatrix(const int rows,const int columns, double* const matrix){
-
-	for (int row=0;row<rows;row++){
-		//make probabilites for one row
-		makeProbabilities(matrix + row*columns,columns);
-	}
-}
 
 myInt64 bw(double* transitionMatrix, double* stateProb, double* emissionMatrix, double* const alpha, double* beta,double* const gamma, double* const xi,   const int * const observations, double* const ct,double* const inv_ct, const int hiddenStates, const int differentObservables, const int T){
 
@@ -370,38 +286,6 @@ void update(double* const a, double* const p, double* const b, const double* con
 	return;
 }
 
-int finished(const double* const alpha,const double* const beta, const double* const ct, double* const l,const int N,const int T){
-
-	//log likelihood
-	double oldLogLikelihood=*l;
-
-	double newLogLikelihood = 0.0;
-	//evidence with alpha only:
-
-	for(int time = 0; time < T; time++){
-		newLogLikelihood -= log2(ct[time]);
-	}
-	
-	*l=newLogLikelihood;
-
-	return (newLogLikelihood-oldLogLikelihood)<EPSILON;
-	
-}
-
-int similar(const double * const a, const double * const b , const int N, const int M){
-	//Frobenius norm
-	double sum=0.0;
-	double abs=0.0;
-	for(int i=0;i<N;i++){
-		for(int j=0;j<M;j++){
-			abs=a[i*M+j]-b[i*M+j];
-			sum+=abs*abs;
-		}
-	}
-    	//DEBUG off
-	//printf("Frobenius norm = %.10lf delta = %.10lf\n", sqrt(sum), DELTA);
-	return sqrt(sum)<DELTA; 
-}
 
 void heatup(double* const transitionMatrix,double* const piVector,double* const emissionMatrix,const int* const observations,const int hiddenStates,const int differentObservables,const int T){
 
@@ -428,19 +312,24 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 }
 int main(int argc, char *argv[]){
 
-	//wikipedia_example();
 
-	if(argc != 5){
+	if(argc < 5){
 		printf("USAGE: ./run <seed> <hiddenStates> <observables> <T> \n");
 		return -1;
 	}
 
-	const int maxRuns=10;
-	const int cachegrind_runs = 1;
 	const int seed = atoi(argv[1]);  
 	const int hiddenStates = atoi(argv[2]); 
 	const int differentObservables = atoi(argv[3]); 
-	const int T = atoi(argv[4]); 
+	const int T = atoi(argv[4]);
+	
+	if(argc ==6){
+		int exp = atoi(argv[5]);
+		EPSILON  = pow(10,-exp);
+	} 
+	
+	const int maxRuns=10;
+	const int cachegrind_runs = 1;
 
 	myInt64 cycles;
    	myInt64 start;
@@ -505,7 +394,7 @@ int main(int argc, char *argv[]){
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
         	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
        	
-       	_flush_cache(buf); // ensure the cache is cold
+       	_flush_cache(buf,BUFSIZE); // ensure the cache is cold
        	
        	myInt64 cycles=bw(transitionMatrix, stateProb,  emissionMatrix, alpha, beta, gamma, xi, observations, ct, inv_ct, hiddenStates, differentObservables, T);
 	
@@ -525,7 +414,7 @@ int main(int argc, char *argv[]){
 	memcpy(stateProbTesting, stateProbSafe, hiddenStates * sizeof(double));
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
-        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations);
+        tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations,EPSILON, DELTA);
 
 	/*
 	//Show results
@@ -540,7 +429,7 @@ int main(int argc, char *argv[]){
 	print_vector(stateProbTesting, hiddenStates);
 	*/
 
-	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates)){
+	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates,DELTA) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates,DELTA)){
 		printf("Something went wrong !");	
 		
 	}  
