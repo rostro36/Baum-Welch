@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=( "stb" "cop" "reo" "vec" "alt" )
+files=( "cop" "reo" )
 compilers=( "g" "i" )
 flags=( "-O2" )
 seeds=( 36 )
@@ -16,7 +16,7 @@ for file in "${files[@]}"
 	        "$compiler"cc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
             for seed in "${seeds[@]}"
             do
-                arraylength=${#hiddenStates[@]}
+                arraylength=${#differentObservables[@]}
                 for ((place=0; place<${arraylength}; place++));
                 do
                     T=${Ts[place]}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=("cop" "reo" "vec" "alt" )
+files=("cop" "reo")
 compilers=( "g" "i" )
 flags=( "-O2" )
 seeds=( 36 )
@@ -24,7 +24,7 @@ do
                     for differentObservable in "${differenObservables[@]}"
                     do
                         echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-time.txt"
-                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-time.txt"
+                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-do-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done
