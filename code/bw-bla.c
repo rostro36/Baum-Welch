@@ -732,7 +732,7 @@ int main(int argc, char *argv[]){
 	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
 	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations,EPSILON, DELTA);
 
-	
+	/*
 	//Show results
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrix, hiddenStates,differentObservables);
@@ -743,7 +743,7 @@ int main(int argc, char *argv[]){
 	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
 	print_vector(stateProbTesting, hiddenStates);
-	
+	*/
 	
 	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates,DELTA) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates,DELTA)){
 		printf("Something went wrong !");	
