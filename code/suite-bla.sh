@@ -94,3 +94,4 @@ for file in "${files[@]}"
         done
     done 
 done
+rm -f time

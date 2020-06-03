@@ -13,7 +13,7 @@ for file in "${files[@]}"
     do
         for flag in "${flags[@]}"
         do
-	        "$compiler"cc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
+	        "$compiler"cc $flag -o time "bw-$file.c" io.c bw-tested.c util.c -lm
             for seed in "${seeds[@]}"
             do
                 arraylength=${#differentObservables[@]}
@@ -33,3 +33,4 @@ for file in "${files[@]}"
         done
     done
 done
+rm -f time

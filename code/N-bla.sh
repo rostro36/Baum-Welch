@@ -14,7 +14,7 @@ do
 	do
         for flag in "${flags[@]}"
             do
-	        "$compiler"cc $flag $blas_flags -o timing "bw-$file.c" io.c bw-tested.c tested.h $blas_libs -lm
+	        "$compiler"cc $flag $blas_flags -o timing "bw-$file.c" io.c bw-tested.c util.c $blas_libs -lm
             for seed in "${seeds[@]}"
             do
                 for N in "${Ns[@]}"
@@ -28,3 +28,4 @@ do
         done
     done
 done
+rm -f timing

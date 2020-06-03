@@ -10,8 +10,8 @@ for file in "${files[@]}"
 do
     for flag in "${flags[@]}"
     do
-	    gcc $flag -o time "bw-$file.c" io.c bw-tested.c tested.h -lm
-        gcc $flag -o cache "bw-$file-cg.c" io.c bw-tested.c tested.h -lm
+	    gcc $flag -o time "bw-$file.c" io.c bw-tested.c util.c -lm
+        gcc $flag -o cache "bw-$file-cg.c" io.c bw-tested.c util.c -lm
         for seed in "${seeds[@]}"
         do
             for hiddenState in "${hiddenStates[@]}"
@@ -31,3 +31,5 @@ do
         done
     done
 done
+rm -f time
+rm -f cache
