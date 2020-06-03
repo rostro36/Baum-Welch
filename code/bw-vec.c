@@ -2578,6 +2578,7 @@ int main(int argc, char *argv[]){
 	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations,EPSILON, DELTA);
 	
 
+	//printf("steps = %i\n", steps);
 	/*	
 	//Show results
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);

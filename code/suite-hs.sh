@@ -6,7 +6,8 @@ flags=( "-O2" )
 seeds=( 36 )
 hiddenStates=( 8 16 32 64 128 256 512 1024)
 differentObservables=( 8 64 128 )
-Ts=( 32 512 1028 )
+Ts=( 64 256 512 )
+now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
     do
     for compiler in "${compilers[@]}"

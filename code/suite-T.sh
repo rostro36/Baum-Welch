@@ -6,7 +6,8 @@ compilers=( "g" "i" )
 seeds=( 36 )
 hiddenStates=( 8 64 128 )
 differentObservables=( 8 64 128 )
-Ts=( 32 64 128 256 512 1024 2048 4096 )
+Ts=( 1024 2048 4096 8192 16384 32768 )
+now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
     do
     for compiler in "${compilers[@]}"
