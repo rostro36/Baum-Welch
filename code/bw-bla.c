@@ -139,7 +139,7 @@ void initial_step(double* const a, double* const b, double* const p, const int* 
 	return;
 
 }
-myInt64 bw(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T, double* beta, double* beta_new ,double* alpha, char* buf, int maxSteps){
+myInt64 bw(double* const a, double* const b, double* const p, const int* const y, double * const gamma_sum, double* const gamma_T,double* const a_new,double* const b_new, double* const ct, const int N, const int K, const int T, double* beta, double* beta_new ,double* alpha, volatile unsigned char* buf, int maxSteps){
      double logLikelihood=-DBL_MAX;
      double disparance;
      int steps=1;
@@ -639,9 +639,7 @@ int main(int argc, char *argv[]){
 		EPSILON  = pow(10,-exp);
 	}
 	
-	myInt64 cycles;
-   	myInt64 start;
-   	
+	   	
 	int minima=10;
 	int variableSteps=100-cbrt(hiddenStates*differentObservables*T)/3;
 	int maxSteps=minima < variableSteps ? variableSteps : minima;
@@ -708,7 +706,6 @@ int main(int argc, char *argv[]){
 	
 	volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
 	
-	int steps = 0;
 	for (int run=0; run<maxRuns; run++){
 
 		//init transition Matrix, emission Matrix and initial state distribution random
@@ -735,7 +732,7 @@ int main(int argc, char *argv[]){
 	transpose(emissionMatrixTesting, differentObservables,hiddenStates);
 	tested_implementation(hiddenStates, differentObservables, T, transitionMatrixTesting, emissionMatrixTesting, stateProbTesting, observations,EPSILON, DELTA);
 
-	/*
+	
 	//Show results
 	print_matrix(transitionMatrix,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrix, hiddenStates,differentObservables);
@@ -746,7 +743,7 @@ int main(int argc, char *argv[]){
 	print_matrix(transitionMatrixTesting,hiddenStates,hiddenStates);
 	print_matrix(emissionMatrixTesting, hiddenStates,differentObservables);
 	print_vector(stateProbTesting, hiddenStates);
-	*/
+	
 	
 	if (!similar(transitionMatrixTesting,transitionMatrix,hiddenStates,hiddenStates,DELTA) && similar(emissionMatrixTesting,emissionMatrix,differentObservables,hiddenStates,DELTA)){
 		printf("Something went wrong !");	
@@ -755,7 +752,7 @@ int main(int argc, char *argv[]){
 
 	//write_result(transitionMatrix, emissionMatrix, observations, stateProb, steps, hiddenStates, differentObservables, T);
         
-    free(groundTransitionMatrix);
+    	free(groundTransitionMatrix);
 	free(groundEmissionMatrix);
 	free(observations);
 	free(transitionMatrix);
@@ -773,7 +770,7 @@ int main(int argc, char *argv[]){
 	free(emissionMatrixTesting);
 	free(stateProbTesting);
 	free((void*)buf);
-    free(beta);
+    	free(beta);
 	free(beta_new);
 	free(alpha);
 	return 0; 
