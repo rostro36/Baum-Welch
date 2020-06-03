@@ -23,8 +23,8 @@ do
                     hiddenState=${hiddenStates[place]}
                     for differentObservable in "${differenObservables[@]}"
                     do
-                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-time.txt"
-                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-do-time.txt"
+                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-do-$now-time.txt"
+                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-do-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done

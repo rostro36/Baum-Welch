@@ -23,8 +23,8 @@ for file in "${files[@]}"
                     differentObservable=${differentObservables[place]}
                     for hiddenState in "${hiddenStates[@]}"
                     do
-                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-time-hs.txt"
-                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-time-hs.txt"
+                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-hs-$now-time.txt"
+                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-hs-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done
