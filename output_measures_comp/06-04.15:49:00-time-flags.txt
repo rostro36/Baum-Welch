@@ -1,0 +1,112 @@
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 11060.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 2097585.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 57705916.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 1250365596.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 3362584935.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 9588951663.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 43960538696.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 9645.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 1812185.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 45755643.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 1077124640.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 2895266229.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 8320986885.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 43062231438.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 7891.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 766498.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 23098744.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 554712905.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 1664985203.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 4499067682.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 16532716543.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 8625.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 1465788.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 41361615.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 1005563823.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 3129039479.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 8922521405.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 30877111380.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 4597.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 202053.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 2977035.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 37664171.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 101778314.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 266594734.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 723510694.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 4869.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 400386.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 4322984.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 73992557.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 240112869.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 582093330.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 1357582929.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 3817.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 121696.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 1451618.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 27786367.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 85169153.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 245070418.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 770048925.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 4
+Median Time: 	 4187.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 16
+Median Time: 	 220676.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 32
+Median Time: 	 1250799.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 64
+Median Time: 	 27139926.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 84
+Median Time: 	 83903759.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 104
+Median Time: 	 234501586.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O3 -march=native -mfma SEED 36 N 128
+Median Time: 	 718754521.000000 cycles 
