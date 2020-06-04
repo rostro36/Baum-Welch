@@ -1,6 +1,10 @@
 #!/bin/bash
 
+<<<<<<< HEAD
 files=("stb" "cop" "reo" "vec")
+=======
+files=( "stb" "cop" "reo")
+>>>>>>> 1d8b8761b5c60a37845e55fbf999c219e605f028
 compilers=( "g" "i" )
 flags=( "-O2 -mfma" )
 seeds=( 36 )

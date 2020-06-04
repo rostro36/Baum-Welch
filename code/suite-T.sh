@@ -1,7 +1,12 @@
 #!/bin/bash
 
+<<<<<<< HEAD
 files=("stb" "cop" "reo" "vec")
 flags=( "-O2 -mfma" )
+=======
+files=( "stb" "cop" "reo" )
+flags=( "-O2" )
+>>>>>>> 1d8b8761b5c60a37845e55fbf999c219e605f028
 compilers=( "g" "i" )
 seeds=( 36 )
 hiddenStates=( 8 64 128 )
