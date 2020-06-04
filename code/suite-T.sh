@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=( "cop" "reo" )
+files=( "stb" "cop" "reo" )
 flags=( "-O2" )
 compilers=( "g" "i" )
 seeds=( 36 )
