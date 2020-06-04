@@ -1,8 +1,8 @@
 #!/bin/bash
 
-files=( "cop" "reo" )
+files=( "stb" "cop" "reo" "vec")
 compilers=( "g" "i" )
-flags=( "-O2" )
+flags=( "-O2 -mfma" )
 seeds=( 36 )
 hiddenStates=( 8 16 32 64 128 256 512 1024)
 differentObservables=( 8 64 128 )

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-files=( "cop" "reo" )
-flags=( "-O2" )
+files=("stb" "cop" "reo" "vec")
+flags=( "-O2 -mfma" )
 compilers=( "g" "i" )
 seeds=( 36 )
 hiddenStates=( 8 64 128 )

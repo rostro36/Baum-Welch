@@ -1,10 +1,10 @@
 #!/bin/bash
 
-files=( "stb" "cop" "reo" "vec" "alt" )
+files=( "stb" "cop" "reo" "vec")
 compilers=( "i" "g" )
-flags=( "-O2" )
+flags=( "-O2 -mfma" )
 seeds=( 36 )
-Ns=( 4 16 32 64 128 192 256 320 )
+Ns=( 4 16 32 64 84 104 128)
 now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
 do

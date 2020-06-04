@@ -2,9 +2,9 @@
 
 files=( "stb" "cop" "reo" "vec" )
 compilers=( "g" "i" )
-flags=( "-O2" )
+flags=( "-O2 -mfma" )
 seeds=( 36 )
-Ns=( 8 128  256  )
+Ns=( 8 32 64  )
 now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
 do
