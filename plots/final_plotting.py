@@ -245,12 +245,11 @@ for i in range(len(file_names)):
     figure.set_size_inches(8,4.5)
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
+    plt.savefig('../final_plots/'+files[i] +'-'+param[wichtiger_param-1]+ '-cycles'+'-' + timestr+'.png',dpi=200)
+    plt.clf()
     wichtiger_param = wichtiger_param-1
     if(wichtiger_param <1):
         wichtiger_param = 3
-    plt.savefig('../final_plots/'+files[i] +'-'+param[wichtiger_param-1] + timestr+ 'cycles.png',dpi=200)
-    plt.clf()
-
 
 wichtiger_param = 2
 for i in range(len(file_names)):
@@ -302,12 +301,12 @@ for i in range(len(file_names)):
     figure.set_size_inches(8,4.5)
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
+    plt.savefig('../final_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=200)
+    plt.clf()
+
     wichtiger_param = wichtiger_param-1
     if(wichtiger_param <1):
         wichtiger_param = 3
-    plt.savefig('../final_plots/'+files[i] +'-'+ param[wichtiger_param-1] +'-'+ timestr+ 'perf.png',dpi=200)
-    plt.clf()
-
 
 
 
