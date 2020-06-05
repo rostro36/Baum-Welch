@@ -7,7 +7,7 @@ import numpy as np
 
 
 folder = "../output_measures/"
-file_name = "stb-time"
+file_name = "stb-T-06-04.10:27:55-time"
 full_name =folder + file_name
 
 #parameter im Performance plot auf x-achse
