@@ -2547,8 +2547,6 @@ int main(int argc, char *argv[]){
 	printf("number of observations= %i \n", T);
 	printf("\n");
     */
-	myInt64 cycles;
-   	myInt64 start;
 	double runs[maxRuns]; //for medianTime
 	//set random according to seed
 	srand(seed);
@@ -2611,7 +2609,9 @@ int main(int argc, char *argv[]){
 
 	//heat up cache
 	heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
-	
+	  
+	//volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
+    	
 
 	for (int run=0; run<cachegrind_runs; run++){
 
@@ -2620,6 +2620,8 @@ int main(int argc, char *argv[]){
    		memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
         	memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));
 		
+		//_flush_cache(buf,BUFSIZE); // ensure the cache is cold
+		       	   	
 	        myInt64 cycles=bw(transitionMatrix, emissionMatrix, stateProb, observations, gamma_sum, gamma_T,a_new,b_new, ct, hiddenStates, differentObservables, T,beta, beta_new, alpha, ab,beta_workingset, reduction);
 
 		/*
@@ -2679,7 +2681,7 @@ int main(int argc, char *argv[]){
 	_mm_free(ab);
 	_mm_free(beta_workingset);
 	_mm_free(reduction);
-			
+	//free((void*)buf);		
 
 	return 0; 
 } 
