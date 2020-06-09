@@ -7,8 +7,8 @@ import numpy as np
 
 folder = "../output_measures_report/"
 file_name_novec = "06-07.12:33:11-time-novec"
-#second measurements 
-file_name_novec = "../output_measures/06-09.23:33:13-time"#06-07.12:33:11-time-novec"
+#second measurements
+#file_name_novec = "../output_measures/06-09.23:33:13-time"#06-07.12:33:11-time-novec"
 full_name_novec =folder + file_name_novec
 
 file_name = "06-03.23:37:35-time"
