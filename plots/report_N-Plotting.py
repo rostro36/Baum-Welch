@@ -196,7 +196,7 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.163,1.02)
+ax.yaxis.set_label_coords(0.158,1.02)
 #ax.set_title('Performance comparision gcc vs. icc')
 ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
@@ -218,8 +218,13 @@ for file in flags_novec.keys():
             work=work_functions[file](params)
             x.append(n)
             y.append(work/stats.median(flags_novec[file][flag][n]))
-            if(file != 'vec'):
-                plot_flag = re.sub('\ -mfma$','',flag)
+            if(plot_flag[0] == 'i'):
+                plot_flag = 'icc '
+            else:
+                plot_flag = 'gcc '
+            plot_flag = plot_flag + flag[1:]
+            
+            
         ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag))
         
         color+=1
@@ -230,7 +235,7 @@ box=ax.get_position()
 ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=2)
 
-fig.set_size_inches(8,4.5)
+fig.set_size_inches(8.5,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig('../report_plots/N-' +timestr+"-perf-compilers.png",dpi=200)
 #plt.show()
@@ -243,7 +248,7 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.163,1.02)
+ax.yaxis.set_label_coords(0.158,1.02)
 #ax.set_title('Performance comparision flags')
 ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
@@ -262,8 +267,13 @@ for file in flags.keys():
             work=work_functions[file](params)
             x.append(n)
             y.append(work/stats.median(flags[file][flag][n]))
-            if(file != 'vec'):
-                plot_flag = re.sub('\ -mfma$','',flag)
+          
+            plot_flag = 'gcc '
+            plot_flag = plot_flag + flag[1:]
+            
+            if(file!='vec'):
+                plot_flag = re.sub('\ -mfma$','',plot_flag)
+            
         ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag))
         
         color+=1
@@ -274,7 +284,7 @@ box=ax.get_position()
 ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=2)
 
-fig.set_size_inches(8,4.5)
+fig.set_size_inches(8.5,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig('../report_plots/N-' +timestr+"-perf-flags.png",dpi=200)
 #plt.show()
@@ -329,7 +339,6 @@ style=1
 for count, file in enumerate(flags.keys()):
     #for flag in list(flags[file].keys())[0]:
         flag = 'g-O2 -mfma'
-        plot_flag = flag
         x=[]
         y=[]
         for n in flags[file][flag]:
@@ -340,8 +349,9 @@ for count, file in enumerate(flags.keys()):
             memory=memory_functions[file](params)
             x.append(work/memory)
             y.append(work/cycles)
+            plot_flag = 'gcc -O2 -mfma'
             if(file != 'vec'):
-                plot_flag = re.sub('\ -mfma$','',flag)
+                plot_flag = re.sub('\ -mfma$','',plot_flag)
 
         plt.plot(x,y, marker=m[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+compiler + ' '+str(plot_flag))
         color+=2

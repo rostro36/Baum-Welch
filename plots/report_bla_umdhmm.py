@@ -36,7 +36,7 @@ compiler =''
 
 plt.rcParams.update({'figure.autolayout': True})
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 13})
 
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k','brown']

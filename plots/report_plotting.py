@@ -70,7 +70,7 @@ compiler ='gcc'
 
 plt.rcParams.update({'figure.autolayout': True})
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 13})
 
 
 styles=['-','--','-.',':']
@@ -212,12 +212,25 @@ for i in range(len(file_names)):
         continue
     if(i == 12 or i == 13 or i==14):
         continue
+        
+        
+        
+    
+    fig = plt.figure()
+    ax=plt.subplot(111)
+
+    ax.set_xlabel('N')
+    ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
+    ax.yaxis.set_label_coords(0.113,1.02)  
+    
+    '''
     #PLOTTING PERFORMANCE
     plt.xlabel(all_order_names[i][-1])
     plt.ylabel('Performance')
     plt.title('Performance: Impact of '+ all_order_names[i][-1] + " " + files[i])
     plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
-
+    '''
+    
     marker=0
     color=0
     style=0
@@ -243,20 +256,27 @@ for i in range(len(file_names)):
                 x.append(p3)
                 y.append(work/stats.median(flags[flag][p1][p2][p3]))
                 
-            plt.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= compiler + ' ' + flag+', '+str(dO)+', '+str(T))
+            plot_flag ='-O2 -mfma'
+            if(files[i] != 'vec'):
+                plot_flag = '-O2'    
+            ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= compiler + ' ' + plot_flag+' '+str(dO)+' '+str(T))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
    # color=0
     marker= (marker + 1) % len(markers)
-    plt.legend()
+    
+    
+    box=ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.18),fancybox=True, shadow=False, ncol=4)
 
-    figure = plt.gcf()
-    figure.set_size_inches(8,4.5)
+    fig.set_size_inches(11,4.5)
+
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
     plt.savefig('../report_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=200)
-    plt.clf()
+    plt.close('all')
 
     wichtiger_param = wichtiger_param-1
     if(wichtiger_param <1):
