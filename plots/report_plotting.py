@@ -260,7 +260,17 @@ for i in range(len(file_names)):
             plot_flag ='-O2 -mfma'
             if(files[i] != 'vec'):
                 plot_flag = '-O2'    
-            ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= compiler + ' ' + plot_flag+' '+str(dO)+' '+str(T))
+            
+            if(wichtiger_param == 2):
+                arg1 = hiddenstate
+                arg2 = T
+            elif(wichtiger_param ==1):
+                arg1 = differentObservables
+                arg2 = T
+            else:
+                arg1 = hiddenstate
+                arg2 = differentObservables;
+            ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= compiler + ' ' + plot_flag+' '+str(arg1)+' '+str(arg2))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
