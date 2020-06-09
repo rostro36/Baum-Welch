@@ -1,0 +1,112 @@
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 4
+Median Time: 	 9231.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 16
+Median Time: 	 2279919.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 32
+Median Time: 	 60579550.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 64
+Median Time: 	 1239191459.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 84
+Median Time: 	 3526853673.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 104
+Median Time: 	 9963147156.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG i-O2 -fno-tree-vectorize SEED 36 N 128
+Median Time: 	 45105870204.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 4
+Median Time: 	 9231.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 16
+Median Time: 	 2112368.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 32
+Median Time: 	 44774560.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 64
+Median Time: 	 1076370362.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 84
+Median Time: 	 2806340198.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 104
+Median Time: 	 8147750219.000000 cycles 
+DAS SEI UESI PARAMETER FILE stb FLAG g-O2 -fno-tree-vectorize SEED 36 N 128
+Median Time: 	 41097418877.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 4
+Median Time: 	 8628.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 16
+Median Time: 	 1865592.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 32
+Median Time: 	 52581260.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 64
+Median Time: 	 1080433234.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 84
+Median Time: 	 3274178525.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 104
+Median Time: 	 9420146597.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG i-O2 -fno-tree-vectorize SEED 36 N 128
+Median Time: 	 38111997671.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 4
+Median Time: 	 8669.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 16
+Median Time: 	 1952178.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 32
+Median Time: 	 40933791.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 64
+Median Time: 	 1016053567.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 84
+Median Time: 	 3119237584.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 104
+Median Time: 	 8688898757.000000 cycles 
+DAS SEI UESI PARAMETER FILE cop FLAG g-O2 -fno-tree-vectorize SEED 36 N 128
+Median Time: 	 32755949252.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 4
+Median Time: 	 4699.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 16
+Median Time: 	 418886.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 32
+Median Time: 	 5259411.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 64
+Median Time: 	 74841491.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 84
+Median Time: 	 239917982.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 104
+Median Time: 	 526758316.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG i-O2 -fno-tree-vectorize SEED 36 N 128
+Median Time: 	 1247063190.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 4
+Median Time: 	 3873.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 16
+Median Time: 	 531666.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 32
+Median Time: 	 5711461.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 64
+Median Time: 	 97297511.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 84
+Median Time: 	 291124322.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 104
+Median Time: 	 694015646.000000 cycles 
+DAS SEI UESI PARAMETER FILE reo FLAG g-O2 -fno-tree-vectorize SEED 36 N 128
+Median Time: 	 1615273474.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 4
+Median Time: 	 3852.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 16
+Median Time: 	 120397.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 32
+Median Time: 	 1415472.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 64
+Median Time: 	 27337302.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 84
+Median Time: 	 83832243.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 104
+Median Time: 	 233009464.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG i-O2 -mfma SEED 36 N 128
+Median Time: 	 708192642.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 4
+Median Time: 	 4170.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 16
+Median Time: 	 220750.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 32
+Median Time: 	 1256723.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 64
+Median Time: 	 26042620.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 84
+Median Time: 	 79125534.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 104
+Median Time: 	 212193336.000000 cycles 
+DAS SEI UESI PARAMETER FILE vec FLAG g-O2 -mfma SEED 36 N 128
+Median Time: 	 660858106.000000 cycles 
