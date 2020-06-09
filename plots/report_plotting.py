@@ -71,7 +71,7 @@ compiler ='gcc'
 
 plt.rcParams.update({'figure.autolayout': True})
 
-plt.rcParams.update({'font.size': 13})
+plt.rcParams.update({'font.size': 26})
 
 
 styles=['-','--','-.',':']
@@ -222,7 +222,14 @@ for i in range(len(file_names)):
 
     ax.set_xlabel(param_comp[wichtiger_param-1])
     ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-    ax.yaxis.set_label_coords(0.113,1.02)  
+    ax.yaxis.set_label_coords(0.267,1.02)  
+    
+    if(files[i]=='vec'):
+        ax.yaxis.set_label_coords(0.267,1.02) 
+    
+    if(wichtiger_param == 3):
+        ax.yaxis.set_label_coords(0.262,1.02) 
+         
     
     '''
     #PLOTTING PERFORMANCE
@@ -257,9 +264,9 @@ for i in range(len(file_names)):
                 x.append(p3)
                 y.append(work/stats.median(flags[flag][p1][p2][p3]))
                 
-            plot_flag ='-O2 -mfma'
+            plot_flag =''
             if(files[i] != 'vec'):
-                plot_flag = '-O2'    
+                plot_flag = ''    
             
             if(wichtiger_param == 2):
                 arg1 = hiddenstate
@@ -270,7 +277,7 @@ for i in range(len(file_names)):
             else:
                 arg1 = hiddenstate
                 arg2 = differentObservables;
-            ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= compiler + ' ' + plot_flag+' '+str(arg1)+' '+str(arg2))
+            ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label=  ' ' + plot_flag+' '+str(arg1)+' '+str(arg2))
             style=(style+1)%len(styles)
         style=0
         color=(color+1)%len(colors)
@@ -278,11 +285,12 @@ for i in range(len(file_names)):
     marker= (marker + 1) % len(markers)
     
     
-    box=ax.get_position()
+    box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),fancybox=True, shadow=False, ncol=4)
-
-    fig.set_size_inches(11,4.5)
+     
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.35),fancybox=True, shadow=True, ncol=3)
+          
+    fig.set_size_inches(10.5,6)
 
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")

@@ -35,7 +35,7 @@ compiler =''
 
 plt.rcParams.update({'figure.autolayout': True})
 
-plt.rcParams.update({'font.size': 13})
+plt.rcParams.update({'font.size': 24})
 
 
 styles=['-','--','-.',':']
@@ -196,7 +196,7 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.158,1.02)
+ax.yaxis.set_label_coords(0.268,1.02)
 #ax.set_title('Performance comparision gcc vs. icc')
 ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
@@ -233,9 +233,9 @@ for file in flags_novec.keys():
 box=ax.get_position()
 
 ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=2)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
 
-fig.set_size_inches(8.5,4.5)
+fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig('../report_plots/N-' +timestr+"-perf-compilers.png",dpi=200)
 #plt.show()
@@ -248,7 +248,7 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.158,1.02)
+ax.yaxis.set_label_coords(0.268,1.02)
 #ax.set_title('Performance comparision flags')
 ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
@@ -282,9 +282,9 @@ for file in flags.keys():
 box=ax.get_position()
 
 ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=2)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
 
-fig.set_size_inches(8.5,4.5)
+fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig('../report_plots/N-' +timestr+"-perf-flags.png",dpi=200)
 #plt.show()
@@ -302,11 +302,11 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('Operational Intensity [flops/byte]')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.163,1.02)
+ax.yaxis.set_label_coords(0.33,1.02)
 
 
 #plt.title('Roofline Model')
-plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 
 ridge_point = scalar_pi/mem_beta
@@ -314,19 +314,16 @@ ridge_point = scalar_pi/mem_beta
 I = []
 flops_byte_scal = []
 flops_byte_vec = []
-for i in np.arange(0.001,100*ridge_point,0.01):
+for i in np.arange(0.005,100*ridge_point,0.01):
 	I.append(i)
 	flops_byte_scal.append(min(scalar_pi, i * mem_beta))
 	flops_byte_vec.append(min(vector_pi, i * mem_beta))
 	
 
-plt.plot(I,flops_byte_scal,color='k',linewidth=0.8)
-plt.plot(I,flops_byte_vec,color='k',linewidth = 0.8)
+ax.plot(I,flops_byte_scal,color='k',linewidth=0.8)
+ax.plot(I,flops_byte_vec,color='k',linewidth = 0.8)
 plt.yscale('log')
 plt.xscale('log')
-figure = plt.gcf()
-figure.set_size_inches(8,4.5)
-plt.legend()
 #plt.xlabel('Operational Intensity [flops/byte]')
 #plt.ylabel('Performance [flops/cycle]')
 
@@ -353,14 +350,17 @@ for count, file in enumerate(flags.keys()):
             if(file != 'vec'):
                 plot_flag = re.sub('\ -mfma$','',plot_flag)
 
-        plt.plot(x,y, marker=m[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+compiler + ' '+str(plot_flag))
+        ax.plot(x,y, marker=m[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+compiler + ' '+str(plot_flag))
         color+=2
         #color=0
         marker=(marker + 1)%2
 
 
+box=ax.get_position()
 
-plt.legend()
+ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
+fig.set_size_inches(8,9)
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
 plt.savefig('../report_plots/N-'+timestr+"-roof-gcc.png",dpi=200)
