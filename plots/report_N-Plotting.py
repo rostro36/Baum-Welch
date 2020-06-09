@@ -7,6 +7,8 @@ import numpy as np
 
 folder = "../output_measures_report/"
 file_name_novec = "06-07.12:33:11-time-novec"
+#second measurements 
+file_name_novec = "../output_measures/06-09.23:33:13-time"#06-07.12:33:11-time-novec"
 full_name_novec =folder + file_name_novec
 
 file_name = "06-03.23:37:35-time"
@@ -41,7 +43,7 @@ plt.rcParams.update({'font.size': 24})
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k','brown']
 #comp_colors=['darkblue', 'softblue', 'darkgreen', 'soft green', 'dark red', 'salmon', 'dark yellow', 'light yellow' ]
-comp_colors = ['#030764','#6488ea','#054907','#6fc276','#840000','#ff796c','#d5b60a','#fffe7a']
+comp_colors = ['#030764','#6488ea','#054907','#6fc276','#840000','#ff796c','#d5b60a','#6fc276']
 markers=[".","v","^","<",">","1","2","3","4","8","s","p","P","*","h","H","+","x","X","D","d","|","_"]
 
 
