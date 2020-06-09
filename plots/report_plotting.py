@@ -55,6 +55,7 @@ wichtiger_param = 2
 #0 = flag	1 = states #2 = dO	3 = T
 
 param=['hs','dO', 'T']
+param_comp=['hidden states', 'different observables', 'T']
 
 #welche work und memory access fuction
 aktuelle_version = 'reo'
@@ -219,7 +220,7 @@ for i in range(len(file_names)):
     fig = plt.figure()
     ax=plt.subplot(111)
 
-    ax.set_xlabel('N')
+    ax.set_xlabel(param_comp[wichtiger_param-1])
     ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
     ax.yaxis.set_label_coords(0.113,1.02)  
     
@@ -269,7 +270,7 @@ for i in range(len(file_names)):
     
     box=ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.18),fancybox=True, shadow=False, ncol=4)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),fancybox=True, shadow=False, ncol=4)
 
     fig.set_size_inches(11,4.5)
 
