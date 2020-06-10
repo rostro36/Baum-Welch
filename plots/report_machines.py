@@ -5,12 +5,12 @@ import statistics as stats
 import time
 import numpy as np
 
-folder = "../output_measures_report/"
-file_name = "06-03.23:37:35-time"
+folder = "../output_measures/"
+file_name = "06-10.12:14:47-time"
 full_name_luca =folder + file_name
 
 folder = "../output_measures/"
-file_name = "06-05.01:33:04-time"
+file_name = "06-10.13:13:29-time"
 full_name_jannik =folder + file_name
 
 #parameter im Performance plot auf x-achse
@@ -176,9 +176,7 @@ marker=0
 color=0
 style=0
 for file in flags_luca.keys():
-    tmp = ['g-O2 -mfma']
-    if(file == 'vec'):
-        continue
+    tmp = ['g-O2']
     for flag in tmp:
         #flag = 'g-O2 -mfma'
         plot_flag = flag
