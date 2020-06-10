@@ -1,8 +1,8 @@
 #!/bin/bash
 
-files=( "stb" "cop" "reo" "vec" )
+files=( "stb" "cop" "reo" )
 compilers=( "g" "i" )
-flags=( "-O2 -mfma" )
+flags=( "-O1" )
 seeds=( 36 )
 Ns=( 8 32 64  )
 now=`date +%m-%d.%H:%M:%S`
