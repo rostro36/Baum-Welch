@@ -8,12 +8,6 @@ import glob
 
 
 folder = "../output_measures_report/"
-file_name1 = "bla-do*"
-full_name1 =glob.glob(folder + file_name1)
-file_name2 = "bla-hs*"
-full_name2 =glob.glob(folder + file_name2)
-file_name3 = "bla-T*"
-full_name3 =glob.glob(folder + file_name3)
 file_name4 = "cop-do*"
 full_name4 =glob.glob(folder + file_name4)
 file_name5 = "cop-hs*"
@@ -32,12 +26,6 @@ file_name11 = "stb-hs*"
 full_name11 =glob.glob(folder + file_name11)
 file_name12 = "stb-T*"
 full_name12 =glob.glob(folder + file_name12)
-file_name13 = "umdhmm-do*"
-full_name13 =glob.glob(folder + file_name13)
-file_name14 = "umdhmm-hs*"
-full_name14 =glob.glob(folder + file_name14)
-file_name15 = "umdhmm-T*"
-full_name15 =glob.glob(folder + file_name15)
 file_name16 = "vec-do*"
 full_name16 =glob.glob(folder + file_name16)
 file_name17 = "vec-hs*"
@@ -46,9 +34,9 @@ file_name18 = "vec-T*"
 full_name18 =glob.glob(folder + file_name18)
 
 
-file_names = [full_name1,full_name2,full_name3,full_name4,full_name5,full_name6,full_name7,full_name8,full_name9,full_name10,full_name11,full_name12,full_name13,full_name14,full_name15,full_name16,full_name17,full_name18]
+file_names = [full_name4,full_name5,full_name6,full_name7,full_name8,full_name9,full_name10,full_name11,full_name12,full_name16,full_name17,full_name18]
 
-files = ['bla','bla','bla','cop','cop','cop', 'reo', 'reo', 'reo', 'stb', 'stb', 'stb','umdhmm','umdhmm','umdhmm', 'vec', 'vec', 'vec']
+files = ['cop','cop','cop', 'reo', 'reo', 'reo', 'stb', 'stb', 'stb', 'vec', 'vec', 'vec']
 
 #parameter im Performance plot auf x-achse
 wichtiger_param = 2
@@ -208,12 +196,7 @@ for i in range(len(file_names)):
 
 wichtiger_param = 2
 for i in range(len(file_names)):
-    
-    if(i<3):
-        continue
-    if(i == 12 or i == 13 or i==14):
-        continue
-        
+
         
         
     
@@ -292,9 +275,9 @@ for i in range(len(file_names)):
           
     fig.set_size_inches(10.5,6)
 
-    #plt.show()
+    plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
-    plt.savefig('../report_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
+    #plt.savefig('../report_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
     plt.close('all')
 
     wichtiger_param = wichtiger_param-1
