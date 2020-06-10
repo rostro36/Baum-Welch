@@ -275,9 +275,9 @@ for i in range(len(file_names)):
           
     fig.set_size_inches(10.5,6)
 
-    plt.show()
+    #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
-    #plt.savefig('../report_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
+    plt.savefig('../report_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
     plt.close('all')
 
     wichtiger_param = wichtiger_param-1
