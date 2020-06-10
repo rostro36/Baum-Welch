@@ -1,1 +1,0 @@
-Median Time: 	 4276523095.000000 cycles 
