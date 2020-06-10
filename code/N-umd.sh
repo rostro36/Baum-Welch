@@ -19,7 +19,7 @@ do
                 do                
                     ./timing $seed $N $N $(( N * N ))
                     echo "DAS SEI UESI PARAMETER" "FILE" "$file" "FLAG" "$compiler$flag" "SEED" $seed "N" $N >> "../output_measures_comp2/$now-umdhmm-time.txt"
-                    ../umdhmm/esthmm -I ../umdhmm/model.hmm ../umdhmm/sequence.seq >> "../output_measures_comp2/$now-umdhmm-time.txt"
+                    /umdhmm/esthmm -I /umdhmm/model.hmm /umdhmm/sequence.seq >> "../output_measures_comp2/$now-umdhmm-time.txt"
                     echo `date +%m-%d.%H:%M:%S`
                     echo "$file $compiler$flag $seed $N"
                 done

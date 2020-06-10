@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <float.h>
-#include "../code/tsc_x86.h"
+#include "../tsc_x86.h"
 
 
 
