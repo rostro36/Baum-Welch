@@ -36,7 +36,7 @@ compiler =''
 
 plt.rcParams.update({'figure.autolayout': True})
 
-plt.rcParams.update({'font.size': 24})
+plt.rcParams.update({'font.size': 21})
 
 styles=['-','--','-.',':']
 colors=['b', 'g', 'r', 'c', 'm', 'y', 'k','brown']
@@ -155,13 +155,13 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('cycles/iteration',rotation='horizontal')
-ax.yaxis.set_label_coords(0.28,1.0)
+ax.yaxis.set_label_coords(0.25,1.0)
 
 
 
 marker=0
 color=0
-style=1
+style=0
 for file in flags.keys():
     #for flag in flags[file].keys():
         filename = file
@@ -182,10 +182,10 @@ for file in flags.keys():
         if(file=='bla'):
            marker+=2
            
-plt.legend(frameon=False)
+plt.legend(frameon=False,fancybox=True, shadow=True)
 figure = plt.gcf()
 figure.set_size_inches(9,6)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-cycles-alternatives.png",dpi=200)
+plt.savefig('../report_plots/N-' +timestr+"-cycles-alternatives.png",dpi=600)
 #plt.show()
 plt.clf()

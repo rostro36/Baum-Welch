@@ -203,13 +203,13 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.268,1.02)
+ax.yaxis.set_label_coords(0.266,1.02)
 #ax.set_title('Performance comparision gcc vs. icc')
 ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 marker=0
 color=0
-style=1
+style=0
 for file in flags_novec.keys():
     tmp = ['i-O2 -fno-tree-vectorize','g-O2 -fno-tree-vectorize']
     if(file == 'vec'):
@@ -239,12 +239,12 @@ for file in flags_novec.keys():
         
 box=ax.get_position()
 
-ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
+ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=True, ncol=1)
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-perf-compilers.png",dpi=200)
+plt.savefig('../report_plots/N-' +timestr+"-perf-compilers.png",dpi=600)
 #plt.show()
 plt.close('all')
 
@@ -255,13 +255,13 @@ ax=plt.subplot(111)
 
 ax.set_xlabel('N')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.268,1.02)
+ax.yaxis.set_label_coords(0.266,1.02)
 #ax.set_title('Performance comparision flags')
 ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 marker=0
 color=0
-style=1
+style=0
 for file in flags.keys():
     for flag in ['g-O2 -mfma','g-O3 -march=native -mfma']:
         #flag = 'g-O2 -mfma'
@@ -288,12 +288,12 @@ for file in flags.keys():
 
 box=ax.get_position()
 
-ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
+ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=True, ncol=1)
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-perf-flags.png",dpi=200)
+plt.savefig('../report_plots/N-' +timestr+"-perf-flags.png",dpi=600)
 #plt.show()
 plt.close('all')
 
@@ -304,12 +304,17 @@ plt.close('all')
 #Plot base model (empty rooflie model)
 
 
+plt.rcParams.update({'figure.autolayout': True})
+
+plt.rcParams.update({'font.size': 19})
+
+
 fig = plt.figure()
 ax=plt.subplot(111)
 
 ax.set_xlabel('Operational Intensity [flops/byte]')
 ax.set_ylabel('Performance [flops/cycle]',rotation='horizontal')
-ax.yaxis.set_label_coords(0.33,1.02)
+ax.yaxis.set_label_coords(0.248,1.02)
 
 
 #plt.title('Roofline Model')
@@ -338,7 +343,7 @@ plt.xscale('log')
 m=["+","x"]
 marker=0
 color=0
-style=1
+style=0
 #compiler = 'gcc'
 for count, file in enumerate(flags.keys()):
     #for flag in list(flags[file].keys())[0]:
@@ -365,12 +370,12 @@ for count, file in enumerate(flags.keys()):
 
 box=ax.get_position()
 
-ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
+ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=1)
 fig.set_size_inches(8,9)
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-'+timestr+"-roof-gcc.png",dpi=200)
+plt.savefig('../report_plots/N-'+timestr+"-roof-gcc.png",dpi=600)
 plt.clf()
 
 

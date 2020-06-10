@@ -151,8 +151,8 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-cycles.png",dpi=200)
-#plt.show()
+#plt.savefig('N-' +timestr+"-cycles.png",dpi=200)
+plt.show()
 plt.clf()
 
 
@@ -185,8 +185,8 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-' +timestr+"-perf.png",dpi=200)
-#plt.show()
+#plt.savefig('N-' +timestr+"-perf.png",dpi=200)
+plt.show()
 plt.clf()
 
 
@@ -252,8 +252,8 @@ for count, file in enumerate(flags.keys()):
 
 
 plt.legend()
-#plt.show()
+plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('N-'+timestr+"-roof.png",dpi=200)
+#plt.savefig('N-'+timestr+"-roof.png",dpi=200)
 plt.clf()
 

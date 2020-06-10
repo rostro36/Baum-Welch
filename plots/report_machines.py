@@ -174,7 +174,7 @@ ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 marker=0
 color=0
-style=1
+style=0
 for file in flags_luca.keys():
     tmp = ['g-O2 -mfma']
     if(file == 'vec'):
@@ -235,12 +235,12 @@ for file in flags_jannik.keys():
         
 box=ax.get_position()
 
-ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=False, ncol=1)
+ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=1)
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-perf-machines.png",dpi=200)
+plt.savefig('../report_plots/N-' +timestr+"-perf-machines.png",dpi=600)
 #plt.show()
 plt.close('all')
 
