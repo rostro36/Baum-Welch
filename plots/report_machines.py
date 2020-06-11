@@ -175,30 +175,7 @@ ax.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 marker=0
 color=0
 style=0
-for file in flags_luca.keys():
-    tmp = ['g-O2']
-    for flag in tmp:
-        #flag = 'g-O2 -mfma'
-        plot_flag = flag
-        x=[]
-        y=[]
-        for n in flags_luca[file][flag]:
-            params=(flag,n,n,n*n)
-            (flag,hiddenstate,differentObservables,T)=params
-            work=work_functions[file](params)
-            x.append(n)
-            y.append(work/stats.median(flags_luca[file][flag][n]))
-            if(plot_flag[0] == 'i'):
-                plot_flag = 'icc '
-            else:
-                plot_flag = 'gcc '
-            plot_flag = plot_flag + flag[1:]
-            
-            
-        ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag) + ' luca')
-        
-        color+=1
-        marker+=1      
+
         
 
 for file in flags_jannik.keys():
@@ -223,11 +200,37 @@ for file in flags_jannik.keys():
             plot_flag = plot_flag + flag[1:]
             
             
-        ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag) + ' jannik')
+        ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag) + ' on system 1')
         
         color+=1
         marker+=1
+       
+
+for file in flags_luca.keys():
+    tmp = ['g-O2']
+    for flag in tmp:
+        #flag = 'g-O2 -mfma'
+        plot_flag = flag
+        x=[]
+        y=[]
+        for n in flags_luca[file][flag]:
+            params=(flag,n,n,n*n)
+            (flag,hiddenstate,differentObservables,T)=params
+            work=work_functions[file](params)
+            x.append(n)
+            y.append(work/stats.median(flags_luca[file][flag][n]))
+            if(plot_flag[0] == 'i'):
+                plot_flag = 'icc '
+            else:
+                plot_flag = 'gcc '
+            plot_flag = plot_flag + flag[1:]
+            
+            
+        ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag) + ' on system 2')
         
+        color+=1
+        marker+=1      
+ 
  
         
         
