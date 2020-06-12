@@ -9,7 +9,7 @@ Fast implementation of the [Baum-Welch algorithm](https://en.wikipedia.org/wiki/
 - [old versions](/old_versions/versions.md) shows the small increments and bigger tests between main versions
 - [output_measures](/output_measures/usage.md) contains the output of the benchmark scripts with times and parsed cachegrind output.
 - [plots](/plots/usage.md) displays all plots that were generated, the most important of those are also in the final report. Next to the plots are also the scripts to generate them.
-- [valgrind](/valgrind/) has the raw [cachegrind](https://valgrind.org/docs/manual/cg-manual.html) output in them.
+- [valgrind](/valgrind/usage.md) has the raw [cachegrind](https://valgrind.org/docs/manual/cg-manual.html) output in them.
 
 ## Main versions
 - std For the most standard implementations
