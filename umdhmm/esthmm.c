@@ -195,7 +195,9 @@ int main (int argc, char **argv)
 	//PrintHMM(stdout, &hmm);
 	qsort (runs, maxRuns, sizeof (double), compare_doubles);
   	double medianTime = runs[maxRuns/2];
-	printf("%f\n", medianTime); 
+	//printf("%f\n", medianTime); 
+	printf("Median Time: \t %lf cycles \n", medianTime); 
+
 	/* free memory */
 	free_ivector(O, 1, T);
 	free_dmatrix(alpha, 1, T, 1, hmm.N);
