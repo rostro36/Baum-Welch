@@ -12,14 +12,14 @@ All other files with numbers are listed in [old_versions](../old_versions) for a
     - add this to other files e.g. ~~~gcc -o blas bw-bla.c io.c bw-tested.c -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl~~~
 
 ### Comparison with [umdhmm](https://github.com/palanceli/UMDHMM)
-Inside the [umdhmm](./umdhmm/) folder:
+Inside the [umdhmm](../umdhmm/) folder:
 - make
 
-Inside the code folder:
-- check that the printing of the models is uncommented in bw-$version.c
+Inside the [old_versions](../old_versions/) folder:
+- check that the printing of the models is uncommented in bw-vec-op.c
 - gcc -o run bw-$version.c io.c bw.tested.c tested.h
 - ./run $seed $hiddenStates $differentObservables $T
-- ../umdhmm/esthmm -I model.hmm sequence.seq
+- (cd ../umdhmm && ./esthmm -I model.hmm sequence.seq)
 
 ### Compile +  run C code
 - version <a href="https://www.codecogs.com/eqnedit.php?latex=\in" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\in" title="\in" /></a> {stb, cop, reo, vec, bla}
