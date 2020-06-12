@@ -124,8 +124,8 @@ myInt64 bw(double* const a, double* const b, double* const p, const int* const y
 	double logLikelihood=-DBL_MAX;
 	double disparance;
 	int steps=1;
-       	_flush_cache(buf,BUFSIZE);
-		myInt64 start = start_tsc();
+	_flush_cache(buf,BUFSIZE);
+	myInt64 start = start_tsc();
 
 	double ct0 = 0.0;
 
