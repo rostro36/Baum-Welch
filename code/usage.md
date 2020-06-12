@@ -5,6 +5,11 @@ There are different milestones of our program. The final version of that milesto
 To each milestone version is next to the implementation also a bw-$name-cg.c file, which is used to read out cachegrind.
 All other files with numbers are listed in [old_versions](../old_versions) for archive reasons.
 
+### Compile +  run C code
+- version <a href="https://www.codecogs.com/eqnedit.php?latex=\in" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\in" title="\in" /></a> {stb, cop, reo, vec, bla}
+- make version 
+- ./version $seed $hiddenState $differentObservable $T
+
 ### Intel Math Kernel (BLAS)
 - download mkl and icc from [here](https://dynamicinstaller.intel.com/system-studio/download)
 - get mkl to path with ~~~source /opt/intel/sw_dev_tools/compilers_and_libraries_2020.1.219/linux/bin/compilervars.sh intel64~~~
@@ -17,14 +22,9 @@ Inside the [umdhmm](../umdhmm/) folder:
 
 Inside the [old_versions](../old_versions/) folder:
 - check that the printing of the models is uncommented in bw-vec-op.c
-- gcc -o run bw-$version.c io.c bw.tested.c tested.h
+- gcc -O2 -mfma -o run bw-vec-op.c io.c bw.tested.c tested.h
 - ./run $seed $hiddenStates $differentObservables $T
 - (cd ../umdhmm && ./esthmm -I model.hmm sequence.seq)
-
-### Compile +  run C code
-- version <a href="https://www.codecogs.com/eqnedit.php?latex=\in" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\in" title="\in" /></a> {stb, cop, reo, vec, bla}
-- make version 
-- ./version $seed $hiddenState $differentObservable $T
 
 ### Valgrind
 - sudo apt-get install [valgrind](https://valgrind.org/docs/manual/manual.html), [kcachegrind](https://kcachegrind.github.io/html/Home.html)
@@ -38,6 +38,6 @@ From inside code folder:
     - read-out statistics for cache misses/branch predictions etc.
 
 ### Run suites
-- [N.sh](./N.sh) and [N-valgrind.sh](./N-valgrind.sh) run different version and put the results into [output_measures](./output_measures/) with the name $now-time.txt for timing and $now-cache.txt for cachegrind. Check the first lines to reduce the amount of parameters.
+- [N.sh](./N.sh) and [N-valgrind.sh](./N-valgrind.sh) run different version and put the results into [output_measures](./output_measures/) with the name $now-N-time.txt (previous: $now-time.txt) for timing and $now-cache.txt for cachegrind. Check the first lines to reduce the amount of parameters.
 - All suite-$variable.sh files benchmark the impact of one variable on different sized models. Their output gets stored in: [output_measures](./output_measures/) with the name $version-$variable-$now-time.txt
 - Since the BLAS version needs other libraries there are other files for this version, which are marked with "bla" for BLAS.
