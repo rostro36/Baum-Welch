@@ -7,7 +7,7 @@ import numpy as np
 import glob
 
 
-folder = "../output_measures_comp/"
+folder = "../output_measures/"
 file_name1 = "bla-do*"
 full_name1 =glob.glob(folder + file_name1)
 file_name2 = "bla-hs*"
@@ -201,9 +201,6 @@ for i in range(len(file_names)):
         wichtiger_param = 3
 
     
-
-
-
 wichtiger_param = 2
 
 for i in range(len(file_names)):
@@ -245,7 +242,7 @@ for i in range(len(file_names)):
     figure.set_size_inches(8,4.5)
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
-    plt.savefig('../final_plots/'+files[i] +'-'+param[wichtiger_param-1]+ '-cycles'+'-' + timestr+'.png',dpi=200)
+    plt.savefig(files[i] +'-'+param[wichtiger_param-1]+ '-cycles'+'-' + timestr+'.png',dpi=200)
     plt.clf()
     wichtiger_param = wichtiger_param-1
     if(wichtiger_param <1):
@@ -301,15 +298,9 @@ for i in range(len(file_names)):
     figure.set_size_inches(8,4.5)
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
-    plt.savefig('../final_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=200)
+    plt.savefig(files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=200)
     plt.clf()
 
     wichtiger_param = wichtiger_param-1
     if(wichtiger_param <1):
         wichtiger_param = 3
-
-
-
-
-
-

@@ -24,8 +24,8 @@ for file in "${files[@]}"
                     differentObservable=${differentObservables[place]}
                     for hiddenState in "${hiddenStates[@]}"
                     do
-                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures_comp2/$file-hs-$now-time.txt"
-                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures_comp2/$file-hs-$now-time.txt"
+                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-hs-$now-time.txt"
+                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-hs-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done
@@ -59,8 +59,8 @@ for file in "${files[@]}"
                     differentObservable=${differentObservables[place]}
                     for hiddenState in "${hiddenStates[@]}"
                     do
-                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures_comp2/$file-hs-$now-time.txt"
-                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures_comp2/$file-hs-$now-time.txt"
+                        echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/$file-hs-$now-time.txt"
+                        ./time $seed $hiddenState $differentObservable $T >> "../output_measures/$file-hs-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done

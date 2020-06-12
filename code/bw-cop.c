@@ -2,22 +2,24 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <math.h>
-#include <float.h> //for DOUBL_MAX
-#include "tsc_x86.h"
+#include <float.h> 
 
+#include "tsc_x86.h"
 #include "io.h"
 #include "tested.h"
 #include "util.h"
 
 double EPSILON = 1e-4;
 #define DELTA 1e-2
-#define BUFSIZE 1<<26   // ~60 MB
+#define BUFSIZE 1<<26 
 
 void forward(const double* const a, const double* const p, const double* const b, double* const alpha,  const int * const y, double* const ct, const int N, const int K, const int T){
 
 	double ct0 = 0.0;
-	//compute alpha(0) and scaling factor for t = 0
+
+	//compute alpha(0)
 	int y0 = y[0];
+
 	for(int s = 0; s < N; s++){
 		double alphas = p[s] * b[s*K + y0];
 		ct0 += alphas;
@@ -26,18 +28,18 @@ void forward(const double* const a, const double* const p, const double* const b
 	
 	ct0 = 1.0 / ct0;
 
-	//scale alpha(0)
 	for(int s = 0; s < N; s++){
 		alpha[s] *= ct0;
 	}
+
 	ct[0] = ct0;
 
 	for(int t = 1; t < T; t++){
 		double ctt = 0.0;	
 		const int yt = y[t];
-		for(int s = 0; s<N; s++){// s=new_state
+		for(int s = 0; s<N; s++){
 			double alphatNs = 0;
-			for(int j = 0; j < N; j++){//j=old_states
+			for(int j = 0; j < N; j++){
 				alphatNs += alpha[(t-1)*N + j] * a[j*N + s];
 			}
 
@@ -45,11 +47,11 @@ void forward(const double* const a, const double* const p, const double* const b
 			ctt += alphatNs;
 			alpha[t*N + s] = alphatNs;
 		}
-		//scaling factor for t 
+
 		ctt = 1.0 / ctt;
 		
 		//scale alpha(t)
-		for(int s = 0; s<N; s++){// s=new_state
+		for(int s = 0; s<N; s++){
 			alpha[t*N+s] *= ctt;
 		}
 		ct[t] = ctt;
@@ -60,22 +62,27 @@ void forward(const double* const a, const double* const p, const double* const b
 
 void backward(const double* const a, const double* const b, double* const beta, const int * const y, const double * const ct, const int N, const int K, const int T ){
 	
-	double ctT1 = ct[T-1];	
+	double ctT1 = ct[T-1];
+	
 	for(int s = 0; s < N; s++){
-		beta[(T-1)*N + s] = /* 1* */ctT1;
+		beta[(T-1)*N + s] = ctT1;
 	}
 
 	for(int t = T-1; t > 0; t--){
 		const int yt =y[t];
 		const double ctt1 = ct[t-1];
-		for(int s = 0; s < N; s++){//s=older state
+
+		for(int s = 0; s < N; s++){
 			double betat1Ns = 0;
-			for(int j = 0; j < N; j++){//j=newer state
+
+			for(int j = 0; j < N; j++){
 				betat1Ns += beta[t*N + j ] * a[s*N + j] * b[j*K + yt];
 			}
+
 			beta[(t-1)*N + s] = ctt1*betat1Ns;
 		}
 	}
+
 	return;
 }
 
@@ -85,16 +92,18 @@ void update(double* const a, double* const p, double* const b, const double* con
 	double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
 
 	for(int t = 0; t < T; t++){
-		for(int s = 0; s < N; s++){ // s old state
+		for(int s = 0; s < N; s++){
 			gamma[t*N + s] = alpha[t*N + s] * beta[t*N + s];
 		}
 	}
 
 	for(int t = 1; t < T; t++){
 		const int yt = y[t];
+
 		for(int s = 0; s < N; s++){
-			const double alphat1Ns = alpha[(t-1)*N + s] ;
-			for(int j = 0; j < N; j++){ // j new state
+			const double alphat1Ns = alpha[(t-1)*N + s];
+
+			for(int j = 0; j < N; j++){
 				xi[((t-1) * N + s) * N + j] = alphat1Ns * a[s*N + j] * beta[t*N + j] * b[j*K + yt]; 
 			}
 		}
@@ -104,33 +113,37 @@ void update(double* const a, double* const p, double* const b, const double* con
 	inv_ct[0] = ct0div;
 
 	for(int s = 0; s < N; s++){
-		// new pi
-		//XXX the next line is not in the r library hmm.
     		p[s] = gamma[s]*ct0div;
     
 		for(int j = 0; j < N; j++){
 			xi_sum = 0.;
 			gamma_sum_denominator = 0.;
+
 			for(int t = 1; t < T; t++){
 				xi_sum += xi[((t-1) * N + s) * N + j];	
 				double inv_ctt1 = 1 / ct[t-1];
 				inv_ct[t-1] = inv_ctt1;
 				gamma_sum_denominator += gamma[(t-1)*N + s]*inv_ctt1;
 			}
+
 			// new transition matrix
 			a[s*N + j] = xi_sum / gamma_sum_denominator;
 		}
+
 		double inv_ctt1 = 1/ct[T-1];
 		inv_ct[T-1]=inv_ctt1;
-		gamma_sum_denominator += gamma[(T-1)*N + s]*inv_ctt1;//ct[T-1];
+		gamma_sum_denominator += gamma[(T-1)*N + s]*inv_ctt1;
 		const double gamma_sum_denominator_div = 1/gamma_sum_denominator ;
+
 		for(int v = 0; v < K; v++){
 			gamma_sum_numerator = 0.;
+
 			for(int t = 0; t < T; t++){
 				if(y[t] == v){
 					gamma_sum_numerator += gamma[t*N + s]*inv_ct[t];
 				}
 			}
+
 			// new emmision matrix
 			b[s*K + v] = gamma_sum_numerator * gamma_sum_denominator_div;
 		}
@@ -164,7 +177,6 @@ void heatup(double* const transitionMatrix,double* const piVector,double* const 
 }
 int main(int argc, char *argv[]){
 
-
 	if(argc < 5){
 		printf("USAGE: ./run <seed> <hiddenStates> <observables> <T> \n");
 		return -1;
@@ -188,33 +200,27 @@ int main(int argc, char *argv[]){
 	minima=1;    
 	variableSteps=10-log10(hiddenStates*differentObservables*T);
 	int maxRuns=minima < variableSteps ? variableSteps : minima;
-	double runs[maxRuns]; //for medianTime
+	double runs[maxRuns]; 
 	
-	//set random according to seed
 	srand(seed);
 
-	//the ground TRUTH we want to approximate:
+	//ground truth
 	double* groundTransitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* groundEmissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
-
-	//set ground truth to some random values
 	makeMatrix(hiddenStates, hiddenStates, groundTransitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, groundEmissionMatrix);
 	int groundInitialState = rand()%hiddenStates;
-	
-	//the observations we made
 	int* observations = (int*) malloc ( T * sizeof(int));
-	makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations);//??? added
+	makeObservations(hiddenStates, differentObservables, groundInitialState, groundTransitionMatrix,groundEmissionMatrix,T, observations);
 
-	//the matrices which should approximate the ground truth
 	double* transitionMatrix = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* transitionMatrixSafe = (double*) malloc(hiddenStates*hiddenStates*sizeof(double));
 	double* transitionMatrixTesting=(double*) malloc(hiddenStates*hiddenStates*sizeof(double));
+
 	double* emissionMatrix = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 	double* emissionMatrixSafe = (double*) malloc(hiddenStates*differentObservables*sizeof(double));
 	double* emissionMatrixTesting=(double*) malloc(hiddenStates*differentObservables*sizeof(double));
 
-	//init state distribution
 	double* stateProb  = (double*) malloc(hiddenStates * sizeof(double));
 	double* stateProbSafe  = (double*) malloc(hiddenStates * sizeof(double));
 	double* stateProbTesting  = (double*) malloc(hiddenStates * sizeof(double));
@@ -223,43 +229,45 @@ int main(int argc, char *argv[]){
 	double* beta = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* gamma = (double*) malloc(hiddenStates * T * sizeof(double));
 	double* xi = (double*) malloc(hiddenStates * hiddenStates * (T-1) * sizeof(double)); 
-
 	double* ct = (double*) malloc(T*sizeof(double));
 	double* inv_ct = (double*) malloc(T*sizeof(double));
 	
-	//Generate matrices
+	//random init transition matrix, emission matrix and state probabilities.
 	makeMatrix(hiddenStates, hiddenStates, transitionMatrix);
 	makeMatrix(hiddenStates, differentObservables, emissionMatrix);
 	makeProbabilities(stateProb,hiddenStates);
 
-	//make a copy of matrices to be able to reset matrices after each run to initial state and to be able to test implementation.
+	//copy for resetting to initial state.
 	memcpy(transitionMatrixSafe, transitionMatrix, hiddenStates*hiddenStates*sizeof(double));
    	memcpy(emissionMatrixSafe, emissionMatrix, hiddenStates*differentObservables*sizeof(double));
 	memcpy(stateProbSafe, stateProb, hiddenStates * sizeof(double));
 
 	//heatup(transitionMatrix,stateProb,emissionMatrix,observations,hiddenStates,differentObservables,T);
 
+	//matrix for flushing cache
 	volatile unsigned char* buf = malloc(BUFSIZE*sizeof(char));
 	int steps = 0;
 	
 	for (int run=0; run<maxRuns; run++){
 
-		//init transition Matrix, emission Matrix and initial state distribution random
-       	memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
+		//reset to init
+       		memcpy(transitionMatrix, transitionMatrixSafe, hiddenStates*hiddenStates*sizeof(double));
 	   	memcpy(emissionMatrix, emissionMatrixSafe, hiddenStates*differentObservables*sizeof(double));
 	        memcpy(stateProb, stateProbSafe, hiddenStates * sizeof(double));	
 	
         	double logLikelihood=-DBL_MAX;
         	double disparance;
      		steps=0;
-        	_flush_cache(buf,BUFSIZE); // ensure the cache is cold
+        	_flush_cache(buf,BUFSIZE);
 		start = start_tsc();
 		
 		do{
-            		//forward
+            		//FORWARD
+
 		        double ct0 = 0.0;
-		        //compute alpha(0) and scaling factor for t = 0
 		        int y0 = observations[0];
+
+		        //compute alpha(0) and scaling factor for t = 0
 		        for(int s = 0; s < hiddenStates; s++){
 			        double alphas = stateProb[s] * emissionMatrix[s*differentObservables + y0];
 			        ct0 += alphas;
@@ -268,18 +276,19 @@ int main(int argc, char *argv[]){
 		        
 		        ct0 = 1.0 / ct0;
 	
-		        //scale alpha(0)
 		        for(int s = 0; s < hiddenStates; s++){
 			        alpha[s] *= ct0;
 		        }
+
 		        ct[0] = ct0;
 	
 		        for(int t = 1; t < T; t++){
 			        double ctt = 0.0;	
 			        const int yt = observations[t];
-			        for(int s = 0; s<hiddenStates; s++){// s=new_state
+			        for(int s = 0; s<hiddenStates; s++){
 				        double alphatNs = 0;
-				        for(int j = 0; j < hiddenStates; j++){//j=old_states
+
+				        for(int j = 0; j < hiddenStates; j++){
 					        alphatNs += alpha[(t-1)*hiddenStates + j] * transitionMatrix[j*hiddenStates + s];
 				        }
 	
@@ -287,48 +296,55 @@ int main(int argc, char *argv[]){
 				        ctt += alphatNs;
 				        alpha[t*hiddenStates + s] = alphatNs;
 			        }
-			        //scaling factor for t 
+ 
 			        ctt = 1.0 / ctt;
 			        
-			        //scale alpha(t)
-			        for(int s = 0; s<hiddenStates; s++){// s=new_state
+			        for(int s = 0; s<hiddenStates; s++){
 				        alpha[t*hiddenStates+s] *= ctt;
 			        }
+
 			        ct[t] = ctt;
 		        }	
 	
-		        //backward
+		        //BACKWARD
+
 		        double ctT1 = ct[T-1];	
+
 		        for(int s = 0; s < hiddenStates; s++){
-			        beta[(T-1)*hiddenStates + s] = /* 1* */ctT1;
+			        beta[(T-1)*hiddenStates + s] = ctT1;
 		        }
 	
 		        for(int t = T-1; t > 0; t--){
 			        const int yt =observations[t];
 			        const double ctt1 = ct[t-1];
-			        for(int s = 0; s < hiddenStates; s++){//s=older state
+
+			        for(int s = 0; s < hiddenStates; s++){
 				        double betat1Ns = 0;
-				        for(int j = 0; j < hiddenStates; j++){//j=newer state
+
+				        for(int j = 0; j < hiddenStates; j++){
 					        betat1Ns += beta[t*hiddenStates + j ] * transitionMatrix[s*hiddenStates + j] * emissionMatrix[j*differentObservables + yt];
 				        }
+
 				        beta[(t-1)*hiddenStates + s] = ctt1*betat1Ns;
 			        }
 		        }
 	
-        		 //Update
+        		 //UPDATE
 		        double xi_sum, gamma_sum_numerator, gamma_sum_denominator;
 	
 		        for(int t = 0; t < T; t++){
-			        for(int s = 0; s < hiddenStates; s++){ // s old state
+			        for(int s = 0; s < hiddenStates; s++){ 
 				        gamma[t*hiddenStates + s] = alpha[t*hiddenStates + s] * beta[t*hiddenStates + s];
 			        }
 		        }
 	
 		        for(int t = 1; t < T; t++){
 			        const int yt = observations[t];
+
 			        for(int s = 0; s < hiddenStates; s++){
-				        const double alphat1Ns = alpha[(t-1)*hiddenStates + s] ;
-				        for(int j = 0; j < hiddenStates; j++){ // j new state
+				        const double alphat1Ns = alpha[(t-1)*hiddenStates + s];
+
+				        for(int j = 0; j < hiddenStates; j++){
 					        xi[((t-1) * hiddenStates + s) * hiddenStates + j] = alphat1Ns * transitionMatrix[s*hiddenStates + j] * beta[t*hiddenStates + j] * emissionMatrix[j*differentObservables + yt]; 
 				        }
 			        }
@@ -338,58 +354,57 @@ int main(int argc, char *argv[]){
 		        inv_ct[0] = ct0div;
 
 		        for(int s = 0; s < hiddenStates; s++){
-			        // new pi
-			        //XXX the next line is not in the r library hmm.
         	    		stateProb[s] = gamma[s]*ct0div;
         	    
 			        for(int j = 0; j < hiddenStates; j++){
 				        xi_sum = 0.;
 				        gamma_sum_denominator = 0.;
+
 				        for(int t = 1; t < T; t++){
 					        xi_sum += xi[((t-1) * hiddenStates + s) * hiddenStates + j];	
 					        double inv_ctt1 = 1 / ct[t-1];
 					        inv_ct[t-1] = inv_ctt1;
 					        gamma_sum_denominator += gamma[(t-1)*hiddenStates + s]*inv_ctt1;
 				        }
+
 				        // new transition matrix
 				        transitionMatrix[s*hiddenStates + j] = xi_sum / gamma_sum_denominator;
 			        }
+
 			        double inv_ctt1 = 1/ct[T-1];
 			        inv_ct[T-1]=inv_ctt1;
-			        gamma_sum_denominator += gamma[(T-1)*hiddenStates + s]*inv_ctt1;//ct[T-1];
-			        const double gamma_sum_denominator_div = 1/gamma_sum_denominator ;
+			        gamma_sum_denominator += gamma[(T-1)*hiddenStates + s]*inv_ctt1;
+			        const double gamma_sum_denominator_div = 1/gamma_sum_denominator;
+
 			        for(int v = 0; v < differentObservables; v++){
 				        gamma_sum_numerator = 0.;
+
 				        for(int t = 0; t < T; t++){
 					        if(observations[t] == v){
 						        gamma_sum_numerator += gamma[t*hiddenStates + s]*inv_ct[t];
 					        }
 				        }
+
 				        // new emmision matrix
 				        emissionMatrix[s*differentObservables + v] = gamma_sum_numerator * gamma_sum_denominator_div;
 			        }
 		        }
         		steps+=1;
 	
-		        //log likelihood
 		        double oldLogLikelihood=logLikelihood;
-	
 		        double newLogLikelihood = 0.0;
-		        //evidence with alpha only:
 	
 	        	for(int time = 0; time < T; time++){
 			        newLogLikelihood -= log2(ct[time]);
 	        	}
 	        
 	        	logLikelihood=newLogLikelihood;
-	
 	        	disparance=newLogLikelihood-oldLogLikelihood;
 
 		}while (disparance>EPSILON && steps<maxSteps);
 
 		cycles = stop_tsc(start);
         	cycles = cycles/steps;
-	     
 		runs[run]=cycles;
 
 	}

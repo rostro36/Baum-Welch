@@ -1,10 +1,10 @@
 #!/bin/bash
 
-files=( "vec-op" )
+files=( "stb" "cop" "reo")
 compilers=( "i" "g" )
 flags=( "-O2" )
 seeds=( 36 )
-Ns=( 4 16 32 64 84 104 128 )
+Ns=( 4 16 32 64 84 104 128)
 now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
 do
@@ -16,10 +16,9 @@ do
             for seed in "${seeds[@]}"
             do
                 for N in "${Ns[@]}"
-                do                
-                    ./timing $seed $N $N $(( N * N ))
-                    echo "DAS SEI UESI PARAMETER" "FILE" "$file" "FLAG" "$compiler$flag" "SEED" $seed "N" $N >> "../output_measures/$now-umdhmm-time.txt"
-                    /umdhmm/esthmm -I /umdhmm/model.hmm /umdhmm/sequence.seq >> "../output_measures/$now-umdhmm-time.txt"
+                do 
+                    echo "DAS SEI UESI PARAMETER" "FILE" "$file" "FLAG" "$compiler$flag" "SEED" $seed "N" $N >> "../output_measures/$now-time.txt"
+                    ./timing $seed $N $N $(( N * N )) >> "../output_measures/$now-time.txt"
                     echo `date +%m-%d.%H:%M:%S`
                     echo "$file $compiler$flag $seed $N"
                 done

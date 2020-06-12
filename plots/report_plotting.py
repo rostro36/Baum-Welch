@@ -7,7 +7,7 @@ import numpy as np
 import glob
 
 
-folder = "../output_measures_report/"
+folder = "../output_measures/"
 file_name4 = "cop-do*"
 full_name4 =glob.glob(folder + file_name4)
 file_name5 = "cop-hs*"
@@ -38,7 +38,7 @@ file_names = [full_name4,full_name5,full_name6,full_name7,full_name8,full_name9,
 
 files = ['cop','cop','cop', 'reo', 'reo', 'reo', 'stb', 'stb', 'stb', 'vec', 'vec', 'vec']
 
-#parameter im Performance plot auf x-achse
+#parameter im Performance plot on x-axis
 wichtiger_param = 2
 #0 = flag	1 = states #2 = dO	3 = T
 
@@ -190,15 +190,8 @@ for i in range(len(file_names)):
     if(wichtiger_param == 0):
         wichtiger_param = 3
 
-    
-
-
-
 wichtiger_param = 2
 for i in range(len(file_names)):
-
-        
-        
     
     fig = plt.figure()
     ax=plt.subplot(111)
@@ -277,15 +270,9 @@ for i in range(len(file_names)):
 
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
-    plt.savefig('../report_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
+    plt.savefig(files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
     plt.close('all')
 
     wichtiger_param = wichtiger_param-1
     if(wichtiger_param <1):
         wichtiger_param = 3
-
-
-
-
-
-

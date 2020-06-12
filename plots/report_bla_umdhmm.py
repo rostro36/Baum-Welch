@@ -5,7 +5,7 @@ import statistics as stats
 import time
 import numpy as np
 
-folder = "../output_measures_report/"
+folder = "../output_measures/"
 file_name = "06-03.23:37:35-time"
 full_name =folder + file_name
 
@@ -29,9 +29,6 @@ vector_pi=scalar_pi*4
 mem_beta=25
 #compiler
 compiler =''
-
-
-
 
 
 plt.rcParams.update({'figure.autolayout': True})
@@ -59,10 +56,6 @@ def to_order(array, index):
     del array[-1]
     array.insert(index,value)
     return array
-
-
-
-
 
 
 f = open(full_name+'.txt')
@@ -146,10 +139,6 @@ while(re.search('FLAG', text)):
         flags[file][flag][n]=[]
     flags[file][flag][n].append(cycles)
     
-
-   
-   
-
 fig = plt.figure()
 ax=plt.subplot(111)
 
@@ -186,6 +175,6 @@ plt.legend(frameon=False,fancybox=True, shadow=True)
 figure = plt.gcf()
 figure.set_size_inches(9,6)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-cycles-alternatives.png",dpi=600)
+plt.savefig('N-' +timestr+"-cycles-alternatives.png",dpi=600)
 #plt.show()
 plt.clf()

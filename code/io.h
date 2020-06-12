@@ -3,16 +3,27 @@
 
 
 void write_matrix_file(const double * const a, const int R, const int C, char* filename);
+
 void write_vector_file(const double* const v, const int R, char* filename);
+
 void write_matrix_file_int(const int * const a, const int R, const int C, char* filename);
+
 void write_vector_file_int(const int* const v, const int R, char* filename);
+
 void read_matrix_file(double * const a, const int R, const int C, char* filename);
+
 void read_vector_file(double* const v, const int R, char* filename);
+
 void read_matrix_file_int(int * const a, const int R, const int C, char* filename);
+
 void read_vector_file_int(int* const v, const int R, char* filename);
+
 void print_matrix(const double * const  a, const int R, const int C);
+
 void print_vector(const double * const a, const int L);
+
 void print_vector_int(const int * const a, const int L);
+
 void write_all(const double * const groundTransitionMatrix,
 		const double * const groundEmissionMatrix,
 		const double * const transitionMatrix,

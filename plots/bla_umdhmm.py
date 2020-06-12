@@ -5,7 +5,7 @@ import statistics as stats
 import time
 import numpy as np
 
-folder = "../output_measures_comp/"
+folder = "../output_measures/"
 file_name = "06-03.23:37:35-time"
 full_name =folder + file_name
 
@@ -29,9 +29,6 @@ vector_pi=scalar_pi*4
 mem_beta=25
 #compiler
 compiler =''
-
-
-
 
 
 plt.rcParams.update({'figure.autolayout': True})
@@ -59,11 +56,6 @@ def to_order(array, index):
     del array[-1]
     array.insert(index,value)
     return array
-
-
-
-
-
 
 f = open(full_name+'.txt')
 text=f.read()
@@ -178,6 +170,6 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-cycles-alternatives.png",dpi=200)
+plt.savefig('N-' +timestr+"-cycles-alternatives.png",dpi=200)
 plt.show()
 plt.clf()
