@@ -7,7 +7,7 @@ compilers=( "g" "i" )
 seeds=( 36 )
 hiddenStates=( 8 64 128 )
 differentObservables=( 8 64 128 )
-Ts=( 1024 2048 4096 8192 16384 32768 )
+Ts=( 1024 1368 1704 2048 2728 3416 4096 5456 6832 8192 10924 13652 16384 21844 27308 32768)
 now=`date +%m-%d.%H:%M:%S`
 for file in "${files[@]}"
     do

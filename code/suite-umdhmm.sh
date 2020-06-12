@@ -26,7 +26,7 @@ do
                     do
                         ./time $seed $hiddenState $differentObservable $T
                         echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/umdhmm-do-$now-time.txt"
-                        /umdhmm/esthmm -I /umdhmm/model.hmm /umdhmm/sequence.seq >> "../output_measures/umdhmm-do-$now-time.txt"
+                        ../umdhmm/esthmm -I ../umdhmm/model.hmm ../umdhmm/sequence.seq >> "../output_measures/umdhmm-do-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done
@@ -56,7 +56,7 @@ for file in "${files[@]}"
                     do
                         ./time $seed $hiddenState $differentObservable $T
                         echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/umdhmm-hs-$now-time.txt"
-                        /umdhmm/esthmm -I /umdhmm/model.hmm /umdhmm/sequence.seq >> "../output_measures/umdhmm-hs-$now-time.txt"
+                        ../umdhmm/esthmm -I ../umdhmm/model.hmm ../umdhmm/sequence.seq >> "../output_measures/umdhmm-hs-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done
@@ -86,7 +86,7 @@ for file in "${files[@]}"
                     do
                         ./time $seed $hiddenState $differentObservable $T
                         echo "DAS SEI UESI PARAMETER" "FLAG" $compiler$flag "SEED" $seed "HIDDENSTATE" $hiddenState "DIFFERENTOBSERVABLES" $differentObservable "T" $T >> "../output_measures/umdhmm-T-$now-time.txt"
-                        /umdhmm/esthmm -I /umdhmm/model.hmm /umdhmm/sequence.seq >> "../output_measures/umdhmm-T-$now-time.txt"
+                        ../umdhmm/esthmm -I ../umdhmm/model.hmm ../umdhmm/sequence.seq >> "../output_measures/umdhmm-T-$now-time.txt"
                         echo `date +%m-%d.%H:%M:%S`
                         echo "$file $compiler$flag $seed $differentObservable $hiddenState $T"
                     done
