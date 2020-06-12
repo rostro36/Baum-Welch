@@ -6,7 +6,7 @@ import time
 import numpy as np
 import glob
 
-folder = "../output_measures_comp2/"
+folder = "../output_measures/output_measures_comp2/"
 
 file_name = "*time_novec*"
 full_name_novec =glob.glob(folder + file_name)
@@ -233,7 +233,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report2_plots/N-' +timestr+"-perf-compilers.png",dpi=600)
+plt.savefig('../plots/report_plots4/N-' +timestr+"-perf-compilers.png",dpi=600)
 #plt.show()
 plt.close('all')
 
@@ -283,7 +283,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report2_plots/N-' +timestr+"-perf-flags.png",dpi=600)
+plt.savefig('../plots/report_plots4/N-' +timestr+"-perf-flags.png",dpi=600)
 #plt.show()
 plt.close('all')
 
@@ -372,7 +372,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=
 fig.set_size_inches(8,9)
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report2_plots/N-'+timestr+"-roof-gcc.png",dpi=600)
+plt.savefig('../plots/report_plots4/N-'+timestr+"-roof-gcc.png",dpi=600)
 plt.clf()
 
 

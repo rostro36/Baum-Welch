@@ -8,3 +8,10 @@
 
 ## Usage
 python3 $script_name.py
+
+## Folders
+report_plots1: contains a broad collection of first plots without proper formatting
+report_plots2: contains a collection of plots ready for the report.
+report_plots3: contains a collection of plots actually used in the report.
+
+

@@ -6,7 +6,7 @@ import time
 import numpy as np
 import glob
 
-folder = "../output_measures_comp2/"
+folder = "../output_measures/output_measures_comp2/"
 
 file_name = "*N-time*"
 full_name =glob.glob(folder + file_name)
@@ -186,6 +186,6 @@ plt.legend(frameon=False,fancybox=True, shadow=True)
 figure = plt.gcf()
 figure.set_size_inches(9,6)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report2_plots/N-' +timestr+"-cycles-alternatives.png",dpi=600)
+plt.savefig('../plots/report_plots4/N-' +timestr+"-cycles-alternatives.png",dpi=600)
 #plt.show()
 plt.clf()

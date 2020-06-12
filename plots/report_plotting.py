@@ -7,7 +7,7 @@ import numpy as np
 import glob
 
 
-folder = "../output_measures_comp2/"
+folder = "../output_measures/output_measures_comp2/"
 file_name4 = "cop-do*"
 full_name4 =glob.glob(folder + file_name4)
 file_name5 = "cop-hs*"
@@ -279,7 +279,7 @@ for i in range(len(file_names)):
 
     #plt.show()
     timestr = time.strftime("%d-%m_%H;%M")
-    plt.savefig('../report2_plots/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
+    plt.savefig('../plots/report_plots4/'+files[i] +'-'+ param[wichtiger_param-1]+ '-perf' +'-'+ timestr+'.png',dpi=600)
     plt.close('all')
 
     wichtiger_param = wichtiger_param-1

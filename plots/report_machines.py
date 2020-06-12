@@ -6,7 +6,7 @@ import time
 import numpy as np
 import glob
 
-folder = "../output_measures_comp2/"
+folder = "../output_measures/output_measures_comp2/"
 
 file_name = "*N-time*"
 full_name_luca =glob.glob(folder + file_name)
@@ -244,7 +244,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report2_plots/N-' +timestr+"-perf-machines.png",dpi=600)
+plt.savefig('../plots/report_plots4/N-' +timestr+"-perf-machines.png",dpi=600)
 #plt.show()
 plt.close('all')
 
