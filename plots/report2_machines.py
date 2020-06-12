@@ -205,7 +205,6 @@ for file in flags_jannik.keys():
         marker+=1
        
 
-print(flags_luca)
 for file in flags_luca.keys():
     if(file == 'vec'):
         continue
@@ -245,8 +244,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-#plt.savefig('../report_plots/N-' +timestr+"-perf-machines.png",dpi=600)
-plt.show()
+plt.savefig('../report2_plots/N-' +timestr+"-perf-machines.png",dpi=600)
+#plt.show()
 plt.close('all')
 
 

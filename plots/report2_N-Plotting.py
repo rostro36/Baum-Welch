@@ -233,8 +233,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-#plt.savefig('../report_plots/N-' +timestr+"-perf-compilers.png",dpi=600)
-plt.show()
+plt.savefig('../report2_plots/N-' +timestr+"-perf-compilers.png",dpi=600)
+#plt.show()
 plt.close('all')
 
 
@@ -283,8 +283,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-#plt.savefig('../report_plots/N-' +timestr+"-perf-flags.png",dpi=600)
-plt.show()
+plt.savefig('../report2_plots/N-' +timestr+"-perf-flags.png",dpi=600)
+#plt.show()
 plt.close('all')
 
 
@@ -370,9 +370,9 @@ box=ax.get_position()
 ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=1)
 fig.set_size_inches(8,9)
-plt.show()
+#plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-#plt.savefig('../report_plots/N-'+timestr+"-roof-gcc.png",dpi=600)
+plt.savefig('../report2_plots/N-'+timestr+"-roof-gcc.png",dpi=600)
 plt.clf()
 
 

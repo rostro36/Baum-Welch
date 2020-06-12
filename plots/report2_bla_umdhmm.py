@@ -149,9 +149,6 @@ while(re.search('FLAG', text)):
     flags[file][flag][n].append(cycles)
     
 
-print(flags) 
-   
-
 fig = plt.figure()
 ax=plt.subplot(111)
 
@@ -189,6 +186,6 @@ plt.legend(frameon=False,fancybox=True, shadow=True)
 figure = plt.gcf()
 figure.set_size_inches(9,6)
 timestr = time.strftime("%d-%m_%H;%M")
-#plt.savefig('../report_plots/N-' +timestr+"-cycles-alternatives.png",dpi=600)
-plt.show()
+plt.savefig('../report2_plots/N-' +timestr+"-cycles-alternatives.png",dpi=600)
+#plt.show()
 plt.clf()
