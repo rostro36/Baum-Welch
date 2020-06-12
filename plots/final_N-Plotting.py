@@ -5,19 +5,16 @@ import statistics as stats
 import time
 import numpy as np
 
-folder = "../output_measures_comp/"
+folder = "../output_measures/"
 file_name = "06-03.23:37:35-time"
 full_name =folder + file_name
 
 file_name_flags = "06-04.15:49:00-time-flags"
 full_name_flags = folder+file_name_flags
-#parameter im Performance plot auf x-achse
+#parameter im Performance plot on x-axis
 wichtiger_param = 3
 #0 = flag	1 = states
 #2 = dO	3 = T
-
-#welche work und memory access fuction
-#aktuelle_version = 'reo'
 
 #machine specs
 scalar_pi=4
@@ -98,11 +95,6 @@ def base_memory_compulsory(params):
     return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
 
 
-
-
-
-
-
 f = open(full_name+'.txt')
 text=f.read()
 flags=dict()
@@ -164,7 +156,6 @@ plt.title('Different implementations icc')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 
 
-
 marker=0
 color=0
 style=1
@@ -187,7 +178,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-cycles-icc.png",dpi=200)
+plt.savefig('N-' +timestr+"-cycles-icc.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -218,7 +209,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-cycles-gcc.png",dpi=200)
+plt.savefig('N-' +timestr+"-cycles-gcc.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -250,7 +241,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-cycles-compilers.png",dpi=200)
+plt.savefig('N-' +timestr+"-cycles-compilers.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -283,10 +274,9 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-cycles-march.png",dpi=200)
+plt.savefig('N-' +timestr+"-cycles-march.png",dpi=200)
 #plt.show()
 plt.clf()
-
 
 
 plt.xlabel('N')
@@ -316,14 +306,9 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-cycles-flags.png",dpi=200)
+plt.savefig('N-' +timestr+"-cycles-flags.png",dpi=200)
 #plt.show()
 plt.clf()
-
-
-
-
-
 
 
 plt.xlabel('N')
@@ -356,7 +341,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-perf-icc.png",dpi=200)
+plt.savefig('N-' +timestr+"-perf-icc.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -391,7 +376,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-perf-gcc.png",dpi=200)
+plt.savefig('N-' +timestr+"-perf-gcc.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -426,7 +411,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-perf-compilers.png",dpi=200)
+plt.savefig('N-' +timestr+"-perf-compilers.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -462,7 +447,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-perf-march.png",dpi=200)
+plt.savefig('N-' +timestr+"-perf-march.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -500,7 +485,7 @@ plt.legend()
 figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-' +timestr+"-perf-flags.png",dpi=200)
+plt.savefig('N-' +timestr+"-perf-flags.png",dpi=200)
 #plt.show()
 plt.clf()
 
@@ -571,7 +556,7 @@ for count, file in enumerate(flags.keys()):
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-'+timestr+"-roof-icc.png",dpi=200)
+plt.savefig('N-'+timestr+"-roof-icc.png",dpi=200)
 plt.clf()
 
 #Plot base model (empty rooflie model)
@@ -626,7 +611,7 @@ for count, file in enumerate(flags.keys()):
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-'+timestr+"-roof-gcc.png",dpi=200)
+plt.savefig('N-'+timestr+"-roof-gcc.png",dpi=200)
 plt.clf()
 
 
@@ -673,7 +658,7 @@ for count, file in enumerate(flags.keys()):
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-'+timestr+"-roof-compilers.png",dpi=200)
+plt.savefig('N-'+timestr+"-roof-compilers.png",dpi=200)
 plt.clf()
 
 
@@ -722,7 +707,7 @@ for count, file in enumerate(flags.keys()):
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-'+timestr+"-roof-march.png",dpi=200)
+plt.savefig('N-'+timestr+"-roof-march.png",dpi=200)
 plt.clf()
 
 
@@ -769,8 +754,5 @@ for count, file in enumerate(flags.keys()):
 plt.legend()
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../final_plots/N-'+timestr+"-roof-flags.png",dpi=200)
+plt.savefig('N-'+timestr+"-roof-flags.png",dpi=200)
 plt.clf()
-
-
-

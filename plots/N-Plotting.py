@@ -8,13 +8,10 @@ folder = "../output_measures/"
 file_name = "05-31.14:38:01-time"
 full_name =folder + file_name
 
-#parameter im Performance plot auf x-achse
+#parameter im Performance plot on x-axis
 wichtiger_param = 3
 #0 = flag	1 = states
 #2 = dO	3 = T
-
-#welche work und memory access fuction
-#aktuelle_version = 'reo'
 
 #machine specs
 scalar_pi=4
@@ -22,10 +19,6 @@ vector_pi=scalar_pi*4
 mem_beta=25
 #compiler
 compiler ='gcc'
-
-
-
-
 
 plt.rcParams.update({'figure.autolayout': True})
 
@@ -93,11 +86,6 @@ def base_memory_compulsory(params):
     return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
 
 
-
-
-
-
-
 f = open(full_name+'.txt')
 text=f.read()
 flags=dict()
@@ -152,7 +140,7 @@ figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
 #plt.savefig('N-' +timestr+"-cycles.png",dpi=200)
-plt.show()
+#plt.show()
 plt.clf()
 
 
@@ -186,7 +174,7 @@ figure = plt.gcf()
 figure.set_size_inches(8,4.5)
 timestr = time.strftime("%d-%m_%H;%M")
 #plt.savefig('N-' +timestr+"-perf.png",dpi=200)
-plt.show()
+#plt.show()
 plt.clf()
 
 
@@ -252,7 +240,7 @@ for count, file in enumerate(flags.keys()):
 
 
 plt.legend()
-plt.show()
+#plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
 #plt.savefig('N-'+timestr+"-roof.png",dpi=200)
 plt.clf()

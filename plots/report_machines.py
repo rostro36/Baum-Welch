@@ -96,12 +96,6 @@ def base_memory_compulsory(params):
     #Compulsory misses only:
     return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
 
-
-
-
-
-
-
 f = open(full_name_luca+'.txt')
 text=f.read()
 flags_luca=dict()
@@ -156,9 +150,6 @@ while(re.search('FLAG', text)):
     if n not in flags_jannik[file][flag]:
         flags_jannik[file][flag][n]=[]
     flags_jannik[file][flag][n].append(cycles)
-
-
-
 
 
 fig = plt.figure()
@@ -229,11 +220,8 @@ for file in flags_luca.keys():
         ax.plot(x,y, marker=markers[marker], color=comp_colors[color], linestyle=styles[style], label= file[:6]+': '+ compiler+' ' +str(plot_flag) + ' on system 2')
         
         color+=1
-        marker+=1      
- 
- 
-        
-        
+        marker+=1  
+
 box=ax.get_position()
 
 ax.set_position([box.x0, box.y0 + box.height * 0.05, box.width, box.height * 0.95])
@@ -241,7 +229,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-perf-machines.png",dpi=600)
+plt.savefig('N-' +timestr+"-perf-machines.png",dpi=600)
 #plt.show()
 plt.close('all')
 

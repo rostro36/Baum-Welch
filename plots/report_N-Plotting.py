@@ -5,7 +5,7 @@ import statistics as stats
 import time
 import numpy as np
 
-folder = "../output_measures_report/"
+folder = "../output_measures/"
 file_name_novec = "06-07.12:33:11-time-novec"
 
 #second measurements 
@@ -14,19 +14,16 @@ file_name_novec = "06-07.12:33:11-time-novec"
 
 full_name_novec =folder + file_name_novec
 
-folder = "../output_measures_report/"
+folder = "../output_measures/"
 file_name = "06-03.23:37:35-time"
 full_name =folder + file_name
 
 file_name_flags = "06-04.15:49:00-time-flags"
 full_name_flags = folder+file_name_flags
-#parameter im Performance plot auf x-achse
+#parameter im Performance plot on x-axis
 wichtiger_param = 3
 #0 = flag	1 = states
 #2 = dO	3 = T
-
-#welche work und memory access fuction
-#aktuelle_version = 'reo'
 
 #machine specs
 scalar_pi=4
@@ -106,11 +103,6 @@ def base_memory_compulsory(params):
     (flag,hiddenstate,differentObservables,T)=params
     #Compulsory misses only:
     return 3*hiddenstate*T + hiddenstate*hiddenstate*T+T + hiddenstate + hiddenstate*hiddenstate + hiddenstate * differentObservables
-
-
-
-
-
 
 
 f = open(full_name_novec+'.txt')
@@ -244,7 +236,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-perf-compilers.png",dpi=600)
+plt.savefig('N-' +timestr+"-perf-compilers.png",dpi=600)
 #plt.show()
 plt.close('all')
 
@@ -293,13 +285,9 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),fancybox=True, shadow=
 
 fig.set_size_inches(9,12)
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-' +timestr+"-perf-flags.png",dpi=600)
+plt.savefig('N-' +timestr+"-perf-flags.png",dpi=600)
 #plt.show()
 plt.close('all')
-
-
-
-
 
 #Plot base model (empty rooflie model)
 
@@ -375,11 +363,5 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=
 fig.set_size_inches(8,9)
 #plt.show()
 timestr = time.strftime("%d-%m_%H;%M")
-plt.savefig('../report_plots/N-'+timestr+"-roof-gcc.png",dpi=600)
+plt.savefig('N-'+timestr+"-roof-gcc.png",dpi=600)
 plt.clf()
-
-
-
-
-
-

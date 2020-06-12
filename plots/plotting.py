@@ -4,17 +4,15 @@ import statistics as stats
 import time
 import numpy as np
 
-
-
 folder = "../output_measures/"
 file_name = "stb-T-06-04.10:27:55-time"
 full_name =folder + file_name
 
-#parameter im Performance plot auf x-achse
+#parameter im Performance plot on x-axis
 wichtiger_param = 1
 #0 = flag	1 = states #2 = dO	3 = T
 
-#welche work und memory access fuction
+#which work und memory access fuction
 aktuelle_version = 'reo'
 
 #machine specs
