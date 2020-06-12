@@ -10,6 +10,11 @@ All other files with numbers are listed in [old_versions](../old_versions) for a
 - make version 
 - ./version $seed $hiddenState $differentObservable $T
 
+### Run suites
+- [N.sh](./N.sh) and [N-valgrind.sh](./N-valgrind.sh) run different version and put the results into [output_measures](./output_measures/) with the name $now-N-time.txt (previous: $now-time.txt) for timing and $now-cache.txt for cachegrind. Check the first lines to reduce the amount of parameters.
+- All suite-$variable.sh files benchmark the impact of one variable on different sized models. Their output gets stored in: [output_measures](./output_measures/) with the name $version-$variable-$now-time.txt
+- Since the BLAS version needs other libraries there are other files for this version, which are marked with "bla" for BLAS.
+
 ### Intel Math Kernel (BLAS)
 - download mkl and icc from [here](https://dynamicinstaller.intel.com/system-studio/download)
 - get mkl to path with ~~~source /opt/intel/sw_dev_tools/compilers_and_libraries_2020.1.219/linux/bin/compilervars.sh intel64~~~
@@ -37,7 +42,4 @@ From inside code folder:
 - kcachegrind ../valgrind/$now-$file-$seed-$hiddenState-$hiddenState-$differentObservable-$T-cache
     - read-out statistics for cache misses/branch predictions etc.
 
-### Run suites
-- [N.sh](./N.sh) and [N-valgrind.sh](./N-valgrind.sh) run different version and put the results into [output_measures](./output_measures/) with the name $now-N-time.txt (previous: $now-time.txt) for timing and $now-cache.txt for cachegrind. Check the first lines to reduce the amount of parameters.
-- All suite-$variable.sh files benchmark the impact of one variable on different sized models. Their output gets stored in: [output_measures](./output_measures/) with the name $version-$variable-$now-time.txt
-- Since the BLAS version needs other libraries there are other files for this version, which are marked with "bla" for BLAS.
+
