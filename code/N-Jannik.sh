@@ -17,8 +17,8 @@ do
             do
                 for N in "${Ns[@]}"
                 do 
-                    echo "DAS SEI UESI PARAMETER" "FILE" "$file" "FLAG" "$compiler$flag" "SEED" $seed "N" $N >> "../output_measures/$now-time.txt"
-                    ./timing $seed $N $N $(( N * N )) >> "../output_measures/$now-time.txt"
+                    echo "DAS SEI UESI PARAMETER" "FILE" "$file" "FLAG" "$compiler$flag" "SEED" $seed "N" $N >> "../output_measures/$now-N-time.txt"
+                    ./timing $seed $N $N $(( N * N )) >> "../output_measures/$now-N-time.txt"
                     echo `date +%m-%d.%H:%M:%S`
                     echo "$file $compiler$flag $seed $N"
                 done
