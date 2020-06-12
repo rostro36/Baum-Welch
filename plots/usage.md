@@ -6,5 +6,5 @@
 - report_machines.py: creates a performance plot for two different machines for stb, cop, reo ( can also be used for vec if both machines support fma instructions)
 - report_plotting.py: creates performance plot for the impact of one parameter for stb, cop, reo and vec
 
-##Usage
+## Usage
 python3 $script_name.py
